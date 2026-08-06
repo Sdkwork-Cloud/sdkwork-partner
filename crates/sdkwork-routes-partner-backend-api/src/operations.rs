@@ -162,7 +162,7 @@ pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router
             patch(update_level).delete(delete_level),
         )
         .route(
-            "/backend/v3/api/partners/commission-config",
+            "/backend/v3/api/partners/commission_config",
             get(fetch_commission_config).patch(update_commission_config),
         )
         // Partners
@@ -184,7 +184,7 @@ pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router
         )
         // Join fees
         .route(
-            "/backend/v3/api/partners/{partnerId}/join-fee-payments",
+            "/backend/v3/api/partners/{partnerId}/join_fee_payments",
             get(fetch_join_fee_payments).post(create_join_fee_payment),
         )
         // Customer bindings
@@ -202,7 +202,7 @@ pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router
         )
         // Commission events & settlements
         .route(
-            "/backend/v3/api/partners/commission-events",
+            "/backend/v3/api/partners/commission_events",
             get(fetch_commission_events).post(create_manual_commission_event),
         )
         .route(

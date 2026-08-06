@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "generator": "@sdkwork/sdk-generator",
+  "artifacts": {
+    "stateDir": ".sdkwork",
+    "manifestPath": ".sdkwork/sdkwork-generator-manifest.json",
+    "changeSummaryPath": ".sdkwork/sdkwork-generator-changes.json",
+    "executionReportPath": ".sdkwork/sdkwork-generator-report.json",
+    "manualBackupDir": ".sdkwork/manual-backups"
+  },
+  "status": "ok",
+  "mode": "apply",
+  "hasChanges": false,
+  "hasDestructiveChanges": false,
+  "changeFingerprint": "b595915c83e88e32833d3fea1812d94b89760e195f28cbfa3a04cc5a3c4c533f",
+  "changeImpact": {
+    "schemaVersion": 1,
+    "areas": [],
+    "details": [],
+    "requiresVerification": false,
+    "summary": "No generated, scaffold, or backup changes detected. Verification can be skipped."
+  },
+  "executionDecision": {
+    "schemaVersion": 1,
+    "riskLevel": "low",
+    "nextAction": "skip",
+    "requiresManualReview": false,
+    "applyRequiresExpectedFingerprint": false,
+    "summary": "No actionable changes were detected. No apply or verification step is required.",
+    "reasons": [
+      "no-actionable-changes"
+    ]
+  },
+  "executionHandoff": {
+    "schemaVersion": 1,
+    "summary": "No further commands are required.",
+    "steps": []
+  },
+  "verificationPlan": {
+    "shouldRun": false,
+    "runPhase": "skip",
+    "summary": "No generated, scaffold, or backup changes detected. Verification can be skipped.",
+    "steps": []
+  },
+  "sdk": {
+    "name": "sdkwork-partner-backend-sdk",
+    "version": "0.1.0",
+    "language": "typescript",
+    "sdkType": "backend",
+    "protocol": "http",
+    "outputPath": "E:\\sdkwork-space\\sdkwork-partner\\sdks\\sdkwork-partner-backend-sdk\\sdkwork-partner-backend-sdk-typescript\\generated\\server-openapi",
+    "packageName": "sdkwork-partner-backend-sdk-generated-typescript"
+  },
+  "versioning": {
+    "resolvedVersion": "0.1.0",
+    "localVersions": []
+  },
+  "stats": {
+    "totalFiles": 78,
+    "models": 54,
+    "apis": 1,
+    "types": 56
+  },
+  "warnings": [],
+  "syncSummary": {
+    "dryRun": false,
+    "controlPlaneEnabled": true,
+    "writtenFiles": 0,
+    "skippedScaffoldFiles": 2,
+    "skippedUnchangedGeneratedFiles": 76,
+    "deletedGeneratedFiles": 0,
+    "changeSummaryPath": ".sdkwork/sdkwork-generator-changes.json",
+    "changeFingerprint": "b595915c83e88e32833d3fea1812d94b89760e195f28cbfa3a04cc5a3c4c533f",
+    "changes": {
+      "createdGeneratedFiles": [],
+      "updatedGeneratedFiles": [],
+      "unchangedGeneratedFiles": [
+        "bin/publish-core.mjs",
+        "bin/publish.ps1",
+        "bin/publish.sh",
+        "bin/sdk-gen.bat",
+        "bin/sdk-gen.sh",
+        "CHANGELOG.md",
+        "LICENSE",
+        "package.json",
+        "README.md",
+        "sdkwork-sdk.json",
+        "src/api/base.ts",
+        "src/api/index.ts",
+        "src/api/partners.ts",
+        "src/api/paths.ts",
+        "src/auth/index.ts",
+        "src/http/client.ts",
+        "src/http/index.ts",
+        "src/index.ts",
+        "src/sdk.ts",
+        "src/types/admin-commission-config-update-request.ts",
+        "src/types/admin-commission-event-create-request.ts",
+        "src/types/admin-customer-bind-request.ts",
+        "src/types/admin-join-fee-payment-create-request.ts",
+        "src/types/admin-ledger-adjustment-request.ts",
+        "src/types/admin-partner-create-request.ts",
+        "src/types/admin-partner-level-create-request.ts",
+        "src/types/admin-partner-level-update-request.ts",
+        "src/types/admin-partner-update-request.ts",
+        "src/types/admin-settlement-run-request.ts",
+        "src/types/admin-withdrawal-create-request.ts",
+        "src/types/admin-withdrawal-pay-request.ts",
+        "src/types/admin-withdrawal-review-request.ts",
+        "src/types/commission-config-item-envelope.ts",
+        "src/types/commission-config-item.ts",
+        "src/types/commission-event-item-envelope.ts",
+        "src/types/commission-event-item.ts",
+        "src/types/commission-event-list-envelope.ts",
+        "src/types/common.ts",
+        "src/types/customer-binding-item-envelope.ts",
+        "src/types/customer-binding-item.ts",
+        "src/types/customer-binding-list-envelope.ts",
+        "src/types/distribution-item.ts",
+        "src/types/index.ts",
+        "src/types/join-fee-payment-item-envelope.ts",
+        "src/types/join-fee-payment-item.ts",
+        "src/types/join-fee-payment-list-envelope.ts",
+        "src/types/ledger-entry-item-envelope.ts",
+        "src/types/ledger-entry-item.ts",
+        "src/types/ledger-entry-list-envelope.ts",
+        "src/types/page-info.ts",
+        "src/types/partner-ancestor-item.ts",
+        "src/types/partner-ancestor-list-envelope.ts",
+        "src/types/partner-item-envelope.ts",
+        "src/types/partner-item.ts",
+        "src/types/partner-level-item-envelope.ts",
+        "src/types/partner-level-item.ts",
+        "src/types/partner-level-list-envelope.ts",
+        "src/types/partner-list-envelope.ts",
+        "src/types/partner-stat-item-envelope.ts",
+        "src/types/partner-stat-item.ts",
+        "src/types/partner-tree-item.ts",
+        "src/types/partner-tree-list-envelope.ts",
+        "src/types/problem-detail.ts",
+        "src/types/sdk-work-api-response.ts",
+        "src/types/settlement-item.ts",
+        "src/types/settlement-list-envelope.ts",
+        "src/types/settlement-run-result-envelope.ts",
+        "src/types/settlement-run-result.ts",
+        "src/types/stat-snapshot-item.ts",
+        "src/types/stat-snapshot-list-envelope.ts",
+        "src/types/stats-overview-item-envelope.ts",
+        "src/types/stats-overview-item.ts",
+        "src/types/withdrawal-item-envelope.ts",
+        "src/types/withdrawal-item.ts",
+        "src/types/withdrawal-list-envelope.ts",
+        "tsconfig.json"
+      ],
+      "deletedGeneratedFiles": [],
+      "scaffoldedFiles": [],
+      "preservedScaffoldFiles": [
+        "custom/build-runtime.mjs",
+        "custom/README.md"
+      ],
+      "backedUpFiles": []
+    },
+    "impact": {
+      "schemaVersion": 1,
+      "areas": [],
+      "details": [],
+      "requiresVerification": false,
+      "summary": "No generated, scaffold, or backup changes detected. Verification can be skipped."
+    },
+    "verificationPlan": {
+      "shouldRun": false,
+      "runPhase": "skip",
+      "summary": "No generated, scaffold, or backup changes detected. Verification can be skipped.",
+      "steps": []
+    },
+    "executionDecision": {
+      "schemaVersion": 1,
+      "riskLevel": "low",
+      "nextAction": "skip",
+      "requiresManualReview": false,
+      "applyRequiresExpectedFingerprint": false,
+      "summary": "No actionable changes were detected. No apply or verification step is required.",
+      "reasons": [
+        "no-actionable-changes"
+      ]
+    },
+    "backedUpFiles": [],
+    "preservedLegacyFiles": false
+  }
+}

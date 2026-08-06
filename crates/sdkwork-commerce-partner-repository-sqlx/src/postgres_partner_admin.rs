@@ -671,6 +671,7 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
         subject: &'a PartnerAdminSubject,
     ) -> PartnerAdminFuture<'a, PartnerAdminListPage<PartnerItem>> {
         Box::pin(async move {
+            let q = query.list.q.as_deref();
             let total = sqlx::query(COUNT_PARTNERS)
                 .bind(subject.tenant_id)
                 .bind(subject.organization_id)

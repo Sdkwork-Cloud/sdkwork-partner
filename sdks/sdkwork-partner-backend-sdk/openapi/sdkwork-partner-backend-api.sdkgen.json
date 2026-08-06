@@ -1,0 +1,5978 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "SDKWork Partner Backend API",
+    "version": "0.1.0",
+    "description": "Backend administration API for the multi-level partner (agent) management system: levels and commission ratios, partners, join fees, customer bindings, commission events and settlements, ledger, withdrawals, and stats.",
+    "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+    "x-sdkwork-sdk-family": "sdkwork-partner-backend-sdk",
+    "x-sdkwork-owner": "sdkwork-partner"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8080"
+    }
+  ],
+  "tags": [
+    {
+      "name": "partners",
+      "description": "partner operations exposed by sdkwork-partner."
+    }
+  ],
+  "paths": {
+    "/backend/v3/api/partners/levels": {
+      "get": {
+        "operationId": "levels.list",
+        "summary": "List partner levels",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerLevelListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "levels.create",
+        "summary": "Create a partner level",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerLevelItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPartnerLevelCreateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners/levels/{levelId}": {
+      "patch": {
+        "operationId": "levels.update",
+        "summary": "Update a partner level",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerLevelItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPartnerLevelUpdateRequest"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "levelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Level id."
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "levels.delete",
+        "summary": "Delete a partner level",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "levelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Level id."
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/commission_config": {
+      "get": {
+        "operationId": "commissionConfig.retrieve",
+        "summary": "Retrieve the commission configuration",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionConfigItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "commissionConfig.update",
+        "summary": "Update the commission configuration",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionConfigItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCommissionConfigUpdateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners": {
+      "get": {
+        "operationId": "partner.list",
+        "summary": "List partners",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "ACTIVE",
+                "SUSPENDED",
+                "CLOSED"
+              ]
+            }
+          },
+          {
+            "name": "level_no",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "partner.create",
+        "summary": "Create a partner",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPartnerCreateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners/{partnerId}": {
+      "get": {
+        "operationId": "partner.retrieve",
+        "summary": "Retrieve a partner",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "partnerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Partner id."
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "partner.update",
+        "summary": "Update a partner",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPartnerUpdateRequest"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "partnerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Partner id."
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/{partnerId}/tree": {
+      "get": {
+        "operationId": "partner.tree.list",
+        "summary": "List the partner descendant tree",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerTreeListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "partnerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Partner id."
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/{partnerId}/ancestors": {
+      "get": {
+        "operationId": "partner.ancestors.list",
+        "summary": "List the partner ancestor chain",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerAncestorListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "partnerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Partner id."
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/{partnerId}/join_fee_payments": {
+      "get": {
+        "operationId": "joinFeePayments.list",
+        "summary": "List join fee payments of a partner",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinFeePaymentListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "partnerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Partner id."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "joinFeePayments.create",
+        "summary": "Record a join fee payment and trigger ancestor commission",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinFeePaymentItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminJoinFeePaymentCreateRequest"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "partnerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Partner id."
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/{partnerId}/customers": {
+      "get": {
+        "operationId": "customerBindings.list",
+        "summary": "List customer bindings of a partner",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerBindingListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "partnerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Partner id."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/customers": {
+      "post": {
+        "operationId": "customerBindings.create",
+        "summary": "Bind a customer to a partner",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerBindingItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCustomerBindRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners/customers/{bindingId}": {
+      "delete": {
+        "operationId": "customerBindings.delete",
+        "summary": "Unbind a customer from a partner",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bindingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Binding id."
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/commission_events": {
+      "get": {
+        "operationId": "commissionEvents.list",
+        "summary": "List commission revenue events",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionEventListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "SETTLED",
+                "SKIPPED",
+                "FAILED"
+              ]
+            }
+          },
+          {
+            "name": "source_type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "USAGE_SETTLEMENT",
+                "RECHARGE",
+                "MANUAL"
+              ]
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "commissionEvents.create",
+        "summary": "Create a manual commission revenue event",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionEventItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCommissionEventCreateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners/settlements/run": {
+      "post": {
+        "operationId": "settlements.run",
+        "summary": "Run commission settlement for pending events",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementRunResultEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSettlementRunRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners/settlements": {
+      "get": {
+        "operationId": "settlements.list",
+        "summary": "List commission settlements",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "partner_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SETTLED",
+                "SKIPPED"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/{partnerId}/ledger": {
+      "get": {
+        "operationId": "ledgerEntries.list",
+        "summary": "List ledger entries of a partner",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerEntryListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "partnerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Partner id."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "entry_type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/ledger/adjustments": {
+      "post": {
+        "operationId": "ledgerEntries.create",
+        "summary": "Create a manual ledger adjustment",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerEntryItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLedgerAdjustmentRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners/withdrawals": {
+      "get": {
+        "operationId": "withdrawals.list",
+        "summary": "List withdrawal requests",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "partner_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED",
+                "PAID"
+              ]
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "withdrawals.create",
+        "summary": "Create a withdrawal request",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminWithdrawalCreateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners/withdrawals/{withdrawalId}/review": {
+      "patch": {
+        "operationId": "withdrawalReviews.update",
+        "summary": "Approve or reject a withdrawal request",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminWithdrawalReviewRequest"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "withdrawalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Withdrawal id."
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/withdrawals/{withdrawalId}/pay": {
+      "patch": {
+        "operationId": "withdrawalPayments.update",
+        "summary": "Mark an approved withdrawal as paid",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminWithdrawalPayRequest"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "withdrawalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Withdrawal id."
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/stats/overview": {
+      "get": {
+        "operationId": "statsOverview.list",
+        "summary": "Retrieve partner stats overview",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsOverviewItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/stats": {
+      "get": {
+        "operationId": "stats.list",
+        "summary": "List partner stats snapshots",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatSnapshotListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "partner_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "period_type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DAY",
+                "MONTH"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/{partnerId}/stats": {
+      "get": {
+        "operationId": "stats.retrieve",
+        "summary": "Retrieve a partner's aggregated stats",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerStatItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "partnerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Partner id."
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AuthToken": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "AccessToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Access-Token"
+      }
+    },
+    "schemas": {
+      "ProblemDetail": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "code",
+          "traceId"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PageInfo": {
+        "type": "object",
+        "required": [
+          "mode",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages",
+          "hasMore"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "offset"
+            ]
+          },
+          "page": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalItems": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SdkWorkApiResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PartnerLevelItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "levelNo",
+          "name",
+          "customerRevenueRatio",
+          "joinFeeCommissionRatio",
+          "joinFee",
+          "status",
+          "sortOrder"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Level id.",
+            "format": "int64"
+          },
+          "levelNo": {
+            "type": "integer",
+            "description": "Level number (1-based).",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "description": "Level name."
+          },
+          "customerRevenueRatio": {
+            "type": "string",
+            "description": "Customer revenue commission ratio (percent, e.g. 20.00)."
+          },
+          "joinFeeCommissionRatio": {
+            "type": "string",
+            "description": "Join fee commission ratio (percent, e.g. 10.00)."
+          },
+          "joinFee": {
+            "type": "string",
+            "description": "Join fee amount for this level."
+          },
+          "status": {
+            "type": "string",
+            "description": "Level status.",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          },
+          "sortOrder": {
+            "type": "integer",
+            "description": "Display sort order.",
+            "format": "int32"
+          }
+        }
+      },
+      "PartnerLevelListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/PartnerLevelItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PartnerLevelItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/PartnerLevelItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminPartnerLevelCreateRequest": {
+        "type": "object",
+        "required": [
+          "levelNo",
+          "name",
+          "customerRevenueRatio",
+          "joinFeeCommissionRatio",
+          "joinFee"
+        ],
+        "properties": {
+          "levelNo": {
+            "type": "integer",
+            "description": "Level number (1-based).",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "description": "Level name."
+          },
+          "customerRevenueRatio": {
+            "type": "string",
+            "description": "Customer revenue commission ratio (percent)."
+          },
+          "joinFeeCommissionRatio": {
+            "type": "string",
+            "description": "Join fee commission ratio (percent)."
+          },
+          "joinFee": {
+            "type": "string",
+            "description": "Join fee amount."
+          },
+          "sortOrder": {
+            "type": "integer",
+            "description": "Display sort order.",
+            "format": "int32"
+          }
+        }
+      },
+      "AdminPartnerLevelUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "customerRevenueRatio",
+          "joinFeeCommissionRatio",
+          "joinFee",
+          "status"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Level name."
+          },
+          "customerRevenueRatio": {
+            "type": "string",
+            "description": "Customer revenue commission ratio (percent)."
+          },
+          "joinFeeCommissionRatio": {
+            "type": "string",
+            "description": "Join fee commission ratio (percent)."
+          },
+          "joinFee": {
+            "type": "string",
+            "description": "Join fee amount."
+          },
+          "status": {
+            "type": "string",
+            "description": "Level status.",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          },
+          "sortOrder": {
+            "type": "integer",
+            "description": "Display sort order.",
+            "format": "int32"
+          }
+        }
+      },
+      "CommissionConfigItem": {
+        "type": "object",
+        "required": [
+          "enabled",
+          "usageSettlementEnabled",
+          "rechargeEnabled",
+          "maxCommissionDepth",
+          "currency",
+          "minWithdrawalAmount"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Global commission settlement toggle."
+          },
+          "usageSettlementEnabled": {
+            "type": "boolean",
+            "description": "Commission on usage settlement revenue."
+          },
+          "rechargeEnabled": {
+            "type": "boolean",
+            "description": "Commission on recharge revenue."
+          },
+          "maxCommissionDepth": {
+            "type": "integer",
+            "description": "Max ancestor depth for commission (0 = unlimited).",
+            "format": "int64"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Commission currency code."
+          },
+          "minWithdrawalAmount": {
+            "type": "string",
+            "description": "Minimum withdrawal amount."
+          }
+        }
+      },
+      "CommissionConfigItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/CommissionConfigItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminCommissionConfigUpdateRequest": {
+        "type": "object",
+        "required": [
+          "enabled",
+          "usageSettlementEnabled",
+          "rechargeEnabled",
+          "maxCommissionDepth",
+          "currency",
+          "minWithdrawalAmount"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Global commission settlement toggle."
+          },
+          "usageSettlementEnabled": {
+            "type": "boolean",
+            "description": "Commission on usage settlement revenue."
+          },
+          "rechargeEnabled": {
+            "type": "boolean",
+            "description": "Commission on recharge revenue."
+          },
+          "maxCommissionDepth": {
+            "type": "integer",
+            "description": "Max ancestor depth (0 = unlimited).",
+            "format": "int64"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Commission currency code."
+          },
+          "minWithdrawalAmount": {
+            "type": "string",
+            "description": "Minimum withdrawal amount."
+          }
+        }
+      },
+      "PartnerItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "uuid",
+          "name",
+          "contactName",
+          "phone",
+          "email",
+          "levelNo",
+          "userAccountId",
+          "status",
+          "joinFeeAmount",
+          "joinFeeStatus",
+          "ownerId",
+          "remark",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Partner uuid."
+          },
+          "name": {
+            "type": "string",
+            "description": "Partner display name."
+          },
+          "contactName": {
+            "type": "string",
+            "description": "Contact name."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Contact phone."
+          },
+          "email": {
+            "type": "string",
+            "description": "Contact email."
+          },
+          "levelNo": {
+            "type": "integer",
+            "description": "Partner level number.",
+            "format": "int32"
+          },
+          "parentPartnerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Parent partner id (null = top level).",
+            "format": "int64"
+          },
+          "userAccountId": {
+            "type": "integer",
+            "description": "Bound IAM user account id.",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "description": "Partner status.",
+            "enum": [
+              "PENDING",
+              "ACTIVE",
+              "SUSPENDED",
+              "CLOSED"
+            ]
+          },
+          "joinFeeAmount": {
+            "type": "string",
+            "description": "Recorded join fee amount."
+          },
+          "joinFeeStatus": {
+            "type": "string",
+            "description": "Join fee status.",
+            "enum": [
+              "UNPAID",
+              "PAID"
+            ]
+          },
+          "joinedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Join timestamp."
+          },
+          "ownerId": {
+            "type": "integer",
+            "description": "Operator id that created the partner.",
+            "format": "int64"
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created timestamp."
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Updated timestamp."
+          }
+        }
+      },
+      "PartnerListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/PartnerItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PartnerItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/PartnerItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminPartnerCreateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "levelNo",
+          "userAccountId"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Partner display name."
+          },
+          "contactName": {
+            "type": "string",
+            "description": "Contact name."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Contact phone."
+          },
+          "email": {
+            "type": "string",
+            "description": "Contact email."
+          },
+          "levelNo": {
+            "type": "integer",
+            "description": "Partner level number.",
+            "format": "int32"
+          },
+          "parentPartnerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Parent partner id (null = top level).",
+            "format": "int64"
+          },
+          "userAccountId": {
+            "type": "integer",
+            "description": "Bound IAM user account id.",
+            "format": "int64"
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          }
+        }
+      },
+      "AdminPartnerUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "levelNo",
+          "status"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Partner display name."
+          },
+          "contactName": {
+            "type": "string",
+            "description": "Contact name."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Contact phone."
+          },
+          "email": {
+            "type": "string",
+            "description": "Contact email."
+          },
+          "levelNo": {
+            "type": "integer",
+            "description": "Partner level number.",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "description": "Partner status.",
+            "enum": [
+              "PENDING",
+              "ACTIVE",
+              "SUSPENDED",
+              "CLOSED"
+            ]
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          }
+        }
+      },
+      "PartnerTreeItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "levelNo",
+          "status",
+          "children"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "Partner display name."
+          },
+          "levelNo": {
+            "type": "integer",
+            "description": "Partner level number.",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "description": "Partner status."
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartnerTreeItem"
+            }
+          }
+        }
+      },
+      "PartnerTreeListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/PartnerTreeItem"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PartnerAncestorItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "levelNo",
+          "status",
+          "levelOffset"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "Partner display name."
+          },
+          "levelNo": {
+            "type": "integer",
+            "description": "Partner level number.",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "description": "Partner status."
+          },
+          "levelOffset": {
+            "type": "integer",
+            "description": "0 = the partner itself, 1 = direct parent, ...",
+            "format": "int32"
+          }
+        }
+      },
+      "PartnerAncestorListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/PartnerAncestorItem"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "JoinFeePaymentItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "partnerId",
+          "amount",
+          "currency",
+          "status",
+          "paymentMethod",
+          "remark",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Payment id.",
+            "format": "int64"
+          },
+          "partnerId": {
+            "type": "integer",
+            "description": "Paying partner id.",
+            "format": "int64"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Join fee amount."
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code."
+          },
+          "status": {
+            "type": "string",
+            "description": "Payment status.",
+            "enum": [
+              "PAID",
+              "REFUNDED"
+            ]
+          },
+          "paymentMethod": {
+            "type": "string",
+            "description": "Payment method."
+          },
+          "paidAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Paid timestamp."
+          },
+          "paidBy": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Operator id that recorded the payment.",
+            "format": "int64"
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created timestamp."
+          }
+        }
+      },
+      "JoinFeePaymentListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/JoinFeePaymentItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "JoinFeePaymentItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/JoinFeePaymentItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminJoinFeePaymentCreateRequest": {
+        "type": "object",
+        "required": [
+          "amount"
+        ],
+        "properties": {
+          "amount": {
+            "type": "string",
+            "description": "Join fee amount paid."
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code (default CNY)."
+          },
+          "paymentMethod": {
+            "type": "string",
+            "description": "Payment method."
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          }
+        }
+      },
+      "CustomerBindingItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "partnerId",
+          "customerUserId",
+          "bindingType",
+          "status",
+          "boundAt",
+          "boundBy",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Binding id.",
+            "format": "int64"
+          },
+          "partnerId": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "customerUserId": {
+            "type": "integer",
+            "description": "Customer (IAM user) id.",
+            "format": "int64"
+          },
+          "bindingType": {
+            "type": "string",
+            "description": "Binding type.",
+            "enum": [
+              "ADMIN_BIND"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "Binding status.",
+            "enum": [
+              "ACTIVE",
+              "UNBOUND"
+            ]
+          },
+          "boundAt": {
+            "type": "string",
+            "description": "Bound timestamp."
+          },
+          "boundBy": {
+            "type": "integer",
+            "description": "Operator id that bound the customer.",
+            "format": "int64"
+          },
+          "unboundAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Unbound timestamp."
+          },
+          "unboundBy": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Operator id that unbound the customer.",
+            "format": "int64"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created timestamp."
+          }
+        }
+      },
+      "CustomerBindingListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/CustomerBindingItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CustomerBindingItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/CustomerBindingItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminCustomerBindRequest": {
+        "type": "object",
+        "required": [
+          "partnerId",
+          "customerUserId"
+        ],
+        "properties": {
+          "partnerId": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "customerUserId": {
+            "type": "integer",
+            "description": "Customer (IAM user) id.",
+            "format": "int64"
+          },
+          "bindingType": {
+            "type": "string",
+            "description": "Binding type (default ADMIN_BIND).",
+            "enum": [
+              "ADMIN_BIND"
+            ]
+          }
+        }
+      },
+      "CommissionEventItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "sourceType",
+          "sourceRef",
+          "customerUserId",
+          "baseAmount",
+          "eventAt",
+          "status",
+          "remark",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Event id.",
+            "format": "int64"
+          },
+          "sourceType": {
+            "type": "string",
+            "description": "Revenue source type.",
+            "enum": [
+              "USAGE_SETTLEMENT",
+              "RECHARGE",
+              "MANUAL"
+            ]
+          },
+          "sourceRef": {
+            "type": "string",
+            "description": "Source reference (unique per source type)."
+          },
+          "customerUserId": {
+            "type": "integer",
+            "description": "Customer (IAM user) id.",
+            "format": "int64"
+          },
+          "baseAmount": {
+            "type": "string",
+            "description": "Commissionable base amount."
+          },
+          "eventAt": {
+            "type": "string",
+            "description": "Revenue event timestamp."
+          },
+          "status": {
+            "type": "string",
+            "description": "Event status.",
+            "enum": [
+              "PENDING",
+              "SETTLED",
+              "SKIPPED",
+              "FAILED"
+            ]
+          },
+          "settledAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Settled timestamp."
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created timestamp."
+          }
+        }
+      },
+      "CommissionEventListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/CommissionEventItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CommissionEventItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/CommissionEventItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminCommissionEventCreateRequest": {
+        "type": "object",
+        "required": [
+          "sourceRef",
+          "customerUserId",
+          "baseAmount"
+        ],
+        "properties": {
+          "sourceRef": {
+            "type": "string",
+            "description": "Source reference (unique for MANUAL events)."
+          },
+          "customerUserId": {
+            "type": "integer",
+            "description": "Customer (IAM user) id.",
+            "format": "int64"
+          },
+          "baseAmount": {
+            "type": "string",
+            "description": "Commissionable base amount."
+          },
+          "eventAt": {
+            "type": "string",
+            "description": "Revenue event timestamp (default now)."
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          }
+        }
+      },
+      "SettlementRunResult": {
+        "type": "object",
+        "required": [
+          "processed",
+          "settled",
+          "skipped",
+          "failed"
+        ],
+        "properties": {
+          "processed": {
+            "type": "integer",
+            "description": "Events processed in the batch.",
+            "format": "int64"
+          },
+          "settled": {
+            "type": "integer",
+            "description": "Events settled with distributions.",
+            "format": "int64"
+          },
+          "skipped": {
+            "type": "integer",
+            "description": "Events skipped (no active binding or no allocation).",
+            "format": "int64"
+          },
+          "failed": {
+            "type": "integer",
+            "description": "Events that failed during settlement.",
+            "format": "int64"
+          }
+        }
+      },
+      "SettlementRunResultEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/SettlementRunResult"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminSettlementRunRequest": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Max events to process in this run (default 100).",
+            "format": "int64"
+          }
+        }
+      },
+      "SettlementItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "eventId",
+          "baseAmount",
+          "distributedAmount",
+          "receiverCount",
+          "status",
+          "computedAt",
+          "remark",
+          "distributions"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Settlement id.",
+            "format": "int64"
+          },
+          "eventId": {
+            "type": "integer",
+            "description": "Commission event id (0 = join-fee batch).",
+            "format": "int64"
+          },
+          "baseAmount": {
+            "type": "string",
+            "description": "Base amount."
+          },
+          "distributedAmount": {
+            "type": "string",
+            "description": "Total distributed amount."
+          },
+          "receiverCount": {
+            "type": "integer",
+            "description": "Receiver count.",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "description": "Settlement status.",
+            "enum": [
+              "SETTLED",
+              "SKIPPED"
+            ]
+          },
+          "computedAt": {
+            "type": "string",
+            "description": "Computed timestamp."
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          },
+          "distributions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DistributionItem"
+            }
+          }
+        }
+      },
+      "SettlementListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SettlementItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "DistributionItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "settlementId",
+          "receiverPartnerId",
+          "levelOffset",
+          "ratio",
+          "baseAmount",
+          "amount",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Distribution id.",
+            "format": "int64"
+          },
+          "settlementId": {
+            "type": "integer",
+            "description": "Settlement id.",
+            "format": "int64"
+          },
+          "receiverPartnerId": {
+            "type": "integer",
+            "description": "Receiving partner id.",
+            "format": "int64"
+          },
+          "levelOffset": {
+            "type": "integer",
+            "description": "0 = revenue owner, 1 = direct parent, ...",
+            "format": "int32"
+          },
+          "ratio": {
+            "type": "string",
+            "description": "Applied ratio (percent)."
+          },
+          "baseAmount": {
+            "type": "string",
+            "description": "Base amount."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Distributed amount."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created timestamp."
+          }
+        }
+      },
+      "LedgerEntryItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "partnerId",
+          "entryType",
+          "direction",
+          "amount",
+          "balanceAfter",
+          "refType",
+          "operatorId",
+          "remark",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Entry id.",
+            "format": "int64"
+          },
+          "partnerId": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "entryType": {
+            "type": "string",
+            "description": "Entry type.",
+            "enum": [
+              "JOIN_FEE_PAYMENT",
+              "JOIN_FEE_COMMISSION",
+              "REVENUE_COMMISSION",
+              "WITHDRAWAL_APPLY",
+              "WITHDRAWAL_REJECT",
+              "WITHDRAWAL_PAID",
+              "MANUAL_ADJUST"
+            ]
+          },
+          "direction": {
+            "type": "string",
+            "description": "Balance direction.",
+            "enum": [
+              "IN",
+              "OUT"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "description": "Entry amount."
+          },
+          "balanceAfter": {
+            "type": "string",
+            "description": "Available balance after the entry."
+          },
+          "refType": {
+            "type": "string",
+            "description": "Reference type."
+          },
+          "refId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Reference id.",
+            "format": "int64"
+          },
+          "operatorId": {
+            "type": "integer",
+            "description": "Operator id.",
+            "format": "int64"
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created timestamp."
+          }
+        }
+      },
+      "LedgerEntryListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/LedgerEntryItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "LedgerEntryItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/LedgerEntryItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminLedgerAdjustmentRequest": {
+        "type": "object",
+        "required": [
+          "partnerId",
+          "amount",
+          "remark"
+        ],
+        "properties": {
+          "partnerId": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Adjustment amount (positive credits, negative debits)."
+          },
+          "remark": {
+            "type": "string",
+            "description": "Adjustment reason (required)."
+          }
+        }
+      },
+      "WithdrawalItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "partnerId",
+          "amount",
+          "status",
+          "reviewRemark",
+          "remark",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Withdrawal id.",
+            "format": "int64"
+          },
+          "partnerId": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Withdrawal amount."
+          },
+          "status": {
+            "type": "string",
+            "description": "Withdrawal status.",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "PAID"
+            ]
+          },
+          "reviewedBy": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Reviewer operator id.",
+            "format": "int64"
+          },
+          "reviewedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reviewed timestamp."
+          },
+          "reviewRemark": {
+            "type": "string",
+            "description": "Review remark."
+          },
+          "paidAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Paid timestamp."
+          },
+          "paidBy": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Paying operator id.",
+            "format": "int64"
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created timestamp."
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Updated timestamp."
+          }
+        }
+      },
+      "WithdrawalListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/WithdrawalItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "WithdrawalItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/WithdrawalItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminWithdrawalCreateRequest": {
+        "type": "object",
+        "required": [
+          "partnerId",
+          "amount"
+        ],
+        "properties": {
+          "partnerId": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Withdrawal amount."
+          },
+          "remark": {
+            "type": "string",
+            "description": "Remark."
+          }
+        }
+      },
+      "AdminWithdrawalReviewRequest": {
+        "type": "object",
+        "required": [
+          "approve"
+        ],
+        "properties": {
+          "approve": {
+            "type": "boolean",
+            "description": "true approves, false rejects."
+          },
+          "reviewRemark": {
+            "type": "string",
+            "description": "Review remark."
+          }
+        }
+      },
+      "AdminWithdrawalPayRequest": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "remark": {
+            "type": "string",
+            "description": "Payment remark."
+          }
+        }
+      },
+      "StatsOverviewItem": {
+        "type": "object",
+        "required": [
+          "totalPartners",
+          "activePartners",
+          "totalJoinFee",
+          "totalCommission",
+          "pendingWithdrawalCount",
+          "pendingWithdrawalAmount"
+        ],
+        "properties": {
+          "totalPartners": {
+            "type": "integer",
+            "description": "Total partner count.",
+            "format": "int64"
+          },
+          "activePartners": {
+            "type": "integer",
+            "description": "Active partner count.",
+            "format": "int64"
+          },
+          "totalJoinFee": {
+            "type": "string",
+            "description": "Total recorded join fees."
+          },
+          "totalCommission": {
+            "type": "string",
+            "description": "Total earned commission."
+          },
+          "pendingWithdrawalCount": {
+            "type": "integer",
+            "description": "Pending withdrawal count.",
+            "format": "int64"
+          },
+          "pendingWithdrawalAmount": {
+            "type": "string",
+            "description": "Pending withdrawal amount."
+          }
+        }
+      },
+      "StatsOverviewItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/StatsOverviewItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "StatSnapshotItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "partnerId",
+          "periodStart",
+          "periodEnd",
+          "periodType",
+          "joinFeeTotal",
+          "customerCount",
+          "revenueBase",
+          "commissionEarned",
+          "downstreamPartnerCount"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Snapshot id.",
+            "format": "int64"
+          },
+          "partnerId": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "periodStart": {
+            "type": "string",
+            "description": "Period start."
+          },
+          "periodEnd": {
+            "type": "string",
+            "description": "Period end."
+          },
+          "periodType": {
+            "type": "string",
+            "description": "Period type.",
+            "enum": [
+              "DAY",
+              "MONTH"
+            ]
+          },
+          "joinFeeTotal": {
+            "type": "string",
+            "description": "Join fees in the period."
+          },
+          "customerCount": {
+            "type": "integer",
+            "description": "Bound customer count.",
+            "format": "int64"
+          },
+          "revenueBase": {
+            "type": "string",
+            "description": "Commissionable revenue base."
+          },
+          "commissionEarned": {
+            "type": "string",
+            "description": "Commission earned."
+          },
+          "downstreamPartnerCount": {
+            "type": "integer",
+            "description": "Downstream partner count.",
+            "format": "int64"
+          }
+        }
+      },
+      "StatSnapshotListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StatSnapshotItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PartnerStatItem": {
+        "type": "object",
+        "required": [
+          "partnerId",
+          "totalJoinFee",
+          "totalCommission",
+          "availableBalance",
+          "withdrawingAmount",
+          "withdrawnAmount",
+          "customerCount",
+          "downstreamPartnerCount"
+        ],
+        "properties": {
+          "partnerId": {
+            "type": "integer",
+            "description": "Partner id.",
+            "format": "int64"
+          },
+          "totalJoinFee": {
+            "type": "string",
+            "description": "Total paid join fees."
+          },
+          "totalCommission": {
+            "type": "string",
+            "description": "Total earned commission."
+          },
+          "availableBalance": {
+            "type": "string",
+            "description": "Available wallet balance."
+          },
+          "withdrawingAmount": {
+            "type": "string",
+            "description": "Funds frozen by pending withdrawals."
+          },
+          "withdrawnAmount": {
+            "type": "string",
+            "description": "Total withdrawn amount."
+          },
+          "customerCount": {
+            "type": "integer",
+            "description": "Active bound customer count.",
+            "format": "int64"
+          },
+          "downstreamPartnerCount": {
+            "type": "integer",
+            "description": "Downstream partner count.",
+            "format": "int64"
+          }
+        }
+      },
+      "PartnerStatItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/PartnerStatItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "responses": {
+      "PartnerLevelListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PartnerLevelListEnvelope"
+            }
+          }
+        }
+      },
+      "PartnerLevelItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PartnerLevelItemEnvelope"
+            }
+          }
+        }
+      },
+      "CommissionConfigItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CommissionConfigItemEnvelope"
+            }
+          }
+        }
+      },
+      "PartnerListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PartnerListEnvelope"
+            }
+          }
+        }
+      },
+      "PartnerItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PartnerItemEnvelope"
+            }
+          }
+        }
+      },
+      "PartnerTreeListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PartnerTreeListEnvelope"
+            }
+          }
+        }
+      },
+      "PartnerAncestorListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PartnerAncestorListEnvelope"
+            }
+          }
+        }
+      },
+      "JoinFeePaymentListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/JoinFeePaymentListEnvelope"
+            }
+          }
+        }
+      },
+      "JoinFeePaymentItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/JoinFeePaymentItemEnvelope"
+            }
+          }
+        }
+      },
+      "CustomerBindingListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CustomerBindingListEnvelope"
+            }
+          }
+        }
+      },
+      "CustomerBindingItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CustomerBindingItemEnvelope"
+            }
+          }
+        }
+      },
+      "CommissionEventListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CommissionEventListEnvelope"
+            }
+          }
+        }
+      },
+      "CommissionEventItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CommissionEventItemEnvelope"
+            }
+          }
+        }
+      },
+      "SettlementRunResultEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SettlementRunResultEnvelope"
+            }
+          }
+        }
+      },
+      "SettlementListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SettlementListEnvelope"
+            }
+          }
+        }
+      },
+      "LedgerEntryListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/LedgerEntryListEnvelope"
+            }
+          }
+        }
+      },
+      "LedgerEntryItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/LedgerEntryItemEnvelope"
+            }
+          }
+        }
+      },
+      "WithdrawalListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/WithdrawalListEnvelope"
+            }
+          }
+        }
+      },
+      "WithdrawalItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/WithdrawalItemEnvelope"
+            }
+          }
+        }
+      },
+      "StatsOverviewItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StatsOverviewItemEnvelope"
+            }
+          }
+        }
+      },
+      "StatSnapshotListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StatSnapshotListEnvelope"
+            }
+          }
+        }
+      },
+      "PartnerStatItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PartnerStatItemEnvelope"
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-api-prefix": "/backend/v3/api",
+  "x-sdk-client": "SdkworkPartnerBackendClient",
+  "x-sdk-family": "sdkwork-partner-backend-sdk"
+}

@@ -27,50 +27,50 @@ const HTTP_ROUTES: &[HttpRoute] = &[
     ),
     read(
         HttpMethod::Get,
-        "/backend/v3/api/partners/commission-config",
+        "/backend/v3/api/partners/commission_config",
         "commissionConfig.retrieve",
     ),
     manage(
         HttpMethod::Patch,
-        "/backend/v3/api/partners/commission-config",
+        "/backend/v3/api/partners/commission_config",
         "commissionConfig.update",
     ),
     // Partners
-    read(HttpMethod::Get, "/backend/v3/api/partners", "partners.list"),
+    read(HttpMethod::Get, "/backend/v3/api/partners", "partner.list"),
     manage(
         HttpMethod::Post,
         "/backend/v3/api/partners",
-        "partners.create",
+        "partner.create",
     ),
     read(
         HttpMethod::Get,
         "/backend/v3/api/partners/{partnerId}",
-        "partners.retrieve",
+        "partner.retrieve",
     ),
     manage(
         HttpMethod::Patch,
         "/backend/v3/api/partners/{partnerId}",
-        "partners.update",
+        "partner.update",
     ),
     read(
         HttpMethod::Get,
         "/backend/v3/api/partners/{partnerId}/tree",
-        "partners.tree.list",
+        "partner.tree.list",
     ),
     read(
         HttpMethod::Get,
         "/backend/v3/api/partners/{partnerId}/ancestors",
-        "partners.ancestors.list",
+        "partner.ancestors.list",
     ),
     // Join fees
     read(
         HttpMethod::Get,
-        "/backend/v3/api/partners/{partnerId}/join-fee-payments",
+        "/backend/v3/api/partners/{partnerId}/join_fee_payments",
         "joinFeePayments.list",
     ),
     manage(
         HttpMethod::Post,
-        "/backend/v3/api/partners/{partnerId}/join-fee-payments",
+        "/backend/v3/api/partners/{partnerId}/join_fee_payments",
         "joinFeePayments.create",
     ),
     // Customer bindings
@@ -92,13 +92,13 @@ const HTTP_ROUTES: &[HttpRoute] = &[
     // Commission events & settlements
     read(
         HttpMethod::Get,
-        "/backend/v3/api/partners/commission-events",
+        "/backend/v3/api/partners/commission_events",
         "commissionEvents.list",
     ),
     manage(
         HttpMethod::Post,
-        "/backend/v3/api/partners/commission-events",
-        "commissionEvents.createManual",
+        "/backend/v3/api/partners/commission_events",
+        "commissionEvents.create",
     ),
     manage(
         HttpMethod::Post,
@@ -119,7 +119,7 @@ const HTTP_ROUTES: &[HttpRoute] = &[
     manage(
         HttpMethod::Post,
         "/backend/v3/api/partners/ledger/adjustments",
-        "ledgerEntries.adjust",
+        "ledgerEntries.create",
     ),
     // Withdrawals
     read(
@@ -135,18 +135,18 @@ const HTTP_ROUTES: &[HttpRoute] = &[
     manage(
         HttpMethod::Patch,
         "/backend/v3/api/partners/withdrawals/{withdrawalId}/review",
-        "withdrawals.review",
+        "withdrawalReviews.update",
     ),
     manage(
         HttpMethod::Patch,
         "/backend/v3/api/partners/withdrawals/{withdrawalId}/pay",
-        "withdrawals.pay",
+        "withdrawalPayments.update",
     ),
     // Stats
     read(
         HttpMethod::Get,
         "/backend/v3/api/partners/stats/overview",
-        "stats.overview",
+        "statsOverview.list",
     ),
     read(
         HttpMethod::Get,

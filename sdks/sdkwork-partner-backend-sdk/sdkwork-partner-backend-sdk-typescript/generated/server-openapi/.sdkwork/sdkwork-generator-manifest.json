@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 1,
+  "generator": "@sdkwork/sdk-generator",
+  "sdk": {
+    "name": "sdkwork-partner-backend-sdk",
+    "version": "0.1.0",
+    "language": "typescript",
+    "sdkType": "backend",
+    "protocol": "http",
+    "packageName": "sdkwork-partner-backend-sdk-generated-typescript"
+  },
+  "generatedFiles": [
+    {
+      "path": "bin/publish-core.mjs",
+      "sha256": "98ad0918a78bfbe22bf8f12fec709b0bed545b9e01edd40f5e4abf31a23378a5"
+    },
+    {
+      "path": "bin/publish.ps1",
+      "sha256": "78c6419400b988409d9393c2ecd85aa02dd6760f73edb3cc84cb28fefc51b41e"
+    },
+    {
+      "path": "bin/publish.sh",
+      "sha256": "899087c23e670b6951a12a13490fd557f761c96d78fabfb7e58a37e367db889f"
+    },
+    {
+      "path": "bin/sdk-gen.bat",
+      "sha256": "1fa0948b506e5deecf73be9371db39a042e48555d018292334fa0004a897fcbe"
+    },
+    {
+      "path": "bin/sdk-gen.sh",
+      "sha256": "215c7192b3f5891efebd79d6e2938a520ac6c9c6eb6b64979371c1ee7a58fd3d"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "fb941a0806986a54fc192f98a98f6d9c282b8d350b2b19a3e71dda404e92d545"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "7840cc7d2b36ff364ac16c2fc5ec15b861bfe96854eecf81fb59b00edb8b1447"
+    },
+    {
+      "path": "package.json",
+      "sha256": "6e516583f9a5f83c97aafd3c1de687bbaa64a8f64797e644ce2013b4154330ca"
+    },
+    {
+      "path": "README.md",
+      "sha256": "e3730b6a2c82078b8b77c2de4d907f68073466f2e344e467801a7d566fa810c1"
+    },
+    {
+      "path": "sdkwork-sdk.json",
+      "sha256": "22c289ee0eaddc25f11a9a5387925fa797c75771969e7facc81683bf64f6ab53"
+    },
+    {
+      "path": "src/api/base.ts",
+      "sha256": "02ad25e6bf331ff241ba387c2947ddf1900dd849038e08c2757416a3aa788a04"
+    },
+    {
+      "path": "src/api/index.ts",
+      "sha256": "895e9e7062d7db465c327b318f8ebc8d4fd2361792f8cef267db5a84ca79eaab"
+    },
+    {
+      "path": "src/api/partners.ts",
+      "sha256": "eb8dd1b9d59a364278ed582c4a548ebf383e4fa2781fc4bd3b2e400a907e575f"
+    },
+    {
+      "path": "src/api/paths.ts",
+      "sha256": "fb06a3db13e96bb5b349ddc1831aa6d350c17b09d05ea92a36438131140f666e"
+    },
+    {
+      "path": "src/auth/index.ts",
+      "sha256": "657fc63738bdcd61d83133120732a477dd127448cf2c51229b05d21f5e1f5c04"
+    },
+    {
+      "path": "src/http/client.ts",
+      "sha256": "8a0a4cb9cc3cb855091ccd790e99feb9b9beff7637db48869173393ab544b9af"
+    },
+    {
+      "path": "src/http/index.ts",
+      "sha256": "fc204fbe89750b9d25ecaffe41003e6ac243a1a895b65e65856202ab825d2dbe"
+    },
+    {
+      "path": "src/index.ts",
+      "sha256": "3a4a3f9c5ce1c5bf55baf261e7b648091cbef7ba2c30ea402dd15f3f37820956"
+    },
+    {
+      "path": "src/sdk.ts",
+      "sha256": "af4ec70069bc9183e850d12509d4eb51748b6ed0e6e0e8daac41cbbb463e349f"
+    },
+    {
+      "path": "src/types/admin-commission-config-update-request.ts",
+      "sha256": "901d040cb12a7a28466264ddd51681f1edeb3cf54ab2be547c7a4feb3f981eb2"
+    },
+    {
+      "path": "src/types/admin-commission-event-create-request.ts",
+      "sha256": "7bafaf5b6e0b134ff2eb715e92e5708f74a56072dc7f9192b3ca359f88c42375"
+    },
+    {
+      "path": "src/types/admin-customer-bind-request.ts",
+      "sha256": "a6a8153059e36e11aae6f8e4187e4fc1a550a4d9bdc38d66a132260991b60ce8"
+    },
+    {
+      "path": "src/types/admin-join-fee-payment-create-request.ts",
+      "sha256": "5e4d0d3e8ee7c9f3ea37d9095403d9d21e2930d1cf7c875c4464763c207e0a82"
+    },
+    {
+      "path": "src/types/admin-ledger-adjustment-request.ts",
+      "sha256": "eccc7f0c78332bea4672c5ce71dbe808b2f6e6d90f05cb930e8307cea4481cf4"
+    },
+    {
+      "path": "src/types/admin-partner-create-request.ts",
+      "sha256": "bd8c29c1ed86588f5d345105a44577122b0f6186b5185234a9f34a49528b3398"
+    },
+    {
+      "path": "src/types/admin-partner-level-create-request.ts",
+      "sha256": "8906ea816a4a695c427b41ff2c9d37624d104bea585714b8e16385111e3fa488"
+    },
+    {
+      "path": "src/types/admin-partner-level-update-request.ts",
+      "sha256": "6627f2a38f6b9baca739af1353caba537b4ccbe132bf922864d8ddc8623f161b"
+    },
+    {
+      "path": "src/types/admin-partner-update-request.ts",
+      "sha256": "1e68adfd9820adf7bc14a0f7cff7fc8ee4cc2f8e3ea12488a65947c0a8f58025"
+    },
+    {
+      "path": "src/types/admin-settlement-run-request.ts",
+      "sha256": "24191afd08f705d32c5b48efa22c3d348a2a2a56094cee71f219791f97a16bfc"
+    },
+    {
+      "path": "src/types/admin-withdrawal-create-request.ts",
+      "sha256": "0e1e74659310cbd835c7f044e95ddf04fb9fe1eb469f4011f49cfedaac9df8d3"
+    },
+    {
+      "path": "src/types/admin-withdrawal-pay-request.ts",
+      "sha256": "7be7b45d510a95e5950eba8c9cf5a4d09b6ad829760dd44f67f9180dcf5c18ee"
+    },
+    {
+      "path": "src/types/admin-withdrawal-review-request.ts",
+      "sha256": "f05c18a9c61480bd9ec79a34b539e4793a30605d046953567617ffdba7c32a04"
+    },
+    {
+      "path": "src/types/commission-config-item-envelope.ts",
+      "sha256": "ca8292946f51eed0d4ddbde939f486e3115819d72100d79bec327f4ea89b128b"
+    },
+    {
+      "path": "src/types/commission-config-item.ts",
+      "sha256": "be32fe0555b1210837dd643a2e1b04800dded5264cce45f848ee0fc129f374d5"
+    },
+    {
+      "path": "src/types/commission-event-item-envelope.ts",
+      "sha256": "42b99c1cfc3933f685bab2b2f4f585d418d2976ae4c0e61a780fc23c79040ed2"
+    },
+    {
+      "path": "src/types/commission-event-item.ts",
+      "sha256": "b58ba6d5d20874f7ccad23e79dd0221111bd91fc6f23ce8a439af5201f686582"
+    },
+    {
+      "path": "src/types/commission-event-list-envelope.ts",
+      "sha256": "5cfc69d1420b348867177bc4e797f33084e63d6bfb24d20e6cf0716690f89027"
+    },
+    {
+      "path": "src/types/common.ts",
+      "sha256": "351d721c3c6f48f4453f92276856105120d72eb8d2fa9cd28de8e3854bf10f6c"
+    },
+    {
+      "path": "src/types/customer-binding-item-envelope.ts",
+      "sha256": "f85420231c2d373af8b270c0b78c7480af6030aca1e1727db7b5f1a2574b6536"
+    },
+    {
+      "path": "src/types/customer-binding-item.ts",
+      "sha256": "ea964aab19ef9a43639808c71cdd0dcdef22a1705b2b549db9049a8911d29bfc"
+    },
+    {
+      "path": "src/types/customer-binding-list-envelope.ts",
+      "sha256": "8a61e183311ed00c329281a798e6ac94fd6417a9bc2f434b64a17e5ec1a33448"
+    },
+    {
+      "path": "src/types/distribution-item.ts",
+      "sha256": "074663cf2f7f93b2cfc42c2609e9fe0a7bf1583bdffd8a5a1c74509caa7d6ce2"
+    },
+    {
+      "path": "src/types/index.ts",
+      "sha256": "ab5f9bdecf39400d3edd7e93dbb86e51de88883253dff539485f0249a1f66d03"
+    },
+    {
+      "path": "src/types/join-fee-payment-item-envelope.ts",
+      "sha256": "213efdc462ba8962b366da2b06930e4023527cfeaeeae469375503a9fbd0d9b5"
+    },
+    {
+      "path": "src/types/join-fee-payment-item.ts",
+      "sha256": "9f492796833734c2eab09f01ebcb8be2611affda7b687e466828a69a29c8de05"
+    },
+    {
+      "path": "src/types/join-fee-payment-list-envelope.ts",
+      "sha256": "2f58f26ef9182f9b9ecac43c3ab0c2dbd1dd1fef28327f072dae56ae8714df64"
+    },
+    {
+      "path": "src/types/ledger-entry-item-envelope.ts",
+      "sha256": "dd0771f9aedddfb7f43e3141dd2fa54d12ed81ef3585f1d6a2a5cf61ec147c93"
+    },
+    {
+      "path": "src/types/ledger-entry-item.ts",
+      "sha256": "b76a50c79b06e6c3bf34fe1181506546b14a579bc17b7754470e986b26cdc746"
+    },
+    {
+      "path": "src/types/ledger-entry-list-envelope.ts",
+      "sha256": "0e234cc1fe6e379fd5828f15511dfdb2fdbb3c3c6facee192137ba2cc3d497d3"
+    },
+    {
+      "path": "src/types/page-info.ts",
+      "sha256": "0fd949c0f289e1c5e1162f5fbe4b185dcb57cb50b41403da913726f79145ce61"
+    },
+    {
+      "path": "src/types/partner-ancestor-item.ts",
+      "sha256": "3f32a34a944d29965ddcb210f11028c77bd2156172e4f7334dc0b6358c833399"
+    },
+    {
+      "path": "src/types/partner-ancestor-list-envelope.ts",
+      "sha256": "12362db8145e280727a58925784a02e75574300d090eb2370816a80ec370562f"
+    },
+    {
+      "path": "src/types/partner-item-envelope.ts",
+      "sha256": "ffe61e2de4d6f985164b0509b08504d0820a6028f1a8d80e845196de20085e26"
+    },
+    {
+      "path": "src/types/partner-item.ts",
+      "sha256": "1fdee78d84a2d24ede417673d931109563114cbcd022615e9ca4a625f6c4587d"
+    },
+    {
+      "path": "src/types/partner-level-item-envelope.ts",
+      "sha256": "e128fe0fb04364c2b0490ce0a47657176baa63f4b437d75569027665e545aeb2"
+    },
+    {
+      "path": "src/types/partner-level-item.ts",
+      "sha256": "91dabf208ed973f92631961e6111dd2e3d0fcf2911efb8e042c349922c18611d"
+    },
+    {
+      "path": "src/types/partner-level-list-envelope.ts",
+      "sha256": "f6fdb4d17f88d0ce23d5831b80d163e6e1ca2fdf9572133131a1bc2d3b2566ac"
+    },
+    {
+      "path": "src/types/partner-list-envelope.ts",
+      "sha256": "58a6c92721b0cd66610e109d6cba8b6a7efe340d49e6e930c032c681ceab670a"
+    },
+    {
+      "path": "src/types/partner-stat-item-envelope.ts",
+      "sha256": "933e6fdd2a868ccf94de109227e0576dabf567daafb1fcc9074fdf8cf6ff13ec"
+    },
+    {
+      "path": "src/types/partner-stat-item.ts",
+      "sha256": "9fdea0aaf0f5c5bf68165f84b97f29b136618facef2fc8a0c1b036644df6068b"
+    },
+    {
+      "path": "src/types/partner-tree-item.ts",
+      "sha256": "8208316734774208b9681dd1c9c6012a893e2a790de4f287afa4c043a0841841"
+    },
+    {
+      "path": "src/types/partner-tree-list-envelope.ts",
+      "sha256": "dcdb4d47b56bad05ed4661b579bc912b1a63ba3ba476f3540c36fb1898d372d6"
+    },
+    {
+      "path": "src/types/problem-detail.ts",
+      "sha256": "0a8cde29adcdcec871de1abc6d3b9964afb2c470506706b5f03c83e75015051e"
+    },
+    {
+      "path": "src/types/sdk-work-api-response.ts",
+      "sha256": "8e584b2088957d1ba02d0b8533403c4d3e35b7896857f90f71ce4b1beb0c4022"
+    },
+    {
+      "path": "src/types/settlement-item.ts",
+      "sha256": "abf00c8ae9452588a6e836f27b5f4961d37fb9b28cf59aafa85c812baf7e0071"
+    },
+    {
+      "path": "src/types/settlement-list-envelope.ts",
+      "sha256": "cfbd53126ccc3cb4196c22627453f6b6fb05bb78d86fe08c297f8267e44b49fb"
+    },
+    {
+      "path": "src/types/settlement-run-result-envelope.ts",
+      "sha256": "5c48f095460fbfbebb465309bd486aab5a760bd6039a94fea82244b0fa1c001d"
+    },
+    {
+      "path": "src/types/settlement-run-result.ts",
+      "sha256": "7b730c4363421d736bdd8373ac514d8e21a7a1701ae993b3c572d36b912d36f3"
+    },
+    {
+      "path": "src/types/stat-snapshot-item.ts",
+      "sha256": "4918d57885736c05ebfec0c965c07b2182dd1d702e63021fc6478cf24d323772"
+    },
+    {
+      "path": "src/types/stat-snapshot-list-envelope.ts",
+      "sha256": "a8c346e41ec541cf18bff976ff32c9f991c546396a6c45335047456a2ade4acf"
+    },
+    {
+      "path": "src/types/stats-overview-item-envelope.ts",
+      "sha256": "f92a559786111fc8b8ca2aa3aa40c9e82a454b0ddaf941854f80460465f132cc"
+    },
+    {
+      "path": "src/types/stats-overview-item.ts",
+      "sha256": "88c823323dc24dc0c0e92bbb97da26658be56375b6ce0359032b7eab88688445"
+    },
+    {
+      "path": "src/types/withdrawal-item-envelope.ts",
+      "sha256": "e5d5cebf75c1214be544f7c1403de5dda98c5935f2e983f93b8784cb132e10cd"
+    },
+    {
+      "path": "src/types/withdrawal-item.ts",
+      "sha256": "5ec3bc13d402466742f4aab90ed4de6c5ef79228110b9ecb131f4c432f6f57d6"
+    },
+    {
+      "path": "src/types/withdrawal-list-envelope.ts",
+      "sha256": "f76176d5e2a56415fd43d037290483286767c789ed8c2b5a78c03e13a140cbc8"
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "7c8a6c2b00fb208ec28e1e6045194487d1b3e563d6c44cef4783fd4fe0e8ffad"
+    }
+  ],
+  "scaffoldFiles": [
+    "custom/build-runtime.mjs",
+    "custom/README.md"
+  ],
+  "customRoots": [
+    "custom/"
+  ]
+}
