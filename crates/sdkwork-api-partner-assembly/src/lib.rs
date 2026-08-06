@@ -5,40 +5,38 @@
 mod bootstrap;
 mod generated;
 
-pub use bootstrap::{assemble_api_router, ApiAssembly};
+pub use bootstrap::{ApiAssembly, ApiAssemblyContext, assemble_api_router};
 
-use sdkwork_web_bootstrap::{ApiAssemblyContribution, ReadinessCheck};
+use sdkwork_partner_service_host::PartnerServiceHost;
 use sdkwork_web_core::DomainContextInjector;
 use std::sync::Arc;
 
 pub async fn assemble_backend_business_router(
-    host: Arc<sdkwork_partner_service_host::PartnerServiceHost>,
-) -> ApiAssembly {
-    let router = sdkwork_routes_partner_backend_api::gateway_mount_business(host).await;
-    let manifest = sdkwork_routes_partner_backend_api::gateway_route_manifest();
-    ApiAssemblyContribution::from_manifest(
-        "sdkwork-partner",
-        "SDKWork Partner Backend API",
-        router,
-        manifest,
-        Vec::<Arc<dyn DomainContextInjector>>::new(),
-        Arc::new(sdkwork_web_bootstrap::AlwaysReady) as Arc<dyn ReadinessCheck>,
-    )
-    .expect("partner backend route manifest is valid")
+    host: Arc<PartnerServiceHost>,
+) -> Result<bootstrap::ApiAssembly, String> {
+    let context = bootstrap::ApiAssemblyContext {
+        host,
+        domain_context_injectors: Vec::<Arc<dyn DomainContextInjector>>::new(),
+        readiness_check: Arc::new(sdkwork_web_bootstrap::AlwaysReady)
+            as Arc<dyn sdkwork_web_bootstrap::ReadinessCheck>,
+    };
+    bootstrap::assemble_backend_api_contribution(context).await
 }
 
 pub async fn assemble_api_router_from_env() -> Result<ApiAssembly, String> {
-    let host = Arc::new(
-        sdkwork_partner_service_host::PartnerServiceHost::from_env().await?,
-    );
-    Ok(assemble_api_router(host).await)
+    let host = Arc::new(PartnerServiceHost::from_env().await?);
+    let context = bootstrap::ApiAssemblyContext {
+        host,
+        domain_context_injectors: Vec::<Arc<dyn DomainContextInjector>>::new(),
+        readiness_check: Arc::new(sdkwork_web_bootstrap::AlwaysReady)
+            as Arc<dyn sdkwork_web_bootstrap::ReadinessCheck>,
+    };
+    assemble_api_router(context).await
 }
 
 pub async fn assemble_backend_business_router_from_env() -> Result<ApiAssembly, String> {
-    let host = Arc::new(
-        sdkwork_partner_service_host::PartnerServiceHost::from_env().await?,
-    );
-    Ok(assemble_backend_business_router(host).await)
+    let host = Arc::new(PartnerServiceHost::from_env().await?);
+    assemble_backend_business_router(host).await
 }
 
 pub fn assembly_route_count() -> usize {
