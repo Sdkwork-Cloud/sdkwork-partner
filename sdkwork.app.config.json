@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 3,
+  "kind": "sdkwork.app",
+  "app": {
+    "key": "sdkwork-partner-pc",
+    "name": "SDKWork Partner PC",
+    "displayName": "SDKWork Partner PC",
+    "description": "SDKWork Partner PC SDKWork application (multi-level partner/agent management center).",
+    "vendor": "SDKWork",
+    "appType": "APP_REACT",
+    "versionSource": "package.json",
+    "identifiers": {
+      "packageName": null,
+      "bundleId": null,
+      "desktopAppId": "com.sdkwork.sdkwork.partner.pc.desktop",
+      "containerImage": "registry.sdkwork.com/apps/sdkwork-partner-pc"
+    }
+  },
+  "backend": {
+    "profileKey": "backend-root-admin",
+    "ownerMode": "tenant",
+    "grantMode": "current",
+    "platform": "WEB",
+    "appId": "sdkwork-partner",
+    "organizationId": "0",
+    "tenantId": "100001",
+    "accessTokenPermissionScope": [
+      "commerce.partner.read",
+      "commerce.partner.manage",
+      "iam.users.read"
+    ]
+  },
+  "runtime": {
+    "family": "web",
+    "framework": "react",
+    "runtimes": [
+      "WEB",
+      "BROWSER"
+    ],
+    "deliveryModes": [
+      "WEB_URL",
+      "DIRECT_DOWNLOAD"
+    ],
+    "defaultPlatform": "WEB",
+    "defaultArchitecture": "x64",
+    "supportedDeploymentProfiles": [
+      "cloud",
+      "standalone"
+    ],
+    "defaultDeploymentProfile": "cloud"
+  },
+  "publish": {
+    "status": "ACTIVE",
+    "platforms": [
+      "WEB"
+    ],
+    "defaultPackageId": "web-universal-cloud-browser-zip",
+    "config": {
+      "workspaceRoot": ".",
+      "framework": "react",
+      "managedBy": "apps/scripts/initialize-sdkwork-app-standard-v3.mjs"
+    }
+  },
+  "security": {
+    "checksumRequired": false,
+    "signatureRequired": false,
+    "sbomRequired": true
+  },
+  "devApp": {
+    "build": {
+      "targets": []
+    },
+    "sourceRoot": "."
+  },
+  "metadata": {
+    "standardOwner": "sdkwork-partner",
+    "initializedAt": "2026-08-06T00:00:00Z"
+  }
+}

@@ -1,0 +1,22 @@
+# Rust
+/target
+Cargo.lock.orig
+
+# Node / pnpm
+node_modules/
+dist/
+.runtime/
+*.tsbuildinfo
+.vite/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+
+# Local environment
+.env
+.env.local
+.env.*.local

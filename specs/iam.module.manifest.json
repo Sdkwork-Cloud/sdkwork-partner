@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.iam.module",
+  "moduleId": "partner",
+  "catalogVersion": "1.0.0",
+  "domain": "partner",
+  "owner": "sdkwork-partner",
+  "displayName": "partner module",
+  "permissions": {
+    "catalog": [
+      {
+        "code": "commerce.partner.read",
+        "name": "Read partner management data",
+        "resource": "commerce.partner",
+        "action": "read",
+        "status": "active",
+        "since": "1.0.0",
+        "replacementCode": null
+      },
+      {
+        "code": "commerce.partner.manage",
+        "name": "Manage partners, levels, commission, and withdrawals",
+        "resource": "commerce.partner",
+        "action": "manage",
+        "status": "active",
+        "since": "1.0.0",
+        "replacementCode": null
+      }
+    ]
+  }
+}

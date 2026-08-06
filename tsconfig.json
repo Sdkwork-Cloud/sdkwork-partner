@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "apps/sdkwork-partner-common/packages/**/src/**/*.ts",
+    "apps/sdkwork-partner-pc/packages/**/src/**/*.ts",
+    "apps/sdkwork-partner-pc/packages/**/src/**/*.tsx",
+    "apps/sdkwork-partner-pc/src/**/*.ts",
+    "apps/sdkwork-partner-pc/src/**/*.tsx",
+    "apps/sdkwork-partner-pc/tests/**/*.ts",
+    "sdks/sdkwork-partner-backend-sdk/sdkwork-partner-backend-sdk-typescript/src/**/*.ts",
+    "sdks/sdkwork-partner-backend-sdk/sdkwork-partner-backend-sdk-typescript/src/**/*.tsx",
+    "tests/**/*.ts"
+  ]
+}

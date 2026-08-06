@@ -1,0 +1,62 @@
+{
+  "license": "AGPL-3.0-or-later",
+  "name": "sdkwork-partner-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "stop": "node ../sdkwork-specs/tools/stop-sdkwork-workspace-processes.mjs --workspace .",
+    "dev": "pnpm --dir apps/sdkwork-partner-pc dev",
+    "build": "pnpm --dir apps/sdkwork-partner-pc build",
+    "start": "cargo run -p sdkwork-api-partner-standalone-gateway --bin partner-server",
+    "test": "pnpm test:node && pnpm test:vitest && cargo test --workspace",
+    "test:node": "node --test --test-reporter=spec tests/static/placeholder.test.mjs",
+    "test:vitest": "vitest run --config vitest.config.ts --configLoader native --pool forks --maxWorkers 2",
+    "typecheck": "tsc --noEmit",
+    "verify": "pnpm typecheck && pnpm test:vitest && cargo test --workspace && pnpm run check:app-composition",
+    "format:rust:check": "cargo fmt --all -- --check",
+    "clean": "node -e \"require('fs').rmSync('apps/sdkwork-partner-pc/dist',{recursive:true,force:true}); require('fs').rmSync('.runtime/dev-sites',{recursive:true,force:true})\"",
+    "check": "pnpm run check:app-composition && pnpm db:validate && pnpm api:assembly:validate && pnpm format:rust:check",
+    "db:validate": "node ../sdkwork-specs/tools/check-database-framework-standard.mjs --root .",
+    "db:materialize:contract": "node ../sdkwork-specs/tools/materialize-database-contract-from-baseline.mjs --root . --baseline database/ddl/baseline/postgres/0001_partner_baseline.sql --module-id partner --owner sdkwork-partner --prefixes partner_ --engines postgres",
+    "db:plan": "cargo run --manifest-path ../sdkwork-database/Cargo.toml -p sdkwork-database-cli -- --app-root . plan",
+    "db:init": "cargo run --manifest-path ../sdkwork-database/Cargo.toml -p sdkwork-database-cli -- --app-root . init",
+    "db:migrate": "cargo run --manifest-path ../sdkwork-database/Cargo.toml -p sdkwork-database-cli -- --app-root . migrate",
+    "db:seed": "cargo run --manifest-path ../sdkwork-database/Cargo.toml -p sdkwork-database-cli -- --app-root . seed",
+    "db:status": "cargo run --manifest-path ../sdkwork-database/Cargo.toml -p sdkwork-database-cli -- --app-root . status",
+    "db:drift": "cargo run --manifest-path ../sdkwork-database/Cargo.toml -p sdkwork-database-cli -- --app-root . drift",
+    "db:drift:check": "cargo run --manifest-path ../sdkwork-database/Cargo.toml -p sdkwork-database-cli -- --app-root . drift-check",
+    "db:bootstrap": "cargo run --manifest-path ../sdkwork-database/Cargo.toml -p sdkwork-database-cli -- --app-root . bootstrap",
+    "api:assembly:materialize": "node ../sdkwork-specs/tools/materialize-api-assembly.mjs --root .",
+    "api:assembly:validate": "node ../sdkwork-specs/tools/validate-api-assembly.mjs --root .",
+    "sdk:generate": "node tools/partner_sdk_generate.mjs",
+    "sdk:check": "node tools/partner_sdk_generate.mjs --check",
+    "check:app-composition": "node ../sdkwork-specs/tools/verify-repo.mjs --root ."
+  },
+  "devDependencies": {
+    "@sdkwork/appbase-pc-react": "workspace:*",
+    "@sdkwork/ui-pc-react": "workspace:*",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^25.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "jsdom": "^29.0.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.3",
+    "vitest": "^4.1.2",
+    "lucide-react": "^1.7.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  }
+}

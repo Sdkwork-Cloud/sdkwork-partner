@@ -1,0 +1,52 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/sdkwork-api-partner-assembly",
+  "crates/sdkwork-commerce-partner-service",
+  "crates/sdkwork-commerce-partner-repository-sqlx",
+  "crates/sdkwork-routes-partner-backend-api",
+  "crates/sdkwork-partner-database-host",
+  "crates/sdkwork-partner-service-host",
+  "crates/sdkwork-api-partner-standalone-gateway",
+]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "AGPL-3.0-or-later"
+publish = false
+
+[workspace.dependencies]
+axum = "0.8"
+http = "1"
+tokio = { version = "1.51", features = ["macros", "rt-multi-thread", "net", "sync"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "uuid", "chrono"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+dotenvy = "0.15"
+thiserror = "1"
+async-trait = "0.1"
+sdkwork_contract_service = { path = "../sdkwork-account/crates/sdkwork-contract-service", package = "sdkwork-contract-service" }
+sdkwork-web-core = { path = "../sdkwork-web-framework/crates/sdkwork-web-core" }
+sdkwork-web-axum = { path = "../sdkwork-web-framework/crates/sdkwork-web-axum" }
+sdkwork-web-contract = { path = "../sdkwork-web-framework/crates/sdkwork-web-contract" }
+sdkwork-web-bootstrap = { path = "../sdkwork-web-framework/crates/sdkwork-web-bootstrap" }
+sdkwork-iam-web-adapter = { path = "../sdkwork-iam/crates/sdkwork-iam-web-adapter" }
+sdkwork_iam_context_service = { path = "../sdkwork-iam/crates/sdkwork-iam-context-service", package = "sdkwork-iam-context-service" }
+sdkwork_database_config = { path = "../sdkwork-database/crates/sdkwork-database-config", package = "sdkwork-database-config" }
+sdkwork_database_lifecycle = { path = "../sdkwork-database/crates/sdkwork-database-lifecycle", package = "sdkwork-database-lifecycle" }
+sdkwork_database_spi = { path = "../sdkwork-database/crates/sdkwork-database-spi", package = "sdkwork-database-spi" }
+sdkwork_database_sqlx = { path = "../sdkwork-database/crates/sdkwork-database-sqlx", package = "sdkwork-database-sqlx", features = ["postgres"] }
+sdkwork_commerce_partner_service = { path = "crates/sdkwork-commerce-partner-service", package = "sdkwork-commerce-partner-service" }
+sdkwork_commerce_partner_repository_sqlx = { path = "crates/sdkwork-commerce-partner-repository-sqlx", package = "sdkwork-commerce-partner-repository-sqlx" }
+sdkwork_routes_partner_backend_api = { path = "crates/sdkwork-routes-partner-backend-api", package = "sdkwork-routes-partner-backend-api" }
+sdkwork_partner_database_host = { path = "crates/sdkwork-partner-database-host", package = "sdkwork-partner-database-host" }
+sdkwork_partner_service_host = { path = "crates/sdkwork-partner-service-host", package = "sdkwork-partner-service-host" }
+sdkwork_api_partner_assembly = { path = "crates/sdkwork-api-partner-assembly", package = "sdkwork-api-partner-assembly" }
+sdkwork-utils-rust = { path = "../sdkwork-utils/packages/sdkwork-utils-rust" }

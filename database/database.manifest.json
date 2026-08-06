@@ -1,0 +1,46 @@
+{
+  "owner": "sdkwork-partner",
+  "spi": {
+    "hooks": [],
+    "provider": "default"
+  },
+  "modules": [],
+  "defaultEngine": "postgres",
+  "paths": {
+    "driftPolicy": "drift/policy.yaml",
+    "contract": "contract/schema.yaml",
+    "seeds": "seeds",
+    "migrations": "migrations"
+  },
+  "displayName": "Partner Database",
+  "tablePrefix": "partner_",
+  "kind": "sdkwork.database.module",
+  "serviceCode": "PARTNER",
+  "engines": [
+    "postgres"
+  ],
+  "lifecycle": {
+    "activeSeedLocales": [
+      "zh-CN"
+    ],
+    "supportedSeedLocales": [
+      "zh-CN",
+      "en-US",
+      "ja-JP",
+      "de-DE",
+      "fr-FR",
+      "ru-RU",
+      "ko-KR"
+    ],
+    "driftCheckIntervalSec": 60,
+    "defaultSeedLocale": "zh-CN",
+    "defaultSeedProfile": "standard",
+    "seedOnBoot": false,
+    "autoMigrate": false
+  },
+  "baselineStrategy": "baseline-plus-migrations",
+  "schemaVersion": 2,
+  "contractVersion": "1.0.0",
+  "moduleId": "partner",
+  "databaseRole": "authoritative-server"
+}

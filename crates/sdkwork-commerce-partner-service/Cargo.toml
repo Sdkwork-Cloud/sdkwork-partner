@@ -1,0 +1,22 @@
+[package]
+publish.workspace = true
+name = "sdkwork-commerce-partner-service"
+version.workspace = true
+edition = "2021"
+license.workspace = true
+description = "SDKWork commerce multi-level partner (agent) commission domain rules for local/private Rust deployments."
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+sdkwork_contract_service.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+async-trait.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true }

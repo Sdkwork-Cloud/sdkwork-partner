@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.database.table-registry",
+  "tables": [
+    {
+      "table_name": "partner_level",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_commission_config",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_customer_binding",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_join_fee_payment",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_commission_event",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_commission_settlement",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_commission_distribution",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_wallet",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_ledger_entry",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_withdrawal",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_stat_snapshot",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_audit_log",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    }
+  ]
+}

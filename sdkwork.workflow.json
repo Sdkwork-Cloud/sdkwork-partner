@@ -1,0 +1,93 @@
+{
+  "$schema": "../sdkwork-github-workflow/schemas/sdkwork-workflow.schema.json",
+  "schemaVersion": "2026-06-06.sdkwork.workflow.v1",
+  "app": {
+    "id": "sdkwork-partner",
+    "name": "SDKWork Partner",
+    "repository": "Sdkwork-Cloud/sdkwork-partner",
+    "sourcePath": ".",
+    "configPath": "sdkwork.app.config.json"
+  },
+  "release": {
+    "artifactPrefix": "partner",
+    "defaultVersion": "0.1.0",
+    "versionInput": "package_version",
+    "tagInput": "tag",
+    "changelog": {
+      "source": "auto"
+    }
+  },
+  "dependencies": [
+    {
+      "id": "sdkwork-appbase",
+      "repository": "Sdkwork-Cloud/sdkwork-appbase",
+      "refInput": "SDKWORK_APPBASE_REF",
+      "tokenSecret": "SDKWORK_RELEASE_TOKEN"
+    },
+    {
+      "id": "sdkwork-core",
+      "repository": "Sdkwork-Cloud/sdkwork-core",
+      "refInput": "SDKWORK_CORE_REF",
+      "tokenSecret": "SDKWORK_RELEASE_TOKEN"
+    },
+    {
+      "id": "sdkwork-ui",
+      "repository": "Sdkwork-Cloud/sdkwork-ui",
+      "refInput": "SDKWORK_UI_REF",
+      "tokenSecret": "SDKWORK_RELEASE_TOKEN"
+    },
+    {
+      "id": "sdkwork-account",
+      "repository": "Sdkwork-Cloud/sdkwork-account",
+      "refInput": "SDKWORK_ACCOUNT_REF",
+      "tokenSecret": "SDKWORK_RELEASE_TOKEN"
+    },
+    {
+      "id": "sdkwork-iam",
+      "repository": "Sdkwork-Cloud/sdkwork-iam",
+      "refInput": "SDKWORK_IAM_REF",
+      "tokenSecret": "SDKWORK_RELEASE_TOKEN"
+    },
+    {
+      "id": "sdkwork-database",
+      "repository": "Sdkwork-Cloud/sdkwork-database",
+      "refInput": "SDKWORK_DATABASE_REF",
+      "tokenSecret": "SDKWORK_RELEASE_TOKEN"
+    },
+    {
+      "id": "sdkwork-web-framework",
+      "repository": "Sdkwork-Cloud/sdkwork-web-framework",
+      "refInput": "SDKWORK_WEB_FRAMEWORK_REF",
+      "tokenSecret": "SDKWORK_RELEASE_TOKEN"
+    },
+    {
+      "id": "sdkwork-utils",
+      "repository": "Sdkwork-Cloud/sdkwork-utils",
+      "refInput": "SDKWORK_UTILS_REF",
+      "tokenSecret": "SDKWORK_RELEASE_TOKEN"
+    },
+    {
+      "id": "sdkwork-sdk-generator",
+      "repository": "Sdkwork-Cloud/sdkwork-sdk-generator",
+      "refInput": "SDKWORK_SDK_GENERATOR_REF",
+      "tokenSecret": "SDKWORK_RELEASE_TOKEN"
+    }
+  ],
+  "targets": [
+    {
+      "id": "web-universal-cloud-browser",
+      "profile": "browser",
+      "platform": "web",
+      "architecture": "universal",
+      "formats": [
+        "zip"
+      ],
+      "runner": "ubuntu-24.04",
+      "outputGlobs": [
+        "apps/sdkwork-partner-pc/dist/*"
+      ],
+      "deploymentProfile": "cloud",
+      "runtimeTarget": "browser"
+    }
+  ]
+}

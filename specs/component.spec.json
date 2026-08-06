@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.component.spec",
+  "component": {
+    "name": "sdkwork-partner-workspace",
+    "domain": "commerce",
+    "capability": "partner",
+    "root": "sdkwork-partner"
+  }
+}
