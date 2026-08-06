@@ -55,8 +55,8 @@ pub async fn bootstrap_partner_database_from_env() -> Result<PartnerDatabaseHost
     let manifest = DatabaseManifest::from_file(module.manifest_path())
         .map_err(|error| format!("read partner database manifest failed: {error}"))?;
     let options = lifecycle_options_from_env("PARTNER", &manifest);
-    let orchestrator = LifecycleOrchestrator::new(pool.clone(), module.clone())
-        .with_applied_by("sdkwork-partner");
+    let orchestrator =
+        LifecycleOrchestrator::new(pool.clone(), module.clone()).with_applied_by("sdkwork-partner");
     orchestrator.init().await.map_err(|e| format!("{e}"))?;
     if options.auto_migrate {
         orchestrator.migrate().await.map_err(|e| format!("{e}"))?;

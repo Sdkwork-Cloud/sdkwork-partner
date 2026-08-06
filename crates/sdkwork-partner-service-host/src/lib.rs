@@ -28,7 +28,7 @@ impl PartnerServiceHost {
     pub async fn from_env() -> Result<Self, String> {
         let database = bootstrap_partner_database_from_env().await?;
         let pool = match database.pool() {
-            DatabasePool::Postgres(pool) => pool.clone(),
+            DatabasePool::Postgres(pool, _context) => pool.clone(),
             other => {
                 return Err(format!(
                     "partner service host requires a PostgreSQL pool, got {other:?}"
