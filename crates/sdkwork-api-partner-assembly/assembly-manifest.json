@@ -1,0 +1,21 @@
+{
+  "kind": "sdkwork.api.assembly",
+  "schemaVersion": 1,
+  "applicationCode": "partner",
+  "apiMode": "served",
+  "packageName": "sdkwork-api-partner-assembly",
+  "crateDir": "crates/sdkwork-api-partner-assembly",
+  "routeCrates": [
+    {
+      "packageName": "sdkwork-routes-partner-backend-api",
+      "memberDir": "crates/sdkwork-routes-partner-backend-api",
+      "libName": "sdkwork_routes_partner_backend_api",
+      "surface": "backend-api",
+      "pathPrefix": null,
+      "mountOrder": 0,
+      "componentRef": "crates/sdkwork-routes-partner-backend-api/specs/component.spec.json",
+      "routeManifestRef": "crates/sdkwork-routes-partner-backend-api/src/http_route_manifest.rs#backend_route_manifest",
+      "sourceRef": "crates/sdkwork-routes-partner-backend-api/Cargo.toml"
+    }
+  ]
+}
