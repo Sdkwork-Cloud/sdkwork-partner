@@ -15,7 +15,7 @@
       "lifecycle_status": "active"
     },
     {
-      "table_name": "partner",
+      "table_name": "partner_partner",
       "owner": "sdkwork-partner",
       "compliance_level": "L2",
       "lifecycle_status": "active"

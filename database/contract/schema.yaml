@@ -1,0 +1,50 @@
+schema_version: 1
+kind: sdkwork.database.schema
+database_role: authoritative-server
+module_id: partner
+contract_version: 1.0.0
+owner_team: sdkwork-partner
+compliance_level: L2
+engines:
+  - postgres
+table_prefix: partner_
+tables:
+  - name: partner_level
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_commission_config
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_partner
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_customer_binding
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_join_fee_payment
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_commission_event
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_commission_settlement
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_commission_distribution
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_wallet
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_ledger_entry
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_withdrawal
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_stat_snapshot
+    lifecycle_status: active
+    owner: sdkwork-partner
+  - name: partner_audit_log
+    lifecycle_status: active
+    owner: sdkwork-partner
