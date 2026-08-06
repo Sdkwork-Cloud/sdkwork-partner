@@ -11,9 +11,13 @@
   "dependencies": {
     "@sdkwork/partner-backend-sdk": "workspace:*",
     "@sdkwork/partner-contracts": "workspace:*",
-    "@sdkwork/ui-pc-react": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "@sdkwork/partner-pc-admin-core": "workspace:*",
+    "@sdkwork/partner-pc-admin-partner": "workspace:*",
+    "@sdkwork/partner-pc-admin-commission": "workspace:*",
+    "@sdkwork/partner-pc-admin-withdrawal": "workspace:*",
+    "@sdkwork/partner-pc-admin-stats": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

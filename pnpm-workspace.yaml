@@ -4,16 +4,7 @@ packages:
   - "apps/sdkwork-partner-common/packages/*"
   - "sdks/sdkwork-partner-backend-sdk/sdkwork-partner-backend-sdk-typescript"
   # Sibling SDKWork workspaces (declared by the consuming repository root only)
-  - "../sdkwork-iam/sdks/sdkwork-iam-app-sdk/sdkwork-iam-app-sdk-typescript"
-  - "../sdkwork-iam/sdks/sdkwork-iam-backend-sdk/sdkwork-iam-backend-sdk-typescript"
-  - "../sdkwork-ui/sdkwork-ui-pc-react"
-  - "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react"
-  - "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-core"
-  - "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-*"
-  - "../sdkwork-core/packages/pc-react/foundation/sdkwork-core-pc-react"
-  - "../sdkwork-account/apps/sdkwork-account-common/packages/*"
-  - "../sdkwork-utils/packages/*"
-  - "../sdkwork-sdk-commons/packages/sdkwork-sdk-common"
+  - "../sdkwork-sdk-commons/sdkwork-sdk-common-typescript"
 
 catalog:
   react: ^19.2.4
@@ -22,3 +13,11 @@ catalog:
   vite: ^8.0.3
   vitest: ^4.1.2
   "@vitejs/plugin-react": ^6.0.1
+  "@testing-library/dom": ^10.4.1
+  "@testing-library/jest-dom": ^6.9.1
+  "@testing-library/react": ^16.3.2
+  "@types/node": ^25.5.2
+  "@types/react": ^19.2.14
+  "@types/react-dom": ^19.2.3
+  jsdom: ^29.0.1
+  lucide-react: ^1.7.0

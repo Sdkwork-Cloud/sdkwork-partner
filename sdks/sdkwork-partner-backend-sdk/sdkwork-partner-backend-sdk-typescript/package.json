@@ -1,0 +1,21 @@
+{
+  "name": "@sdkwork/partner-backend-sdk",
+  "version": "0.1.0",
+  "description": "SDKWork Partner backend SDK composed consumer facade.",
+  "type": "module",
+  "private": false,
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@sdkwork/sdk-common": "workspace:*"
+  },
+  "files": ["src", "generated/server-openapi/dist", "generated/server-openapi/src"]
+}

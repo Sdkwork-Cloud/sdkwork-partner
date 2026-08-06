@@ -5,6 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
+    "types": ["vite/client"],
     "jsx": "react-jsx",
     "noEmit": true,
     "skipLibCheck": true,
@@ -14,6 +15,5 @@
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
     "allowImportingTsExtensions": true,
-    "baseUrl": "."
   }
 }

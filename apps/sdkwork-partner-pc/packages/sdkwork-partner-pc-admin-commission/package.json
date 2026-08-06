@@ -1,0 +1,44 @@
+{
+  "name": "@sdkwork/partner-pc-admin-commission",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Partner admin admin-commission domain package.",
+  "exports": {
+    ".": {
+      "types": "./src/index.tsx",
+      "import": "./src/index.tsx",
+      "default": "./src/index.tsx"
+    }
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sdkwork/partner-backend-sdk": "workspace:*",
+    "@sdkwork/partner-pc-admin-core": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@sdkwork/partner-backend-sdk": "workspace:*",
+    "@sdkwork/partner-pc-admin-core": "workspace:*",
+    "react": ">=18.2.0 <20.0.0"
+  },
+  "sdkwork": {
+    "workspace": "sdkwork-partner",
+    "architecture": "pc-react",
+    "domain": "commerce",
+    "capability": "partner",
+    "status": "ready"
+  }
+}

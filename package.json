@@ -35,8 +35,6 @@
     "check:app-composition": "node ../sdkwork-specs/tools/verify-repo.mjs --root ."
   },
   "devDependencies": {
-    "@sdkwork/appbase-pc-react": "workspace:*",
-    "@sdkwork/ui-pc-react": "workspace:*",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
