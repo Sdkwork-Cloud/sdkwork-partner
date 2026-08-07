@@ -33,12 +33,6 @@ tables:
   - name: partner_commission_distribution
     lifecycle_status: active
     owner: sdkwork-partner
-  - name: partner_wallet
-    lifecycle_status: active
-    owner: sdkwork-partner
-  - name: partner_ledger_entry
-    lifecycle_status: active
-    owner: sdkwork-partner
   - name: partner_withdrawal
     lifecycle_status: active
     owner: sdkwork-partner

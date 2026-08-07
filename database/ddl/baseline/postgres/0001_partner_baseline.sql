@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS partner_commission_distribution (
     ratio NUMERIC(18,2) NOT NULL,
     base_amount NUMERIC(18,2) NOT NULL,
     amount NUMERIC(18,2) NOT NULL,
-    wallet_entry_id BIGINT,
+    account_ledger_id BIGINT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -195,45 +195,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_commission_distribution_receiver
 CREATE INDEX IF NOT EXISTS idx_partner_commission_distribution_partner
     ON partner_commission_distribution (tenant_id, organization_id, receiver_partner_id, created_at, id);
 
--- partner_wallet: internal commission balance per partner.
-CREATE TABLE IF NOT EXISTS partner_wallet (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    partner_id BIGINT NOT NULL,
-    total_earned NUMERIC(18,2) NOT NULL DEFAULT 0,
-    available_balance NUMERIC(18,2) NOT NULL DEFAULT 0,
-    withdrawing_amount NUMERIC(18,2) NOT NULL DEFAULT 0,
-    withdrawn_amount NUMERIC(18,2) NOT NULL DEFAULT 0,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_wallet_partner ON partner_wallet (tenant_id, organization_id, partner_id);
-
--- partner_ledger_entry: append-only commission ledger per partner.
-CREATE TABLE IF NOT EXISTS partner_ledger_entry (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    partner_id BIGINT NOT NULL,
-    entry_type VARCHAR(32) NOT NULL,
-    direction VARCHAR(4) NOT NULL,
-    amount NUMERIC(18,2) NOT NULL,
-    balance_after NUMERIC(18,2) NOT NULL,
-    ref_type VARCHAR(32) NOT NULL DEFAULT '',
-    ref_id BIGINT,
-    operator_id BIGINT NOT NULL DEFAULT 0,
-    remark VARCHAR(1024) NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX IF NOT EXISTS idx_partner_ledger_entry_partner
-    ON partner_ledger_entry (tenant_id, organization_id, partner_id, created_at, id);
-CREATE INDEX IF NOT EXISTS idx_partner_ledger_entry_ref
-    ON partner_ledger_entry (tenant_id, organization_id, ref_type, ref_id, id);
 
 -- partner_withdrawal: withdrawal application workflow (apply -> approve/reject -> paid).
 CREATE TABLE IF NOT EXISTS partner_withdrawal (
@@ -244,6 +205,7 @@ CREATE TABLE IF NOT EXISTS partner_withdrawal (
     partner_id BIGINT NOT NULL,
     amount NUMERIC(18,2) NOT NULL,
     status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
+    hold_id BIGINT,
     reviewed_by BIGINT,
     reviewed_at TIMESTAMPTZ,
     review_remark VARCHAR(1024) NOT NULL DEFAULT '',
@@ -317,88 +279,23 @@ CREATE INDEX IF NOT EXISTS idx_partner_audit_log_target
 -- lock_timeout: 15000
 -- statement_timeout: 60000
 
-CREATE TABLE IF NOT EXISTS partner_level (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    level_no INTEGER NOT NULL,
-    name VARCHAR(128) NOT NULL,
-    customer_revenue_ratio NUMERIC(18,2) NOT NULL DEFAULT 0,
-    join_fee_commission_ratio NUMERIC(18,2) NOT NULL DEFAULT 0,
-    join_fee NUMERIC(18,2) NOT NULL DEFAULT 0,
-    status VARCHAR(16) NOT NULL DEFAULT 'ACTIVE',
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ,
-    deleted_by BIGINT
-);
+
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_level_tenant_no ON partner_level (tenant_id, organization_id, level_no);
 CREATE INDEX IF NOT EXISTS idx_partner_level_tenant_status ON partner_level (tenant_id, organization_id, status, sort_order, id);
 
-CREATE TABLE IF NOT EXISTS partner_commission_config (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    enabled BOOLEAN NOT NULL DEFAULT TRUE,
-    revenue_sources TEXT NOT NULL DEFAULT '{"usage_settlement":true,"recharge":true}',
-    max_commission_depth BIGINT NOT NULL DEFAULT 0,
-    currency VARCHAR(8) NOT NULL DEFAULT 'CNY',
-    min_withdrawal_amount NUMERIC(18,2) NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_commission_config_tenant ON partner_commission_config (tenant_id, organization_id);
 
-CREATE TABLE IF NOT EXISTS partner_partner (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    name VARCHAR(256) NOT NULL,
-    contact_name VARCHAR(128) NOT NULL DEFAULT '',
-    phone VARCHAR(32) NOT NULL DEFAULT '',
-    email VARCHAR(256) NOT NULL DEFAULT '',
-    level_no INTEGER NOT NULL,
-    parent_partner_id BIGINT,
-    user_account_id BIGINT NOT NULL,
-    status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
-    join_fee_amount NUMERIC(18,2) NOT NULL DEFAULT 0,
-    join_fee_status VARCHAR(16) NOT NULL DEFAULT 'UNPAID',
-    joined_at TIMESTAMPTZ,
-    owner_id BIGINT NOT NULL DEFAULT 0,
-    remark VARCHAR(1024) NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ,
-    deleted_by BIGINT
-);
+
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_partner_tenant_user ON partner_partner (tenant_id, organization_id, user_account_id);
 CREATE INDEX IF NOT EXISTS idx_partner_partner_tenant_parent ON partner_partner (tenant_id, organization_id, parent_partner_id, id);
 CREATE INDEX IF NOT EXISTS idx_partner_partner_tenant_status ON partner_partner (tenant_id, organization_id, status, level_no, created_at, id);
 CREATE INDEX IF NOT EXISTS idx_partner_partner_tenant_level ON partner_partner (tenant_id, organization_id, level_no, id);
 
-CREATE TABLE IF NOT EXISTS partner_customer_binding (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    partner_id BIGINT NOT NULL,
-    customer_user_id BIGINT NOT NULL,
-    binding_type VARCHAR(16) NOT NULL DEFAULT 'ADMIN_BIND',
-    status VARCHAR(16) NOT NULL DEFAULT 'ACTIVE',
-    bound_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    bound_by BIGINT NOT NULL DEFAULT 0,
-    unbound_at TIMESTAMPTZ,
-    unbound_by BIGINT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_customer_binding_active
     ON partner_customer_binding (tenant_id, organization_id, customer_user_id) WHERE status = 'ACTIVE';
@@ -407,45 +304,14 @@ CREATE INDEX IF NOT EXISTS idx_partner_customer_binding_partner
 CREATE INDEX IF NOT EXISTS idx_partner_customer_binding_customer
     ON partner_customer_binding (tenant_id, organization_id, customer_user_id, id);
 
-CREATE TABLE IF NOT EXISTS partner_join_fee_payment (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    partner_id BIGINT NOT NULL,
-    amount NUMERIC(18,2) NOT NULL,
-    currency VARCHAR(8) NOT NULL DEFAULT 'CNY',
-    status VARCHAR(16) NOT NULL DEFAULT 'UNPAID',
-    payment_method VARCHAR(32) NOT NULL DEFAULT '',
-    paid_at TIMESTAMPTZ,
-    paid_by BIGINT,
-    remark VARCHAR(1024) NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
 
 CREATE INDEX IF NOT EXISTS idx_partner_join_fee_payment_partner
     ON partner_join_fee_payment (tenant_id, organization_id, partner_id, created_at, id);
 CREATE INDEX IF NOT EXISTS idx_partner_join_fee_payment_status
     ON partner_join_fee_payment (tenant_id, organization_id, status, created_at, id);
 
-CREATE TABLE IF NOT EXISTS partner_commission_event (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    source_type VARCHAR(32) NOT NULL,
-    source_ref VARCHAR(128) NOT NULL,
-    customer_user_id BIGINT NOT NULL,
-    base_amount NUMERIC(18,2) NOT NULL,
-    event_at TIMESTAMPTZ NOT NULL,
-    status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
-    settled_at TIMESTAMPTZ,
-    settled_by BIGINT,
-    remark VARCHAR(1024) NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_commission_event_source
     ON partner_commission_event (tenant_id, organization_id, source_type, source_ref);
@@ -454,142 +320,34 @@ CREATE INDEX IF NOT EXISTS idx_partner_commission_event_status
 CREATE INDEX IF NOT EXISTS idx_partner_commission_event_customer
     ON partner_commission_event (tenant_id, organization_id, customer_user_id, event_at, id);
 
-CREATE TABLE IF NOT EXISTS partner_commission_settlement (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    event_id BIGINT NOT NULL,
-    base_amount NUMERIC(18,2) NOT NULL,
-    distributed_amount NUMERIC(18,2) NOT NULL DEFAULT 0,
-    receiver_count INTEGER NOT NULL DEFAULT 0,
-    status VARCHAR(16) NOT NULL DEFAULT 'SETTLED',
-    computed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    computed_by BIGINT NOT NULL DEFAULT 0,
-    remark VARCHAR(1024) NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_commission_settlement_event ON partner_commission_settlement (event_id) WHERE event_id > 0;
 CREATE INDEX IF NOT EXISTS idx_partner_commission_settlement_tenant ON partner_commission_settlement (tenant_id, organization_id, computed_at, id);
 
-CREATE TABLE IF NOT EXISTS partner_commission_distribution (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    settlement_id BIGINT NOT NULL,
-    receiver_partner_id BIGINT NOT NULL,
-    level_offset INTEGER NOT NULL,
-    ratio NUMERIC(18,2) NOT NULL,
-    base_amount NUMERIC(18,2) NOT NULL,
-    amount NUMERIC(18,2) NOT NULL,
-    wallet_entry_id BIGINT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_commission_distribution_receiver
     ON partner_commission_distribution (settlement_id, receiver_partner_id);
 CREATE INDEX IF NOT EXISTS idx_partner_commission_distribution_partner
     ON partner_commission_distribution (tenant_id, organization_id, receiver_partner_id, created_at, id);
 
-CREATE TABLE IF NOT EXISTS partner_wallet (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    partner_id BIGINT NOT NULL,
-    total_earned NUMERIC(18,2) NOT NULL DEFAULT 0,
-    available_balance NUMERIC(18,2) NOT NULL DEFAULT 0,
-    withdrawing_amount NUMERIC(18,2) NOT NULL DEFAULT 0,
-    withdrawn_amount NUMERIC(18,2) NOT NULL DEFAULT 0,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_wallet_partner ON partner_wallet (tenant_id, organization_id, partner_id);
 
-CREATE TABLE IF NOT EXISTS partner_ledger_entry (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    partner_id BIGINT NOT NULL,
-    entry_type VARCHAR(32) NOT NULL,
-    direction VARCHAR(4) NOT NULL,
-    amount NUMERIC(18,2) NOT NULL,
-    balance_after NUMERIC(18,2) NOT NULL,
-    ref_type VARCHAR(32) NOT NULL DEFAULT '',
-    ref_id BIGINT,
-    operator_id BIGINT NOT NULL DEFAULT 0,
-    remark VARCHAR(1024) NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX IF NOT EXISTS idx_partner_ledger_entry_partner
-    ON partner_ledger_entry (tenant_id, organization_id, partner_id, created_at, id);
-CREATE INDEX IF NOT EXISTS idx_partner_ledger_entry_ref
-    ON partner_ledger_entry (tenant_id, organization_id, ref_type, ref_id, id);
-
-CREATE TABLE IF NOT EXISTS partner_withdrawal (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    partner_id BIGINT NOT NULL,
-    amount NUMERIC(18,2) NOT NULL,
-    status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
-    reviewed_by BIGINT,
-    reviewed_at TIMESTAMPTZ,
-    review_remark VARCHAR(1024) NOT NULL DEFAULT '',
-    paid_at TIMESTAMPTZ,
-    paid_by BIGINT,
-    remark VARCHAR(1024) NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
 
 CREATE INDEX IF NOT EXISTS idx_partner_withdrawal_status
     ON partner_withdrawal (tenant_id, organization_id, status, created_at, id);
 CREATE INDEX IF NOT EXISTS idx_partner_withdrawal_partner
     ON partner_withdrawal (tenant_id, organization_id, partner_id, created_at, id);
 
-CREATE TABLE IF NOT EXISTS partner_stat_snapshot (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    partner_id BIGINT NOT NULL,
-    period_start TIMESTAMPTZ NOT NULL,
-    period_end TIMESTAMPTZ NOT NULL,
-    period_type VARCHAR(16) NOT NULL DEFAULT 'MONTH',
-    join_fee_total NUMERIC(18,2) NOT NULL DEFAULT 0,
-    customer_count INTEGER NOT NULL DEFAULT 0,
-    revenue_base NUMERIC(18,2) NOT NULL DEFAULT 0,
-    commission_earned NUMERIC(18,2) NOT NULL DEFAULT 0,
-    downstream_partner_count INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_partner_stat_snapshot_period
     ON partner_stat_snapshot (tenant_id, organization_id, partner_id, period_type, period_start);
 CREATE INDEX IF NOT EXISTS idx_partner_stat_snapshot_period
     ON partner_stat_snapshot (tenant_id, organization_id, period_type, period_start, id);
 
-CREATE TABLE IF NOT EXISTS partner_audit_log (
-    id BIGINT NOT NULL PRIMARY KEY,
-    uuid VARCHAR(64) NOT NULL UNIQUE,
-    tenant_id BIGINT NOT NULL DEFAULT 0,
-    organization_id BIGINT NOT NULL DEFAULT 0,
-    operator_id BIGINT NOT NULL DEFAULT 0,
-    operator_type VARCHAR(16) NOT NULL DEFAULT 'admin',
-    action VARCHAR(64) NOT NULL,
-    target_type VARCHAR(64) NOT NULL DEFAULT '',
-    target_id BIGINT,
-    request_id VARCHAR(128),
-    payload TEXT NOT NULL DEFAULT '{}',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
 
 CREATE INDEX IF NOT EXISTS idx_partner_audit_log_tenant
     ON partner_audit_log (tenant_id, organization_id, created_at, id);

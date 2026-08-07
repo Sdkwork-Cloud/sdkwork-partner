@@ -142,39 +142,8 @@ VALUES ($1, $2, $3, $4, $5, $6::numeric, $7::numeric, $8, $9, CURRENT_TIMESTAMP,
 pub const INSERT_DISTRIBUTION: &str = r#"
 INSERT INTO partner_commission_distribution
     (id, uuid, tenant_id, organization_id, settlement_id, receiver_partner_id,
-     level_offset, ratio, base_amount, amount, wallet_entry_id)
+     level_offset, ratio, base_amount, amount, account_ledger_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8::numeric, $9::numeric, $10::numeric, $11)
-"#;
-
-/// Insert a ledger entry and return the new id.
-pub const INSERT_LEDGER_ENTRY: &str = r#"
-INSERT INTO partner_ledger_entry
-    (id, uuid, tenant_id, organization_id, partner_id, entry_type, direction,
-     amount, balance_after, ref_type, ref_id, operator_id, remark)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8::numeric, $9::numeric, $10, $11, $12, $13)
-RETURNING id
-"#;
-
-/// Upsert a partner wallet (create or update balance) returning current balances.
-pub const UPSERT_WALLET_CREDIT: &str = r#"
-INSERT INTO partner_wallet
-    (id, uuid, tenant_id, organization_id, partner_id, total_earned,
-     available_balance, withdrawing_amount, withdrawn_amount)
-VALUES ($1, $2, $3, $4, $5, $6::numeric, $7::numeric, $8::numeric, $9::numeric)
-ON CONFLICT (tenant_id, organization_id, partner_id)
-DO UPDATE SET total_earned = partner_wallet.total_earned + EXCLUDED.total_earned,
-              available_balance = partner_wallet.available_balance + EXCLUDED.available_balance,
-              withdrawing_amount = partner_wallet.withdrawing_amount + EXCLUDED.withdrawing_amount,
-              withdrawn_amount = partner_wallet.withdrawn_amount + EXCLUDED.withdrawn_amount,
-              updated_at = CURRENT_TIMESTAMP
-RETURNING total_earned::text, available_balance::text, withdrawing_amount::text, withdrawn_amount::text
-"#;
-
-/// Select a partner wallet.
-pub const SELECT_WALLET: &str = r#"
-SELECT total_earned::text, available_balance::text, withdrawing_amount::text, withdrawn_amount::text
-FROM partner_wallet
-WHERE tenant_id = $1 AND organization_id = $2 AND partner_id = $3
 "#;
 
 /// Insert a join fee payment.
@@ -197,15 +166,15 @@ WHERE id = $1 AND tenant_id = $2
 /// Insert a withdrawal.
 pub const INSERT_WITHDRAWAL: &str = r#"
 INSERT INTO partner_withdrawal
-    (id, uuid, tenant_id, organization_id, partner_id, amount, status, remark)
-VALUES ($1, $2, $3, $4, $5, $6::numeric, 'PENDING', $7)
-RETURNING id, partner_id, amount::text, status, reviewed_by, reviewed_at, review_remark,
+    (id, uuid, tenant_id, organization_id, partner_id, amount, status, hold_id, remark)
+VALUES ($1, $2, $3, $4, $5, $6::numeric, 'PENDING', $7, $8)
+RETURNING id, partner_id, amount::text, status, hold_id, reviewed_by, reviewed_at, review_remark,
           paid_at, paid_by, remark, created_at, updated_at
 "#;
 
 /// Select a withdrawal by id.
 pub const SELECT_WITHDRAWAL_BY_ID: &str = r#"
-SELECT id, partner_id, amount::text, status, reviewed_by, reviewed_at, review_remark,
+SELECT id, partner_id, amount::text, status, hold_id, reviewed_by, reviewed_at, review_remark,
        paid_at, paid_by, remark, created_at, updated_at
 FROM partner_withdrawal
 WHERE tenant_id = $1 AND organization_id = $2 AND id = $3

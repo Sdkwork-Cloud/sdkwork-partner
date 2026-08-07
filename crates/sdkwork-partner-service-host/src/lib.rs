@@ -4,7 +4,9 @@
 //! partner admin service, and the commission capture/settlement workers.
 //! Must not mount HTTP routes.
 
-use sdkwork_commerce_partner_repository_sqlx::PostgresPartnerAdminRepository;
+use sdkwork_commerce_partner_repository_sqlx::{
+    account_adapter::PartnerAccountWalletAdapter, PostgresPartnerAdminRepository,
+};
 use sdkwork_commerce_partner_service::backend_admin::{
     PartnerAdminRepositoryPort, PartnerAdminService,
 };
@@ -35,8 +37,12 @@ impl PartnerServiceHost {
                 ));
             }
         };
-        let repository: Arc<dyn PartnerAdminRepositoryPort + Send + Sync> =
-            Arc::new(PostgresPartnerAdminRepository::new(pool));
+        let repository: Arc<dyn PartnerAdminRepositoryPort + Send + Sync> = Arc::new(
+            PostgresPartnerAdminRepository::new(
+                pool.clone(),
+                Arc::new(PartnerAccountWalletAdapter::new(pool.clone())),
+            ),
+        );
         let partner_admin = Arc::new(PartnerAdminService::new(repository));
         Ok(Self::new(database, partner_admin))
     }

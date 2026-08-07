@@ -51,18 +51,6 @@
       "lifecycle_status": "active"
     },
     {
-      "table_name": "partner_wallet",
-      "owner": "sdkwork-partner",
-      "compliance_level": "L2",
-      "lifecycle_status": "active"
-    },
-    {
-      "table_name": "partner_ledger_entry",
-      "owner": "sdkwork-partner",
-      "compliance_level": "L2",
-      "lifecycle_status": "active"
-    },
-    {
       "table_name": "partner_withdrawal",
       "owner": "sdkwork-partner",
       "compliance_level": "L2",

@@ -33,6 +33,8 @@ dotenvy = "0.15"
 thiserror = "1"
 async-trait = "0.1"
 sdkwork_contract_service = { path = "../sdkwork-account/crates/sdkwork-contract-service", package = "sdkwork-contract-service" }
+sdkwork_account_service = { path = "../sdkwork-account/crates/sdkwork-account-service", package = "sdkwork-account-service" }
+sdkwork_account_repository_sqlx = { path = "../sdkwork-account/crates/sdkwork-account-repository-sqlx", package = "sdkwork-account-repository-sqlx" }
 sdkwork-web-core = { path = "../sdkwork-web-framework/crates/sdkwork-web-core" }
 sdkwork-web-axum = { path = "../sdkwork-web-framework/crates/sdkwork-web-axum" }
 sdkwork-web-contract = { path = "../sdkwork-web-framework/crates/sdkwork-web-contract" }

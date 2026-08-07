@@ -1,7 +1,9 @@
 # migrations/postgres
 
-Versioned partner database migrations.
-
-Convention: `{version}_{name}.up.sql` / `{version}_{name}.down.sql`.
-
-Lifecycle authority: `../sdkwork-specs/DATABASE_FRAMEWORK_SPEC.md`. Run via `pnpm db:migrate` (sdkwork-database CLI).
+Pre-launch the partner schema is consolidated on the single greenfield
+baseline: `database/ddl/baseline/postgres/0001_partner_baseline.sql`.
+The baseline already folds the wallet-unification migration
+(0002_partner_wallet_account: `account_ledger_id` rename, `hold_id` column,
+retired `partner_wallet`/`partner_ledger_entry` tables). No ordered
+post-baseline migrations exist while the app is pre-launch; shared development
+schemas converge by resetting the module state to the baseline.

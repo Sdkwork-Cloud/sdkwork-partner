@@ -1,5 +1,6 @@
 //! PostgreSQL implementation of `PartnerAdminRepositoryPort`.
 
+use crate::account_adapter::PartnerWalletPort;
 use crate::mapping::*;
 use crate::partner_admin_sql::*;
 use chrono::{DateTime, Utc};
@@ -15,14 +16,19 @@ use sdkwork_commerce_partner_service::queries::*;
 use sdkwork_contract_service::CommerceServiceError;
 use serde_json::json;
 use sqlx::{Postgres, Row, Transaction};
+use std::sync::Arc;
 
 pub struct PostgresPartnerAdminRepository {
     pool: sqlx::PgPool,
+    /// Partner wallet operations over the account-domain ledger. All balance
+    /// writes (commissions, adjustments, withdrawal holds) go through this
+    /// port; `partner_wallet`/`partner_ledger_entry` are retired (S4).
+    wallet: Arc<dyn PartnerWalletPort>,
 }
 
 impl PostgresPartnerAdminRepository {
-    pub fn new(pool: sqlx::PgPool) -> Self {
-        Self { pool }
+    pub fn new(pool: sqlx::PgPool, wallet: Arc<dyn PartnerWalletPort>) -> Self {
+        Self { pool, wallet }
     }
 }
 
@@ -123,6 +129,7 @@ async fn load_commission_config(
 /// Returns the total distributed amount in cents.
 async fn distribute_join_fee_commission(
     tx: &mut Transaction<'_, Postgres>,
+    wallet: &Arc<dyn PartnerWalletPort>,
     subject: &PartnerAdminSubject,
     paying_partner_id: i64,
     payment_id: i64,
@@ -178,41 +185,26 @@ async fn distribute_join_fee_commission(
         .await
         .map_err(error_from_sql)?;
     for allocation in allocations {
-        let wallet = sqlx::query(UPSERT_WALLET_CREDIT)
-            .bind(next_bigint_id())
-            .bind(next_uuid())
-            .bind(subject.tenant_id)
-            .bind(subject.organization_id)
-            .bind(allocation.partner_id)
-            .bind(cents_to_decimal(allocation.amount_cents))
-            .bind(cents_to_decimal(allocation.amount_cents))
-            .bind("0.00")
-            .bind("0.00")
-            .fetch_one(&mut **tx)
-            .await
-            .map_err(error_from_sql)?;
-        let balance_after: String = wallet.get("available_balance");
-        let ledger_id = sqlx::query(INSERT_LEDGER_ENTRY)
-            .bind(next_bigint_id())
-            .bind(next_uuid())
-            .bind(subject.tenant_id)
-            .bind(subject.organization_id)
-            .bind(allocation.partner_id)
-            .bind("JOIN_FEE_COMMISSION")
-            .bind("IN")
-            .bind(cents_to_decimal(allocation.amount_cents))
-            .bind(&balance_after)
-            .bind("JOIN_FEE_PAYMENT")
-            .bind(payment_id)
-            .bind(subject.user_id)
-            .bind(format!(
-                "join-fee commission level_offset={}",
-                allocation.level_offset
-            ))
-            .fetch_one(&mut **tx)
-            .await
-            .map_err(error_from_sql)?
-            .get::<i64, _>("id");
+        // Commission credit goes through the account-domain ledger; the
+        // idempotency key is deterministic per (payment, partner) so reruns
+        // replay instead of double-crediting.
+        let account_ledger_id = wallet
+            .credit_commission(
+                subject.tenant_id,
+                subject.organization_id,
+                allocation.partner_id,
+                &config.currency,
+                allocation.amount_cents,
+                "join_fee_commission",
+                "JOIN_FEE_PAYMENT",
+                payment_id,
+                &format!(
+                    "join-fee commission level_offset={}",
+                    allocation.level_offset
+                ),
+                &format!("join-fee:{payment_id}:{}", allocation.partner_id),
+            )
+            .await?;
         sqlx::query(INSERT_DISTRIBUTION)
             .bind(next_bigint_id())
             .bind(next_uuid())
@@ -224,7 +216,7 @@ async fn distribute_join_fee_commission(
             .bind(cents_to_decimal(allocation.ratio_per_10000))
             .bind(cents_to_decimal(amount_cents))
             .bind(cents_to_decimal(allocation.amount_cents))
-            .bind(ledger_id)
+            .bind(account_ledger_id)
             .execute(&mut **tx)
             .await
             .map_err(error_from_sql)?;
@@ -269,6 +261,7 @@ async fn load_commission_config_tx(
 /// Returns (settled: bool, distributed_cents: i64).
 async fn settle_event(
     tx: &mut Transaction<'_, Postgres>,
+    wallet: &Arc<dyn PartnerWalletPort>,
     subject: &PartnerAdminSubject,
     event_id: i64,
     customer_user_id: i64,
@@ -361,41 +354,25 @@ async fn settle_event(
         .await
         .map_err(error_from_sql)?;
     for allocation in allocations {
-        let wallet = sqlx::query(UPSERT_WALLET_CREDIT)
-            .bind(next_bigint_id())
-            .bind(next_uuid())
-            .bind(subject.tenant_id)
-            .bind(subject.organization_id)
-            .bind(allocation.partner_id)
-            .bind(cents_to_decimal(allocation.amount_cents))
-            .bind(cents_to_decimal(allocation.amount_cents))
-            .bind("0.00")
-            .bind("0.00")
-            .fetch_one(&mut **tx)
-            .await
-            .map_err(error_from_sql)?;
-        let balance_after: String = wallet.get("available_balance");
-        let ledger_id = sqlx::query(INSERT_LEDGER_ENTRY)
-            .bind(next_bigint_id())
-            .bind(next_uuid())
-            .bind(subject.tenant_id)
-            .bind(subject.organization_id)
-            .bind(allocation.partner_id)
-            .bind("REVENUE_COMMISSION")
-            .bind("IN")
-            .bind(cents_to_decimal(allocation.amount_cents))
-            .bind(&balance_after)
-            .bind("COMMISSION_EVENT")
-            .bind(event_id)
-            .bind(subject.user_id)
-            .bind(format!(
-                "revenue commission level_offset={}",
-                allocation.level_offset
-            ))
-            .fetch_one(&mut **tx)
-            .await
-            .map_err(error_from_sql)?
-            .get::<i64, _>("id");
+        // Commission credit goes through the account-domain ledger with a
+        // deterministic idempotency key per (event, partner).
+        let account_ledger_id = wallet
+            .credit_commission(
+                subject.tenant_id,
+                subject.organization_id,
+                allocation.partner_id,
+                &config.currency,
+                allocation.amount_cents,
+                "commission_earn",
+                "COMMISSION_EVENT",
+                event_id,
+                &format!(
+                    "revenue commission level_offset={}",
+                    allocation.level_offset
+                ),
+                &format!("commission:{event_id}:{}", allocation.partner_id),
+            )
+            .await?;
         sqlx::query(INSERT_DISTRIBUTION)
             .bind(next_bigint_id())
             .bind(next_uuid())
@@ -407,7 +384,7 @@ async fn settle_event(
             .bind(cents_to_decimal(allocation.ratio_per_10000))
             .bind(cents_to_decimal(base_amount_cents))
             .bind(cents_to_decimal(allocation.amount_cents))
-            .bind(ledger_id)
+            .bind(account_ledger_id)
             .execute(&mut **tx)
             .await
             .map_err(error_from_sql)?;
@@ -420,6 +397,45 @@ async fn settle_event(
         .await
         .map_err(error_from_sql)?;
     Ok((true, distributed))
+}
+
+/// Inserts the withdrawal row and its audit record in one transaction. The
+/// account hold is created beforehand (own transaction); callers release it
+/// best-effort when this row insert fails.
+async fn insert_withdrawal_row(
+    pool: &sqlx::PgPool,
+    subject: &PartnerAdminSubject,
+    partner_id: i64,
+    withdrawal_id: i64,
+    hold_id: i64,
+    amount_cents: i64,
+    remark: &str,
+) -> Result<WithdrawalItem, CommerceServiceError> {
+    let mut tx = pool.begin().await.map_err(error_from_sql)?;
+    let row = sqlx::query(INSERT_WITHDRAWAL)
+        .bind(withdrawal_id)
+        .bind(next_uuid())
+        .bind(subject.tenant_id)
+        .bind(subject.organization_id)
+        .bind(partner_id)
+        .bind(cents_to_decimal(amount_cents))
+        .bind(hold_id)
+        .bind(remark)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(error_from_sql)?;
+    insert_audit(
+        &mut tx,
+        subject,
+        "create_withdrawal",
+        "partner_withdrawal",
+        Some(withdrawal_id),
+        json!({"partner_id": partner_id, "amount": cents_to_decimal(amount_cents)}),
+    )
+    .await
+    .map_err(error_from_sql)?;
+    tx.commit().await.map_err(error_from_sql)?;
+    Ok(map_withdrawal(&row))
 }
 
 impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
@@ -1013,37 +1029,10 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 .execute(&mut *tx)
                 .await
                 .map_err(error_from_sql)?;
-            // Record the join fee as an out-flow ledger entry (record only;
-            // join fees are not deducted from the commission wallet).
-            let wallet_balance = sqlx::query(SELECT_WALLET)
-                .bind(subject.tenant_id)
-                .bind(subject.organization_id)
-                .bind(command.partner_id)
-                .fetch_optional(&mut *tx)
-                .await
-                .map_err(error_from_sql)?
-                .map(|w| w.get::<String, _>("available_balance"))
-                .unwrap_or_else(|| "0.00".to_string());
-            sqlx::query(INSERT_LEDGER_ENTRY)
-                .bind(next_bigint_id())
-                .bind(next_uuid())
-                .bind(subject.tenant_id)
-                .bind(subject.organization_id)
-                .bind(command.partner_id)
-                .bind("JOIN_FEE_PAYMENT")
-                .bind("OUT")
-                .bind(cents_to_decimal(command.amount_cents))
-                .bind(&wallet_balance)
-                .bind("JOIN_FEE_PAYMENT")
-                .bind(payment_id)
-                .bind(subject.user_id)
-                .bind("join fee paid")
-                .execute(&mut *tx)
-                .await
-                .map_err(error_from_sql)?;
             // Trigger multi-level join-fee commission for ancestors.
             let distributed = distribute_join_fee_commission(
                 &mut tx,
+                &self.wallet,
                 subject,
                 command.partner_id,
                 payment_id,
@@ -1339,7 +1328,15 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 let customer_user_id: i64 = row.get("customer_user_id");
                 let base_amount =
                     parse_money_to_cents("base_amount", &row.get::<String, _>("base_amount"))?;
-                match settle_event(&mut tx, subject, event_id, customer_user_id, base_amount).await
+                match settle_event(
+                    &mut tx,
+                    &self.wallet,
+                    subject,
+                    event_id,
+                    customer_user_id,
+                    base_amount,
+                )
+                .await
                 {
                     Ok((settled, _)) => {
                         if settled {
@@ -1449,9 +1446,26 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
         subject: &'a PartnerAdminSubject,
     ) -> PartnerAdminFuture<'a, PartnerAdminListPage<LedgerEntryItem>> {
         Box::pin(async move {
-            let count_sql = "SELECT COUNT(*) FROM partner_ledger_entry e \
-                             WHERE e.tenant_id = $1 AND e.organization_id = $2 AND e.partner_id = $3 \
-                             AND ($4::text IS NULL OR e.entry_type = $4)";
+            // The partner ledger is the account-domain ledger
+            // (`acct_ledger_entry`, owner_type=PARTNER, purpose=SETTLEMENT);
+            // partner_wallet/partner_ledger_entry are retired (S4).
+            // The partner ledger is the account-domain ledger
+            // (`acct_ledger_entry`, owner_type=PARTNER, purpose=SETTLEMENT);
+            // partner_wallet/partner_ledger_entry are retired (S4). The
+            // `entry_type` filter keeps the legacy public enum values and maps
+            // them onto the account `business_type` labels.
+            let count_sql = "SELECT COUNT(*) FROM acct_ledger_entry e \
+                             WHERE e.tenant_id = $1 AND e.organization_id = $2 \
+                               AND e.owner_type = 'PARTNER' AND e.owner_id = $3 \
+                             AND ($4::text IS NULL OR \
+                                  e.business_type = CASE $4 \
+                                    WHEN 'JOIN_FEE_COMMISSION' THEN 'join_fee_commission' \
+                                    WHEN 'REVENUE_COMMISSION' THEN 'commission_earn' \
+                                    WHEN 'MANUAL_ADJUST' THEN 'commission_adjustment' \
+                                    WHEN 'WITHDRAWAL_PAID' THEN 'commission_withdraw_paid' \
+                                    WHEN 'WITHDRAWAL_APPLY' THEN 'commission_withdraw_hold' \
+                                    WHEN 'WITHDRAWAL_REJECT' THEN 'commission_withdraw_release' \
+                                    ELSE $4 END)";
             let total = sqlx::query(count_sql)
                 .bind(subject.tenant_id)
                 .bind(subject.organization_id)
@@ -1462,12 +1476,49 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 .map_err(error_from_sql)?
                 .get::<i64, _>("count");
             let offset = (query.list.page - 1) * query.list.page_size;
+            // Project account-domain ledger rows onto the legacy partner
+            // ledger shape: business_type -> entry_type, minor units (cents) ->
+            // decimal strings, source encoded in `business_no`, and the
+            // adjustment operator in `idempotency_key` part 3.
             let rows = sqlx::query(
-                "SELECT e.id, e.partner_id, e.entry_type, e.direction, e.amount::text, \
-                 e.balance_after::text, e.ref_type, e.ref_id, e.operator_id, e.remark, e.created_at \
-                 FROM partner_ledger_entry e \
-                 WHERE e.tenant_id = $1 AND e.organization_id = $2 AND e.partner_id = $3 \
-                 AND ($4::text IS NULL OR e.entry_type = $4) \
+                "SELECT e.id, e.owner_id AS partner_id, \
+                 CASE e.business_type \
+                   WHEN 'join_fee_commission' THEN 'JOIN_FEE_COMMISSION' \
+                   WHEN 'commission_earn' THEN 'REVENUE_COMMISSION' \
+                   WHEN 'commission_adjustment' THEN 'MANUAL_ADJUST' \
+                   WHEN 'commission_withdraw_paid' THEN 'WITHDRAWAL_PAID' \
+                   ELSE e.business_type \
+                 END AS entry_type, \
+                 CASE WHEN e.direction = 'CREDIT' THEN 'IN' ELSE 'OUT' END AS direction, \
+                 round(e.amount::numeric / 100, 2)::text AS amount, \
+                 round(e.balance_after::numeric / 100, 2)::text AS balance_after, \
+                 CASE e.business_type \
+                   WHEN 'join_fee_commission' THEN 'JOIN_FEE_PAYMENT' \
+                   WHEN 'commission_earn' THEN 'COMMISSION_EVENT' \
+                   WHEN 'commission_withdraw_paid' THEN 'PARTNER_WITHDRAWAL' \
+                   ELSE '' \
+                 END AS ref_type, \
+                 CASE e.business_type \
+                   WHEN 'commission_adjustment' THEN NULL \
+                   ELSE NULLIF(split_part(e.business_no, ':', 2), '')::bigint \
+                 END AS ref_id, \
+                 CASE e.business_type \
+                   WHEN 'commission_adjustment' THEN NULLIF(split_part(e.idempotency_key, ':', 3), '')::bigint \
+                   ELSE 0 \
+                 END AS operator_id, \
+                 COALESCE(e.remark, '') AS remark, e.created_at \
+                 FROM acct_ledger_entry e \
+                 WHERE e.tenant_id = $1 AND e.organization_id = $2 \
+                   AND e.owner_type = 'PARTNER' AND e.owner_id = $3 \
+                 AND ($4::text IS NULL OR \
+                      e.business_type = CASE $4 \
+                        WHEN 'JOIN_FEE_COMMISSION' THEN 'join_fee_commission' \
+                        WHEN 'REVENUE_COMMISSION' THEN 'commission_earn' \
+                        WHEN 'MANUAL_ADJUST' THEN 'commission_adjustment' \
+                        WHEN 'WITHDRAWAL_PAID' THEN 'commission_withdraw_paid' \
+                        WHEN 'WITHDRAWAL_APPLY' THEN 'commission_withdraw_hold' \
+                        WHEN 'WITHDRAWAL_REJECT' THEN 'commission_withdraw_release' \
+                        ELSE $4 END) \
                  ORDER BY e.created_at DESC, e.id DESC LIMIT $5 OFFSET $6",
             )
             .bind(subject.tenant_id)
@@ -1494,78 +1545,66 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
         subject: &'a PartnerAdminSubject,
     ) -> PartnerAdminFuture<'a, LedgerEntryItem> {
         Box::pin(async move {
+            let config =
+                load_commission_config(&self.pool, subject.tenant_id, subject.organization_id)
+                    .await?;
+            // Manual adjustments mutate the account-domain ledger through the
+            // wallet port; negative amounts become DEBIT entries and are
+            // validated against the available balance by the account store.
+            // The idempotency key embeds the operator (part 3) so the ledger
+            // view can surface who adjusted.
+            let idempotency_key = format!(
+                "adjust:{}:{}:{}",
+                command.partner_id,
+                subject.user_id,
+                next_uuid()
+            );
+            let ledger_id = if command.amount_cents > 0 {
+                self.wallet
+                    .credit_commission(
+                        subject.tenant_id,
+                        subject.organization_id,
+                        command.partner_id,
+                        &config.currency,
+                        command.amount_cents,
+                        "commission_adjustment",
+                        "MANUAL_ADJUST",
+                        0,
+                        &command.remark,
+                        &idempotency_key,
+                    )
+                    .await?
+            } else {
+                match self
+                    .wallet
+                    .debit_commission(
+                        subject.tenant_id,
+                        subject.organization_id,
+                        command.partner_id,
+                        &config.currency,
+                        command.amount_cents.unsigned_abs() as i64,
+                        "MANUAL_ADJUST",
+                        0,
+                        &command.remark,
+                        &idempotency_key,
+                    )
+                    .await
+                {
+                    Ok(ledger_id) => ledger_id,
+                    Err(error) if error.message() == "insufficient account balance" => {
+                        return Err(CommerceServiceError::invalid_state(
+                            "adjustment would make the wallet balance negative",
+                        ));
+                    }
+                    Err(error) => return Err(error),
+                }
+            };
             let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
-            // Lock the wallet row.
-            let wallet = sqlx::query(
-                "SELECT total_earned::text, available_balance::text, withdrawing_amount::text, \
-                 withdrawn_amount::text FROM partner_wallet \
-                 WHERE tenant_id = $1 AND organization_id = $2 AND partner_id = $3 FOR UPDATE",
-            )
-            .bind(subject.tenant_id)
-            .bind(subject.organization_id)
-            .bind(command.partner_id)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(error_from_sql)?
-            .ok_or_else(|| CommerceServiceError::not_found("partner wallet not found"))?;
-            let available = parse_money_to_cents(
-                "available_balance",
-                &wallet.get::<String, _>("available_balance"),
-            )?;
-            let total_earned =
-                parse_money_to_cents("total_earned", &wallet.get::<String, _>("total_earned"))?;
-            if command.amount_cents < 0 && available + command.amount_cents < 0 {
-                return Err(CommerceServiceError::invalid_state(
-                    "adjustment would make the wallet balance negative",
-                ));
-            }
-            let new_available = available + command.amount_cents;
-            let new_total = if command.amount_cents > 0 {
-                total_earned + command.amount_cents
-            } else {
-                total_earned
-            };
-            let direction = if command.amount_cents > 0 {
-                "IN"
-            } else {
-                "OUT"
-            };
-            sqlx::query(
-                "UPDATE partner_wallet SET total_earned = $4::numeric, available_balance = $5::numeric, \
-                 updated_at = CURRENT_TIMESTAMP \
-                 WHERE tenant_id = $1 AND organization_id = $2 AND partner_id = $3",
-            )
-            .bind(subject.tenant_id)
-            .bind(subject.organization_id)
-            .bind(command.partner_id)
-            .bind(cents_to_decimal(new_total))
-            .bind(cents_to_decimal(new_available))
-            .execute(&mut *tx)
-            .await
-            .map_err(error_from_sql)?;
-            let ledger_id = sqlx::query(INSERT_LEDGER_ENTRY)
-                .bind(next_bigint_id())
-                .bind(next_uuid())
-                .bind(subject.tenant_id)
-                .bind(subject.organization_id)
-                .bind(command.partner_id)
-                .bind("MANUAL_ADJUST")
-                .bind(direction)
-                .bind(cents_to_decimal(command.amount_cents))
-                .bind(cents_to_decimal(new_available))
-                .bind("")
-                .bind(Option::<i64>::None)
-                .bind(subject.user_id)
-                .bind(&command.remark)
-                .fetch_one(&mut *tx)
-                .await
-                .map_err(error_from_sql)?
-                .get::<i64, _>("id");
             insert_audit(
                 &mut tx,
                 subject,
                 "create_ledger_adjustment",
-                "partner_ledger_entry",
+                "acct_ledger_entry",
                 Some(ledger_id),
                 json!({"partner_id": command.partner_id, "amount": cents_to_decimal(command.amount_cents)}),
             )
@@ -1573,9 +1612,17 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             .map_err(error_from_sql)?;
             tx.commit().await.map_err(error_from_sql)?;
             let row = sqlx::query(
-                "SELECT id, partner_id, entry_type, direction, amount::text, balance_after::text, \
-                 ref_type, ref_id, operator_id, remark, created_at FROM partner_ledger_entry \
-                 WHERE tenant_id = $1 AND organization_id = $2 AND id = $3",
+                "SELECT e.id, e.owner_id AS partner_id, \
+                 CASE e.business_type WHEN 'commission_adjustment' THEN 'MANUAL_ADJUST' \
+                   ELSE e.business_type END AS entry_type, \
+                 CASE WHEN e.direction = 'CREDIT' THEN 'IN' ELSE 'OUT' END AS direction, \
+                 round(e.amount::numeric / 100, 2)::text AS amount, \
+                 round(e.balance_after::numeric / 100, 2)::text AS balance_after, \
+                 '' AS ref_type, NULL::bigint AS ref_id, \
+                 NULLIF(split_part(e.idempotency_key, ':', 3), '')::bigint AS operator_id, \
+                 COALESCE(e.remark, '') AS remark, e.created_at \
+                 FROM acct_ledger_entry e \
+                 WHERE e.tenant_id = $1 AND e.organization_id = $2 AND e.id = $3",
             )
             .bind(subject.tenant_id)
             .bind(subject.organization_id)
@@ -1651,88 +1698,78 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                     config.min_withdrawal_amount
                 )));
             }
-            let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
-            let wallet = sqlx::query(
-                "SELECT total_earned::text, available_balance::text, withdrawing_amount::text, \
-                 withdrawn_amount::text FROM partner_wallet \
-                 WHERE tenant_id = $1 AND organization_id = $2 AND partner_id = $3 FOR UPDATE",
-            )
-            .bind(subject.tenant_id)
-            .bind(subject.organization_id)
-            .bind(command.partner_id)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(error_from_sql)?
-            .ok_or_else(|| CommerceServiceError::not_found("partner wallet not found"))?;
-            let available = parse_money_to_cents(
-                "available_balance",
-                &wallet.get::<String, _>("available_balance"),
-            )?;
+            // Freeze the commission through the account-domain hold; the hold
+            // is created before the withdrawal row so an idempotent retry can
+            // never double-freeze. On a later insert failure the hold is
+            // released best-effort.
+            let available = self
+                .wallet
+                .available_balance_cents(
+                    subject.tenant_id,
+                    subject.organization_id,
+                    command.partner_id,
+                    &config.currency,
+                )
+                .await?;
             if command.amount_cents > available {
                 return Err(CommerceServiceError::invalid_state(
                     "withdrawal amount exceeds the available balance",
                 ));
             }
-            let withdrawing = parse_money_to_cents(
-                "withdrawing_amount",
-                &wallet.get::<String, _>("withdrawing_amount"),
-            )?;
-            let new_available = available - command.amount_cents;
-            let new_withdrawing = withdrawing + command.amount_cents;
-            sqlx::query(
-                "UPDATE partner_wallet SET available_balance = $4::numeric, withdrawing_amount = $5::numeric, \
-                 updated_at = CURRENT_TIMESTAMP \
-                 WHERE tenant_id = $1 AND organization_id = $2 AND partner_id = $3",
-            )
-            .bind(subject.tenant_id)
-            .bind(subject.organization_id)
-            .bind(command.partner_id)
-            .bind(cents_to_decimal(new_available))
-            .bind(cents_to_decimal(new_withdrawing))
-            .execute(&mut *tx)
-            .await
-            .map_err(error_from_sql)?;
             let withdrawal_id = next_bigint_id();
-            let row = sqlx::query(INSERT_WITHDRAWAL)
-                .bind(withdrawal_id)
-                .bind(next_uuid())
-                .bind(subject.tenant_id)
-                .bind(subject.organization_id)
-                .bind(command.partner_id)
-                .bind(cents_to_decimal(command.amount_cents))
-                .bind(&command.remark)
-                .fetch_one(&mut *tx)
+            let hold_id = match self
+                .wallet
+                .create_withdrawal_hold(
+                    subject.tenant_id,
+                    subject.organization_id,
+                    command.partner_id,
+                    &config.currency,
+                    command.amount_cents,
+                    &format!("withdraw:{withdrawal_id}"),
+                    withdrawal_id,
+                    &format!("withdraw-hold:{withdrawal_id}:{}", command.partner_id),
+                )
                 .await
-                .map_err(error_from_sql)?;
-            sqlx::query(INSERT_LEDGER_ENTRY)
-                .bind(next_bigint_id())
-                .bind(next_uuid())
-                .bind(subject.tenant_id)
-                .bind(subject.organization_id)
-                .bind(command.partner_id)
-                .bind("WITHDRAWAL_APPLY")
-                .bind("OUT")
-                .bind(cents_to_decimal(command.amount_cents))
-                .bind(cents_to_decimal(new_available))
-                .bind("PARTNER_WITHDRAWAL")
-                .bind(withdrawal_id)
-                .bind(subject.user_id)
-                .bind("withdrawal applied")
-                .execute(&mut *tx)
-                .await
-                .map_err(error_from_sql)?;
-            insert_audit(
-                &mut tx,
+            {
+                Ok(hold_id) => hold_id,
+                Err(error)
+                    if error.message() == "insufficient account balance"
+                        || error.message() == "insufficient available balance for hold" =>
+                {
+                    return Err(CommerceServiceError::invalid_state(
+                        "withdrawal amount exceeds the available balance",
+                    ));
+                }
+                Err(error) => return Err(error),
+            };
+            let row = match insert_withdrawal_row(
+                &self.pool,
                 subject,
-                "create_withdrawal",
-                "partner_withdrawal",
-                Some(withdrawal_id),
-                json!({"partner_id": command.partner_id, "amount": cents_to_decimal(command.amount_cents)}),
+                command.partner_id,
+                withdrawal_id,
+                hold_id,
+                command.amount_cents,
+                &command.remark,
             )
             .await
-            .map_err(error_from_sql)?;
-            tx.commit().await.map_err(error_from_sql)?;
-            Ok(map_withdrawal(&row))
+            {
+                Ok(row) => row,
+                Err(error) => {
+                    // Best-effort rollback: the hold committed in its own
+                    // transaction, so release it when the withdrawal row
+                    // cannot be created (idempotent by withdrawal id).
+                    let _ = self
+                        .wallet
+                        .release_withdrawal_hold(
+                            subject.tenant_id,
+                            hold_id,
+                            &format!("withdraw-rollback:{withdrawal_id}:{}", command.partner_id),
+                        )
+                        .await;
+                    return Err(error);
+                }
+            };
+            Ok(row)
         })
     }
 
@@ -1758,7 +1795,6 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 )));
             }
             let partner_id: i64 = row.get("partner_id");
-            let amount_cents = parse_money_to_cents("amount", &row.get::<String, _>("amount"))?;
             if command.approve {
                 sqlx::query(
                     "UPDATE partner_withdrawal SET status = 'APPROVED', reviewed_by = $3, \
@@ -1773,63 +1809,19 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 .await
                 .map_err(error_from_sql)?;
             } else {
-                // Reject: return the frozen funds to the available balance.
-                let wallet = sqlx::query(
-                    "SELECT available_balance::text, withdrawing_amount::text FROM partner_wallet \
-                     WHERE tenant_id = $1 AND organization_id = $2 AND partner_id = $3 FOR UPDATE",
-                )
-                .bind(subject.tenant_id)
-                .bind(subject.organization_id)
-                .bind(partner_id)
-                .fetch_optional(&mut *tx)
-                .await
-                .map_err(error_from_sql)?;
-                let (available, withdrawing) = if let Some(wallet) = wallet {
-                    (
-                        parse_money_to_cents(
-                            "available_balance",
-                            &wallet.get::<String, _>("available_balance"),
-                        )?,
-                        parse_money_to_cents(
-                            "withdrawing_amount",
-                            &wallet.get::<String, _>("withdrawing_amount"),
-                        )?,
+                // Reject: release the frozen hold so the funds return to the
+                // available balance. The release is idempotent by withdrawal
+                // id, so a retry after a partial failure replays safely.
+                let hold_id = row.get::<Option<i64>, _>("hold_id").ok_or_else(|| {
+                    CommerceServiceError::invalid_state("withdrawal has no hold to release")
+                })?;
+                self.wallet
+                    .release_withdrawal_hold(
+                        subject.tenant_id,
+                        hold_id,
+                        &format!("withdraw-release:{0}:{1}", command.withdrawal_id, partner_id),
                     )
-                } else {
-                    (0, 0)
-                };
-                let new_available = available + amount_cents;
-                let new_withdrawing = withdrawing - amount_cents;
-                sqlx::query(
-                    "UPDATE partner_wallet SET available_balance = $4::numeric, withdrawing_amount = $5::numeric, \
-                     updated_at = CURRENT_TIMESTAMP \
-                     WHERE tenant_id = $1 AND organization_id = $2 AND partner_id = $3",
-                )
-                .bind(subject.tenant_id)
-                .bind(subject.organization_id)
-                .bind(partner_id)
-                .bind(cents_to_decimal(new_available))
-                .bind(cents_to_decimal(new_withdrawing))
-                .execute(&mut *tx)
-                .await
-                .map_err(error_from_sql)?;
-                sqlx::query(INSERT_LEDGER_ENTRY)
-                    .bind(next_bigint_id())
-                    .bind(next_uuid())
-                    .bind(subject.tenant_id)
-                    .bind(subject.organization_id)
-                    .bind(partner_id)
-                    .bind("WITHDRAWAL_REJECT")
-                    .bind("IN")
-                    .bind(cents_to_decimal(amount_cents))
-                    .bind(cents_to_decimal(new_available))
-                    .bind("PARTNER_WITHDRAWAL")
-                    .bind(command.withdrawal_id)
-                    .bind(subject.user_id)
-                    .bind("withdrawal rejected")
-                    .execute(&mut *tx)
-                    .await
-                    .map_err(error_from_sql)?;
+                    .await?;
                 sqlx::query(
                     "UPDATE partner_withdrawal SET status = 'REJECTED', reviewed_by = $3, \
                      reviewed_at = CURRENT_TIMESTAMP, review_remark = $4, updated_at = CURRENT_TIMESTAMP \
@@ -1891,62 +1883,22 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 )));
             }
             let partner_id: i64 = row.get("partner_id");
-            let amount_cents = parse_money_to_cents("amount", &row.get::<String, _>("amount"))?;
-            let wallet = sqlx::query(
-                "SELECT withdrawing_amount::text, withdrawn_amount::text FROM partner_wallet \
-                 WHERE tenant_id = $1 AND organization_id = $2 AND partner_id = $3 FOR UPDATE",
-            )
-            .bind(subject.tenant_id)
-            .bind(subject.organization_id)
-            .bind(partner_id)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(error_from_sql)?
-            .ok_or_else(|| CommerceServiceError::not_found("partner wallet not found"))?;
-            let withdrawing = parse_money_to_cents(
-                "withdrawing_amount",
-                &wallet.get::<String, _>("withdrawing_amount"),
-            )?;
-            let withdrawn = parse_money_to_cents(
-                "withdrawn_amount",
-                &wallet.get::<String, _>("withdrawn_amount"),
-            )?;
-            let new_withdrawing = withdrawing - amount_cents;
-            let new_withdrawn = withdrawn + amount_cents;
-            sqlx::query(
-                "UPDATE partner_wallet SET withdrawing_amount = $4::numeric, withdrawn_amount = $5::numeric, \
-                 updated_at = CURRENT_TIMESTAMP \
-                 WHERE tenant_id = $1 AND organization_id = $2 AND partner_id = $3",
-            )
-            .bind(subject.tenant_id)
-            .bind(subject.organization_id)
-            .bind(partner_id)
-            .bind(cents_to_decimal(new_withdrawing))
-            .bind(cents_to_decimal(new_withdrawn))
-            .execute(&mut *tx)
-            .await
-            .map_err(error_from_sql)?;
-            sqlx::query(INSERT_LEDGER_ENTRY)
-                .bind(next_bigint_id())
-                .bind(next_uuid())
-                .bind(subject.tenant_id)
-                .bind(subject.organization_id)
-                .bind(partner_id)
-                .bind("WITHDRAWAL_PAID")
-                .bind("OUT")
-                .bind(cents_to_decimal(amount_cents))
-                .bind(cents_to_decimal(new_withdrawing + withdrawn))
-                .bind("PARTNER_WITHDRAWAL")
-                .bind(command.withdrawal_id)
-                .bind(subject.user_id)
-                .bind(if command.remark.is_empty() {
-                    "withdrawal paid"
-                } else {
-                    &command.remark
-                })
-                .execute(&mut *tx)
-                .await
-                .map_err(error_from_sql)?;
+            // Settle the frozen hold through the account ledger; the settle is
+            // idempotent by withdrawal id, so a retry after a partial failure
+            // replays safely. The `commission_withdraw_paid` DEBIT is the
+            // withdrawal's ledger record.
+            let hold_id = row.get::<Option<i64>, _>("hold_id").ok_or_else(|| {
+                CommerceServiceError::invalid_state("withdrawal has no hold to settle")
+            })?;
+            self.wallet
+                .settle_withdrawal_hold(
+                    subject.tenant_id,
+                    hold_id,
+                    "commission_withdraw_paid",
+                    &format!("withdraw:{}", command.withdrawal_id),
+                    &format!("withdraw-settle:{0}:{1}", command.withdrawal_id, partner_id),
+                )
+                .await?;
             sqlx::query(
                 "UPDATE partner_withdrawal SET status = 'PAID', paid_at = CURRENT_TIMESTAMP, \
                  paid_by = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND tenant_id = $2",
@@ -1994,9 +1946,13 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             .fetch_one(&self.pool)
             .await
             .map_err(error_from_sql)?;
+            // Cumulative commission = CREDIT entries across all PARTNER
+            // settlement accounts (commission credits + adjustment credits);
+            // partner_wallet is retired (S4).
             let wallet_row = sqlx::query(
-                "SELECT COALESCE(SUM(total_earned), 0)::text AS commission \
-                 FROM partner_wallet WHERE tenant_id = $1 AND organization_id = $2",
+                "SELECT COALESCE(round((SUM(e.amount) FILTER (WHERE e.direction = 'CREDIT'))::numeric / 100, 2), 0.00)::text AS commission \
+                 FROM acct_ledger_entry e \
+                 WHERE e.tenant_id = $1 AND e.organization_id = $2 AND e.owner_type = 'PARTNER'",
             )
             .bind(subject.tenant_id)
             .bind(subject.organization_id)
@@ -2077,27 +2033,43 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
         subject: &'a PartnerAdminSubject,
     ) -> PartnerAdminFuture<'a, PartnerStatItem> {
         Box::pin(async move {
-            let wallet = sqlx::query(SELECT_WALLET)
-                .bind(subject.tenant_id)
-                .bind(subject.organization_id)
-                .bind(query.partner_id)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(error_from_sql)?;
-            let (total_commission, available, withdrawing, withdrawn) = match wallet {
-                Some(wallet) => (
-                    wallet.get::<String, _>("total_earned"),
-                    wallet.get::<String, _>("available_balance"),
-                    wallet.get::<String, _>("withdrawing_amount"),
-                    wallet.get::<String, _>("withdrawn_amount"),
+            // Partner balances live in the account-domain settlement account
+            // (available/frozen) and its ledger (cumulative credits/paid);
+            // partner_wallet/partner_ledger_entry are retired (S4).
+            let account_row = sqlx::query(
+                "SELECT available_amount, frozen_amount \
+                 FROM acct_account \
+                 WHERE tenant_id = $1 AND organization_id = $2 AND owner_type = 'PARTNER' \
+                   AND owner_id = $3 AND asset_code = 'cash' AND account_purpose = 'SETTLEMENT'",
+            )
+            .bind(subject.tenant_id)
+            .bind(subject.organization_id)
+            .bind(query.partner_id)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(error_from_sql)?;
+            let (available_cents, frozen_cents) = match account_row {
+                Some(account) => (
+                    account.get::<i64, _>("available_amount"),
+                    account.get::<i64, _>("frozen_amount"),
                 ),
-                None => (
-                    "0.00".to_string(),
-                    "0.00".to_string(),
-                    "0.00".to_string(),
-                    "0.00".to_string(),
-                ),
+                None => (0, 0),
             };
+            let ledger_row = sqlx::query(
+                "SELECT COALESCE(SUM(e.amount) FILTER (WHERE e.direction = 'CREDIT'), 0) AS earned, \
+                 COALESCE(SUM(e.amount) FILTER (WHERE e.direction = 'DEBIT' AND e.business_type = 'commission_withdraw_paid'), 0) AS withdrawn \
+                 FROM acct_ledger_entry e \
+                 WHERE e.tenant_id = $1 AND e.organization_id = $2 \
+                   AND e.owner_type = 'PARTNER' AND e.owner_id = $3",
+            )
+            .bind(subject.tenant_id)
+            .bind(subject.organization_id)
+            .bind(query.partner_id)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(error_from_sql)?;
+            let total_commission_cents: i64 = ledger_row.get("earned");
+            let withdrawn_cents: i64 = ledger_row.get("withdrawn");
             let join_fee_row = sqlx::query(
                 "SELECT COALESCE(SUM(amount), 0)::text AS total FROM partner_join_fee_payment \
                  WHERE tenant_id = $1 AND organization_id = $2 AND partner_id = $3 AND status = 'PAID'",
@@ -2128,10 +2100,10 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             Ok(PartnerStatItem {
                 partner_id: query.partner_id,
                 total_join_fee: join_fee_row.get("total"),
-                total_commission,
-                available_balance: available,
-                withdrawing_amount: withdrawing,
-                withdrawn_amount: withdrawn,
+                total_commission: cents_to_decimal(total_commission_cents),
+                available_balance: cents_to_decimal(available_cents),
+                withdrawing_amount: cents_to_decimal(frozen_cents),
+                withdrawn_amount: cents_to_decimal(withdrawn_cents),
                 customer_count: customer_row.get("count"),
                 downstream_partner_count: downstream_row.get::<i64, _>("count").max(0),
             })

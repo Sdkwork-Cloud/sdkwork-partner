@@ -21,13 +21,14 @@
 
 ## 3. 领域模型
 
-12 张表：`partner_level`、`partner_commission_config`、`partner`、`partner_customer_binding`、`partner_join_fee_payment`、`partner_commission_event`、`partner_commission_settlement`、`partner_commission_distribution`、`partner_wallet`、`partner_ledger_entry`、`partner_withdrawal`、`partner_stat_snapshot`。
+11 张表：`partner_level`、`partner_commission_config`、`partner`、`partner_customer_binding`、`partner_join_fee_payment`、`partner_commission_event`、`partner_commission_settlement`、`partner_commission_distribution`、`partner_withdrawal`、`partner_stat_snapshot`、`partner_audit_log`。合作伙伴钱包与流水不落本模块表：余额/冻结/累计/流水统一存于 sdkwork-account 账户域（`acct_account`/`acct_ledger_entry`，`owner_type=PARTNER`、`account_purpose=SETTLEMENT`、asset `cash`），提现冻结走 `acct_hold`（0002 迁移废弃 `partner_wallet`/`partner_ledger_entry`）。
 
 ## 4. 提成引擎
 
 - 金额以分（i64）计算，落库 NUMERIC(18,2)。
 - 舍入：逐级四舍五入，末位吸收剩余，保证 Σ = 总额。
-- 幂等：事件唯一键 `(source_type, source_ref)`；结算单事务内写 settlement + distributions + wallet + ledger + 审计。
+- 幂等：事件唯一键 `(source_type, source_ref)`；结算单事务内写 settlement + distributions + 审计；提成入账经账户端口（`PartnerWalletPort` → `PartnerAccountWalletAdapter`），幂等键 `commission:{event_id}:{partner_id}` / `join-fee:{payment_id}:{partner_id}`。
+- 余额写入只经账户端口：结算/加盟费提成 → Credit；提现 → Hold/Release/Settle（`partner_withdrawal.hold_id`）；调账 → Credit/Debit（`commission_adjustment`）。
 
 ## 5. 收益事件链路
 
@@ -37,6 +38,6 @@
 ## 6. 联邦接入（宿主侧触点）
 
 - `Cargo.toml [workspace.dependencies]`：`sdkwork_routes_partner_backend_api` 等。
-- 后端路由：`build_backend_partner_router(PartnerAdminService::new(PostgresPartnerAdminRepository::new(commerce_pool)))` → `.merge(partner_router)`。
+- 后端路由：`build_backend_partner_router(PartnerAdminService::new(PostgresPartnerAdminRepository::new(commerce_pool, Arc::new(PartnerAccountWalletAdapter::new(commerce_pool.clone())))))` → `.merge(partner_router)`。
 - 数据库：`DatabaseModuleRegistry::builder().register(sdkwork_partner_database_host::database_module()...)`。
 - 前端：`getSdkworkPartnerBackendSdkClient()` + 宿主 admin 包路由/菜单注册。

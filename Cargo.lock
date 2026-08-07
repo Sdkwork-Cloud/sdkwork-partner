@@ -1680,6 +1680,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "sdkwork-account-repository-sqlx"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "sdkwork-account-service",
+ "sdkwork-contract-service",
+ "sdkwork-database-id",
+ "sdkwork-utils-rust",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tracing",
+]
+
+[[package]]
+name = "sdkwork-account-service"
+version = "0.1.0"
+dependencies = [
+ "sdkwork-contract-service",
+]
+
+[[package]]
 name = "sdkwork-api-partner-assembly"
 version = "0.1.0"
 dependencies = [
@@ -1711,6 +1733,8 @@ name = "sdkwork-commerce-partner-repository-sqlx"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "sdkwork-account-repository-sqlx",
+ "sdkwork-account-service",
  "sdkwork-commerce-partner-service",
  "sdkwork-contract-service",
  "sdkwork-utils-rust",

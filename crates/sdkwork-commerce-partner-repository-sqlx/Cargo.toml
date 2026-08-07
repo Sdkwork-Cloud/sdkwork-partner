@@ -10,6 +10,8 @@ path = "src/lib.rs"
 
 [dependencies]
 sdkwork_contract_service.workspace = true
+sdkwork_account_service.workspace = true
+sdkwork_account_repository_sqlx.workspace = true
 sdkwork_commerce_partner_service.workspace = true
 sdkwork-utils-rust.workspace = true
 serde = { workspace = true }
