@@ -5,20 +5,20 @@ Generated SDKWork v3 dual-token transport SDK.
 ## Installation
 
 ```bash
-npm install sdkwork-partner-backend-sdk-generated-typescript
+npm install @sdkwork/partner-backend-sdk
 # or
-yarn add sdkwork-partner-backend-sdk-generated-typescript
+yarn add @sdkwork/partner-backend-sdk
 # or
-pnpm add sdkwork-partner-backend-sdk-generated-typescript
+pnpm add @sdkwork/partner-backend-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { SdkworkBackendClient } from 'sdkwork-partner-backend-sdk-generated-typescript';
+import { SdkworkBackendClient } from '@sdkwork/partner-backend-sdk';
 
 const client = new SdkworkBackendClient({
-  baseUrl: 'http://127.0.0.1:8080',
+  baseUrl: 'http://localhost:8080',
   timeout: 30000,
 });
 
@@ -41,10 +41,10 @@ Access-Token: <accessToken>
 ## Configuration (Non-Auth)
 
 ```typescript
-import { SdkworkBackendClient } from 'sdkwork-partner-backend-sdk-generated-typescript';
+import { SdkworkBackendClient } from '@sdkwork/partner-backend-sdk';
 
 const client = new SdkworkBackendClient({
-  baseUrl: 'http://127.0.0.1:8080',
+  baseUrl: 'http://localhost:8080',
   timeout: 30000, // Request timeout in ms
   headers: {      // Custom headers
     'X-Custom-Header': 'value',
@@ -68,7 +68,7 @@ const result = await client.partners.levels.list();
 ## Error Handling
 
 ```typescript
-import { SdkworkBackendClient, NetworkError, TimeoutError, AuthenticationError } from 'sdkwork-partner-backend-sdk-generated-typescript';
+import { SdkworkBackendClient, NetworkError, TimeoutError, AuthenticationError } from '@sdkwork/partner-backend-sdk';
 
 try {
   const result = await client.partners.levels.list();

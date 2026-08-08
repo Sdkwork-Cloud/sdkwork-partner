@@ -15,7 +15,12 @@
     }
   },
   "dependencies": {
-    "@sdkwork/sdk-common": "workspace:*"
+    "@sdkwork/sdk-common": "workspace:*",
+    "@sdkwork/utils": "workspace:*"
   },
-  "files": ["src", "generated/server-openapi/dist", "generated/server-openapi/src"]
+  "files": [
+    "src",
+    "generated/server-openapi/dist",
+    "generated/server-openapi/src"
+  ]
 }

@@ -3,11 +3,11 @@
   "generator": "@sdkwork/sdk-generator",
   "sdk": {
     "name": "sdkwork-partner-backend-sdk",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "language": "typescript",
     "sdkType": "backend",
     "protocol": "http",
-    "packageName": "sdkwork-partner-backend-sdk-generated-typescript"
+    "packageName": "@sdkwork/partner-backend-sdk"
   },
   "generatedFiles": [
     {
@@ -32,7 +32,7 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "fb941a0806986a54fc192f98a98f6d9c282b8d350b2b19a3e71dda404e92d545"
+      "sha256": "ecb55fcda2ed37d190a142ed7f8fe40ecc076276324fd22efd4fd15ab8610ee5"
     },
     {
       "path": "LICENSE",
@@ -40,15 +40,15 @@
     },
     {
       "path": "package.json",
-      "sha256": "6e516583f9a5f83c97aafd3c1de687bbaa64a8f64797e644ce2013b4154330ca"
+      "sha256": "6af8fda077451964a964e513028e5138d85e72f0e90bd57c0844c2b0669984ad"
     },
     {
       "path": "README.md",
-      "sha256": "e3730b6a2c82078b8b77c2de4d907f68073466f2e344e467801a7d566fa810c1"
+      "sha256": "4e4347b3e19dbccd7418ca4853856e14f0184624b629da5b019cdf1990724277"
     },
     {
       "path": "sdkwork-sdk.json",
-      "sha256": "22c289ee0eaddc25f11a9a5387925fa797c75771969e7facc81683bf64f6ab53"
+      "sha256": "566937904ed1e5b770b3c31fd8bb7d6f05f6d40e281494bb9fa6947f5291ec5a"
     },
     {
       "path": "src/api/base.ts",
@@ -72,7 +72,7 @@
     },
     {
       "path": "src/http/client.ts",
-      "sha256": "8a0a4cb9cc3cb855091ccd790e99feb9b9beff7637db48869173393ab544b9af"
+      "sha256": "8232d087b029fcd6897617116ca4f8609a728915cc0ca2f1796c66c00c8d89d9"
     },
     {
       "path": "src/http/index.ts",
