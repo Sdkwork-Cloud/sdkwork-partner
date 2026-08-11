@@ -17,13 +17,18 @@
     "@sdkwork/partner-pc-admin-partner": "workspace:*",
     "@sdkwork/partner-pc-admin-commission": "workspace:*",
     "@sdkwork/partner-pc-admin-withdrawal": "workspace:*",
-    "@sdkwork/partner-pc-admin-stats": "workspace:*"
+    "@sdkwork/partner-pc-admin-stats": "workspace:*",
+    "i18next": "catalog:",
+    "react-i18next": "catalog:",
+    "lucide-react": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "tailwindcss": "catalog:",
+    "@tailwindcss/vite": "catalog:"
   }
 }

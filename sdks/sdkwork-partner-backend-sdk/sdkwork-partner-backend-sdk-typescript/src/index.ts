@@ -11,6 +11,20 @@ export * from "../generated/server-openapi/src/api";
 export * from "../generated/server-openapi/src/http";
 export * from "../generated/server-openapi/src/auth";
 
+export type {
+  PartnersAuditLogsListParams,
+  PartnersCommissionEventsListParams,
+  PartnersCustomerBindingsListAllParams,
+  PartnersCustomerBindingsListParams,
+  PartnersJoinFeePaymentsListAllParams,
+  PartnersJoinFeePaymentsListParams,
+  PartnersLedgerEntriesListParams,
+  PartnersListParams,
+  PartnersSettlementsListParams,
+  PartnersStatsListParams,
+  PartnersWithdrawalsListParams,
+} from "../generated/server-openapi/src/api/partners";
+
 export function createClient(config: SdkworkBackendConfig): SdkworkBackendClient {
   return createGeneratedBackendClient(config);
 }

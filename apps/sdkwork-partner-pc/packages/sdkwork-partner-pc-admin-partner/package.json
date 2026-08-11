@@ -9,6 +9,11 @@
       "types": "./src/index.tsx",
       "import": "./src/index.tsx",
       "default": "./src/index.tsx"
+    },
+    "./i18n": {
+      "types": "./src/i18n/index.ts",
+      "import": "./src/i18n/index.ts",
+      "default": "./src/i18n/index.ts"
     }
   },
   "files": [
@@ -22,7 +27,9 @@
     "@sdkwork/partner-backend-sdk": "workspace:*",
     "@sdkwork/partner-pc-admin-core": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "lucide-react": "catalog:",
+    "react-i18next": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",

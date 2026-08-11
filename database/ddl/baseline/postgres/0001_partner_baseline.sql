@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS partner_partner (
     email VARCHAR(256) NOT NULL DEFAULT '',
     level_no INTEGER NOT NULL,
     parent_partner_id BIGINT,
-    user_account_id BIGINT NOT NULL,
+    -- NULL = no bound IAM user account yet; bindable later from the admin list.
+    user_account_id BIGINT,
     status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
     join_fee_amount NUMERIC(18,2) NOT NULL DEFAULT 0,
     join_fee_status VARCHAR(16) NOT NULL DEFAULT 'UNPAID',

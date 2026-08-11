@@ -1,7 +1,7 @@
 import { backendApiPath } from './paths';
 import type { ApiRequestOptions, HttpClient } from '../http/client';
 
-import type { AdminCommissionConfigUpdateRequest, AdminCommissionEventCreateRequest, AdminCustomerBindRequest, AdminJoinFeePaymentCreateRequest, AdminLedgerAdjustmentRequest, AdminPartnerCreateRequest, AdminPartnerLevelCreateRequest, AdminPartnerLevelUpdateRequest, AdminPartnerUpdateRequest, AdminSettlementRunRequest, AdminWithdrawalCreateRequest, AdminWithdrawalPayRequest, AdminWithdrawalReviewRequest, CommissionConfigItem, CommissionEventItem, CustomerBindingItem, JoinFeePaymentItem, LedgerEntryItem, PageInfo, PartnerAncestorItem, PartnerItem, PartnerLevelItem, PartnerStatItem, PartnerTreeItem, SettlementItem, SettlementRunResult, StatSnapshotItem, StatsOverviewItem, WithdrawalItem } from '../types';
+import type { AdminCommissionConfigUpdateRequest, AdminCommissionEventCreateRequest, AdminCustomerBindRequest, AdminJoinFeePaymentCreateRequest, AdminLedgerAdjustmentRequest, AdminPartnerBindUserAccountRequest, AdminPartnerCreateRequest, AdminPartnerLevelCreateRequest, AdminPartnerLevelUpdateRequest, AdminPartnerUpdateRequest, AdminSettlementRunRequest, AdminWithdrawalCreateRequest, AdminWithdrawalPayRequest, AdminWithdrawalReviewRequest, AuditLogItem, CommissionConfigItem, CommissionEventItem, CustomerBindingItem, JoinFeePaymentItem, LedgerEntryItem, PageInfo, PartnerAncestorItem, PartnerItem, PartnerLevelItem, PartnerStatItem, PartnerTreeItem, SettlementItem, SettlementRunResult, StatSnapshotItem, StatsOverviewItem, WithdrawalItem } from '../types';
 
 
 export interface PartnersStatsListParams {
@@ -114,6 +114,39 @@ export class PartnersWithdrawalsApi {
   }
 }
 
+export interface PartnersAuditLogsListParams {
+  page?: string;
+  pageSize?: string;
+  q?: string;
+  action?: string;
+  targetType?: string;
+  targetId?: string;
+  operatorId?: string;
+}
+
+export class PartnersAuditLogsApi {
+  private client: HttpClient;
+
+  constructor(client: HttpClient) {
+    this.client = client;
+  }
+
+
+/** List partner admin audit logs */
+  async list(params?: PartnersAuditLogsListParams, requestOptions?: ApiRequestOptions): Promise<{ items: AuditLogItem[]; pageInfo: PageInfo; }> {
+    const query = buildQueryString([
+      { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
+      { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
+      { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
+      { name: 'action', value: params?.action, style: 'form', explode: true, allowReserved: false },
+      { name: 'target_type', value: params?.targetType, style: 'form', explode: true, allowReserved: false },
+      { name: 'target_id', value: params?.targetId, style: 'form', explode: true, allowReserved: false },
+      { name: 'operator_id', value: params?.operatorId, style: 'form', explode: true, allowReserved: false },
+    ]);
+    return this.client.request<{ items: AuditLogItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/audit_logs`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+  }
+}
+
 export interface PartnersLedgerEntriesListParams {
   page?: number;
   pageSize?: number;
@@ -220,6 +253,14 @@ export interface PartnersCustomerBindingsListParams {
   q?: string;
 }
 
+export interface PartnersCustomerBindingsListAllParams {
+  page?: string;
+  pageSize?: string;
+  q?: string;
+  partnerId?: string;
+  status?: string;
+}
+
 export class PartnersCustomerBindingsApi {
   private client: HttpClient;
 
@@ -243,6 +284,18 @@ export class PartnersCustomerBindingsApi {
     return this.client.request<CustomerBindingItem>(backendApiPath(`/partners/customers`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 
+/** List customer bindings across all partners */
+  async listAll(params?: PartnersCustomerBindingsListAllParams, requestOptions?: ApiRequestOptions): Promise<{ items: CustomerBindingItem[]; pageInfo: PageInfo; }> {
+    const query = buildQueryString([
+      { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
+      { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
+      { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
+      { name: 'partner_id', value: params?.partnerId, style: 'form', explode: true, allowReserved: false },
+      { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
+    ]);
+    return this.client.request<{ items: CustomerBindingItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/customers`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+  }
+
 /** Unbind a customer from a partner */
   async delete(bindingId: string, requestOptions?: ApiRequestOptions): Promise<void> {
     return this.client.request<void>(backendApiPath(`/partners/customers/${serializePathParameter(bindingId, { name: 'bindingId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'DELETE' as any });
@@ -253,6 +306,14 @@ export interface PartnersJoinFeePaymentsListParams {
   page?: number;
   pageSize?: number;
   q?: string;
+}
+
+export interface PartnersJoinFeePaymentsListAllParams {
+  page?: string;
+  pageSize?: string;
+  q?: string;
+  partnerId?: string;
+  status?: string;
 }
 
 export class PartnersJoinFeePaymentsApi {
@@ -276,6 +337,18 @@ export class PartnersJoinFeePaymentsApi {
 /** Record a join fee payment and trigger ancestor commission */
   async create(partnerId: string, body: AdminJoinFeePaymentCreateRequest, requestOptions?: ApiRequestOptions): Promise<JoinFeePaymentItem> {
     return this.client.request<JoinFeePaymentItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/join_fee_payments`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+  }
+
+/** List join fee payments across all partners */
+  async listAll(params?: PartnersJoinFeePaymentsListAllParams, requestOptions?: ApiRequestOptions): Promise<{ items: JoinFeePaymentItem[]; pageInfo: PageInfo; }> {
+    const query = buildQueryString([
+      { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
+      { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
+      { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
+      { name: 'partner_id', value: params?.partnerId, style: 'form', explode: true, allowReserved: false },
+      { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
+    ]);
+    return this.client.request<{ items: JoinFeePaymentItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/join_fee_payments`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 }
 
@@ -304,6 +377,20 @@ export class PartnersTreeApi {
 /** List the partner descendant tree */
   async list(partnerId: string, requestOptions?: ApiRequestOptions): Promise<PartnerTreeItem[]> {
     return this.client.request<PartnerTreeItem[]>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/tree`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'item' });
+  }
+}
+
+export class PartnersUserAccountApi {
+  private client: HttpClient;
+
+  constructor(client: HttpClient) {
+    this.client = client;
+  }
+
+
+/** Bind an IAM user account to a partner */
+  async create(partnerId: string, body: AdminPartnerBindUserAccountRequest, requestOptions?: ApiRequestOptions): Promise<PartnerItem> {
+    return this.client.request<PartnerItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/user_account`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -361,12 +448,16 @@ export interface PartnersListParams {
   q?: string;
   status?: 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'CLOSED';
   levelNo?: number;
+  createdFrom?: string;
+  createdTo?: string;
+  joinFeeStatus?: 'PAID' | 'UNPAID';
 }
 
 export class PartnersApi {
   private client: HttpClient;
   public readonly levels: PartnersLevelsApi;
   public readonly commissionConfig: PartnersCommissionConfigApi;
+  public readonly userAccount: PartnersUserAccountApi;
   public readonly tree: PartnersTreeApi;
   public readonly ancestors: PartnersAncestorsApi;
   public readonly joinFeePayments: PartnersJoinFeePaymentsApi;
@@ -374,6 +465,7 @@ export class PartnersApi {
   public readonly commissionEvents: PartnersCommissionEventsApi;
   public readonly settlements: PartnersSettlementsApi;
   public readonly ledgerEntries: PartnersLedgerEntriesApi;
+  public readonly auditLogs: PartnersAuditLogsApi;
   public readonly withdrawals: PartnersWithdrawalsApi;
   public readonly withdrawalReviews: PartnersWithdrawalReviewsApi;
   public readonly withdrawalPayments: PartnersWithdrawalPaymentsApi;
@@ -384,6 +476,7 @@ export class PartnersApi {
     this.client = client;
     this.levels = new PartnersLevelsApi(client);
     this.commissionConfig = new PartnersCommissionConfigApi(client);
+    this.userAccount = new PartnersUserAccountApi(client);
     this.tree = new PartnersTreeApi(client);
     this.ancestors = new PartnersAncestorsApi(client);
     this.joinFeePayments = new PartnersJoinFeePaymentsApi(client);
@@ -391,6 +484,7 @@ export class PartnersApi {
     this.commissionEvents = new PartnersCommissionEventsApi(client);
     this.settlements = new PartnersSettlementsApi(client);
     this.ledgerEntries = new PartnersLedgerEntriesApi(client);
+    this.auditLogs = new PartnersAuditLogsApi(client);
     this.withdrawals = new PartnersWithdrawalsApi(client);
     this.withdrawalReviews = new PartnersWithdrawalReviewsApi(client);
     this.withdrawalPayments = new PartnersWithdrawalPaymentsApi(client);
@@ -407,6 +501,9 @@ export class PartnersApi {
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
       { name: 'level_no', value: params?.levelNo, style: 'form', explode: true, allowReserved: false },
+      { name: 'created_from', value: params?.createdFrom, style: 'form', explode: true, allowReserved: false },
+      { name: 'created_to', value: params?.createdTo, style: 'form', explode: true, allowReserved: false },
+      { name: 'join_fee_status', value: params?.joinFeeStatus, style: 'form', explode: true, allowReserved: false },
     ]);
     return this.client.request<{ items: PartnerItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }

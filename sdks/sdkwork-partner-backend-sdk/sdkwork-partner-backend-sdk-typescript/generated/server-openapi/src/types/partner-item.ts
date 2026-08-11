@@ -15,8 +15,8 @@ export interface PartnerItem {
   levelNo: number;
   /** Parent partner id (null = top level). */
   parentPartnerId?: string | null;
-  /** Bound IAM user account id. */
-  userAccountId: string;
+  /** Bound IAM user account id (null = not bound yet). */
+  userAccountId: string | null;
   /** Partner status. */
   status: 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'CLOSED';
   /** Recorded join fee amount. */

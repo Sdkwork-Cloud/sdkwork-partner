@@ -5,6 +5,7 @@ packages:
   - "sdks/sdkwork-partner-backend-sdk/sdkwork-partner-backend-sdk-typescript"
   # Sibling SDKWork workspaces (declared by the consuming repository root only)
   - "../sdkwork-sdk-commons/sdkwork-sdk-common-typescript"
+  - "../sdkwork-utils/packages/sdkwork-utils-typescript"
 
 catalog:
   react: ^19.2.4
@@ -21,4 +22,7 @@ catalog:
   "@types/react-dom": ^19.2.3
   jsdom: ^29.0.1
   lucide-react: ^1.7.0
-  - "../sdkwork-utils/packages/sdkwork-utils-typescript"
+  tailwindcss: ^4.1.14
+  "@tailwindcss/vite": ^4.1.14
+  i18next: ^26.0.0
+  react-i18next: ^17.0.0

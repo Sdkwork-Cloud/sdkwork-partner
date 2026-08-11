@@ -164,7 +164,9 @@ pub struct CreatePartnerCommand {
     pub email: String,
     pub level_no: i32,
     pub parent_partner_id: Option<i64>,
-    pub user_account_id: i64,
+    /// None = the partner has no bound IAM user account yet; it can be bound
+    /// later via `BindPartnerUserAccountCommand`.
+    pub user_account_id: Option<i64>,
     pub remark: String,
 }
 
@@ -176,7 +178,7 @@ impl CreatePartnerCommand {
         email: &str,
         level_no: i32,
         parent_partner_id: Option<i64>,
-        user_account_id: i64,
+        user_account_id: Option<i64>,
         remark: &str,
     ) -> Result<Self, CommerceServiceError> {
         let name = require_non_empty("name", name)?;
@@ -185,10 +187,12 @@ impl CreatePartnerCommand {
                 "level_no must be a positive integer",
             ));
         }
-        if user_account_id <= 0 {
-            return Err(CommerceServiceError::validation(
-                "user_account_id must be a positive integer",
-            ));
+        if let Some(user_account_id) = user_account_id {
+            if user_account_id <= 0 {
+                return Err(CommerceServiceError::validation(
+                    "user_account_id must be a positive integer",
+                ));
+            }
         }
         Ok(Self {
             name,
@@ -199,6 +203,31 @@ impl CreatePartnerCommand {
             parent_partner_id,
             user_account_id,
             remark: remark.trim().to_string(),
+        })
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct BindPartnerUserAccountCommand {
+    pub partner_id: i64,
+    pub user_account_id: i64,
+}
+
+impl BindPartnerUserAccountCommand {
+    pub fn new(partner_id: i64, user_account_id: i64) -> Result<Self, CommerceServiceError> {
+        if partner_id <= 0 {
+            return Err(CommerceServiceError::validation(
+                "partner_id must be a positive integer",
+            ));
+        }
+        if user_account_id <= 0 {
+            return Err(CommerceServiceError::validation(
+                "user_account_id must be a positive integer",
+            ));
+        }
+        Ok(Self {
+            partner_id,
+            user_account_id,
         })
     }
 }

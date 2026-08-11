@@ -2,16 +2,17 @@
 //! the admin service facade.
 
 use crate::commands::{
-    BindCustomerCommand, CreateJoinFeePaymentCommand, CreateLedgerAdjustmentCommand,
-    CreateManualCommissionEventCommand, CreatePartnerCommand, CreatePartnerLevelCommand,
-    CreateWithdrawalCommand, DeletePartnerLevelCommand, PayWithdrawalCommand,
-    ReviewWithdrawalCommand, RunCommissionSettlementCommand, UnbindCustomerCommand,
-    UpdateCommissionConfigCommand, UpdatePartnerCommand, UpdatePartnerLevelCommand,
+    BindCustomerCommand, BindPartnerUserAccountCommand, CreateJoinFeePaymentCommand,
+    CreateLedgerAdjustmentCommand, CreateManualCommissionEventCommand, CreatePartnerCommand,
+    CreatePartnerLevelCommand, CreateWithdrawalCommand, DeletePartnerLevelCommand,
+    PayWithdrawalCommand, ReviewWithdrawalCommand, RunCommissionSettlementCommand,
+    UnbindCustomerCommand, UpdateCommissionConfigCommand, UpdatePartnerCommand,
+    UpdatePartnerLevelCommand,
 };
 use crate::queries::{
-    ListCommissionEventsQuery, ListCustomerBindingsQuery, ListJoinFeePaymentsQuery,
-    ListLedgerEntriesQuery, ListPartnerLevelsQuery, ListPartnersQuery, ListSettlementsQuery,
-    ListStatsSnapshotsQuery, ListWithdrawalsQuery, RetrievePartnerQuery,
+    ListAuditLogsQuery, ListCommissionEventsQuery, ListCustomerBindingsQuery,
+    ListJoinFeePaymentsQuery, ListLedgerEntriesQuery, ListPartnerLevelsQuery, ListPartnersQuery,
+    ListSettlementsQuery, ListStatsSnapshotsQuery, ListWithdrawalsQuery, RetrievePartnerQuery,
 };
 use sdkwork_contract_service::CommerceServiceError;
 use std::future::Future;
@@ -85,7 +86,9 @@ pub struct PartnerItem {
     pub email: String,
     pub level_no: i32,
     pub parent_partner_id: Option<i64>,
-    pub user_account_id: i64,
+    /// None = no IAM user account bound yet (bindable later).
+    #[serde(with = "sdkwork_utils_rust::serde_int64::option")]
+    pub user_account_id: Option<i64>,
     pub status: String,
     pub join_fee_amount: String,
     pub join_fee_status: String,
@@ -222,6 +225,21 @@ pub struct WithdrawalItem {
     pub updated_at: String,
 }
 
+/// Admin audit-log projection (`partner_audit_log`).
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AuditLogItem {
+    pub id: i64,
+    pub operator_id: i64,
+    pub operator_type: String,
+    pub action: String,
+    pub target_type: String,
+    pub target_id: Option<i64>,
+    pub request_id: Option<String>,
+    pub payload: String,
+    pub created_at: String,
+}
+
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatsOverviewItem {
@@ -331,6 +349,13 @@ pub trait PartnerAdminRepositoryPort: Send + Sync {
         subject: &'a PartnerAdminSubject,
     ) -> PartnerAdminFuture<'a, PartnerItem>;
 
+    /// Binds (or replaces) the IAM user account of an existing partner.
+    fn bind_partner_user_account<'a>(
+        &'a self,
+        command: BindPartnerUserAccountCommand,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerItem>;
+
     fn list_partner_tree<'a>(
         &'a self,
         query: RetrievePartnerQuery,
@@ -405,6 +430,13 @@ pub trait PartnerAdminRepositoryPort: Send + Sync {
         query: ListLedgerEntriesQuery,
         subject: &'a PartnerAdminSubject,
     ) -> PartnerAdminFuture<'a, PartnerAdminListPage<LedgerEntryItem>>;
+
+    /// Pages the admin audit log (`partner_audit_log`), newest first.
+    fn list_audit_logs<'a>(
+        &'a self,
+        query: ListAuditLogsQuery,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerAdminListPage<AuditLogItem>>;
 
     fn create_ledger_adjustment<'a>(
         &'a self,
@@ -547,6 +579,16 @@ impl PartnerAdminService {
         self.repository.update_partner(command, subject).await
     }
 
+    pub async fn bind_partner_user_account(
+        &self,
+        command: BindPartnerUserAccountCommand,
+        subject: &PartnerAdminSubject,
+    ) -> Result<PartnerItem, CommerceServiceError> {
+        self.repository
+            .bind_partner_user_account(command, subject)
+            .await
+    }
+
     pub async fn list_partner_tree(
         &self,
         query: RetrievePartnerQuery,
@@ -647,6 +689,14 @@ impl PartnerAdminService {
         subject: &PartnerAdminSubject,
     ) -> Result<PartnerAdminListPage<LedgerEntryItem>, CommerceServiceError> {
         self.repository.list_ledger_entries(query, subject).await
+    }
+
+    pub async fn list_audit_logs(
+        &self,
+        query: ListAuditLogsQuery,
+        subject: &PartnerAdminSubject,
+    ) -> Result<PartnerAdminListPage<AuditLogItem>, CommerceServiceError> {
+        self.repository.list_audit_logs(query, subject).await
     }
 
     pub async fn create_ledger_adjustment(

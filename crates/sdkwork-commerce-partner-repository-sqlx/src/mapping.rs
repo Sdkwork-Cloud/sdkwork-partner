@@ -206,3 +206,19 @@ pub fn map_stat_snapshot(row: &sqlx::postgres::PgRow) -> StatSnapshotItem {
         downstream_partner_count: row.get("downstream_partner_count"),
     }
 }
+
+pub fn map_audit_log(row: &sqlx::postgres::PgRow) -> AuditLogItem {
+    AuditLogItem {
+        id: row.get("id"),
+        operator_id: row.get("operator_id"),
+        operator_type: row.get("operator_type"),
+        action: row.get("action"),
+        target_type: row.get("target_type"),
+        target_id: row.get("target_id"),
+        request_id: row.get("request_id"),
+        payload: row.get("payload"),
+        created_at: row
+            .get::<chrono::DateTime<chrono::Utc>, _>("created_at")
+            .to_rfc3339(),
+    }
+}

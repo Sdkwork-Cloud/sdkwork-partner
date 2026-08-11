@@ -694,6 +694,9 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 .bind(query.status.as_deref())
                 .bind(query.level_no)
                 .bind(q)
+                .bind(query.created_from.as_deref())
+                .bind(query.created_to.as_deref())
+                .bind(query.join_fee_status.as_deref())
                 .fetch_one(&self.pool)
                 .await
                 .map_err(error_from_sql)?
@@ -705,6 +708,9 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 .bind(query.status.as_deref())
                 .bind(query.level_no)
                 .bind(q)
+                .bind(query.created_from.as_deref())
+                .bind(query.created_to.as_deref())
+                .bind(query.join_fee_status.as_deref())
                 .bind(query.list.page_size)
                 .bind(offset)
                 .fetch_all(&self.pool)
@@ -761,6 +767,25 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 }
             }
             let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
+            // The level must exist; an unknown level would silently break the
+            // commission policy of the partner.
+            let level_count: i64 = sqlx::query(
+                "SELECT COUNT(*) FROM partner_level \
+                 WHERE tenant_id = $1 AND organization_id = $2 AND level_no = $3",
+            )
+            .bind(subject.tenant_id)
+            .bind(subject.organization_id)
+            .bind(command.level_no)
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(error_from_sql)?
+            .get("count");
+            if level_count == 0 {
+                return Err(CommerceServiceError::validation(format!(
+                    "partner level {} does not exist",
+                    command.level_no
+                )));
+            }
             let partner_id = next_bigint_id();
             let result = sqlx::query(INSERT_PARTNER)
                 .bind(partner_id)
@@ -814,10 +839,49 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
     ) -> PartnerAdminFuture<'a, PartnerItem> {
         Box::pin(async move {
             let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
+            // Lock the partner row so the CLOSED terminal-state check is
+            // race-free against a concurrent close.
+            let current = sqlx::query(
+                "SELECT status FROM partner_partner \
+                 WHERE id = $1 AND tenant_id = $2 AND organization_id = $3 AND deleted_at IS NULL \
+                 FOR UPDATE",
+            )
+            .bind(command.partner_id)
+            .bind(subject.tenant_id)
+            .bind(subject.organization_id)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(error_from_sql)?
+            .ok_or_else(|| CommerceServiceError::not_found("partner not found"))?;
+            let current_status: String = current.get("status");
+            if current_status == "CLOSED" && command.status != "CLOSED" {
+                return Err(CommerceServiceError::invalid_state(
+                    "closed partners cannot be reactivated",
+                ));
+            }
+            // The level must exist; an unknown level would silently break the
+            // commission policy of the partner.
+            let level_count: i64 = sqlx::query(
+                "SELECT COUNT(*) FROM partner_level \
+                 WHERE tenant_id = $1 AND organization_id = $2 AND level_no = $3",
+            )
+            .bind(subject.tenant_id)
+            .bind(subject.organization_id)
+            .bind(command.level_no)
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(error_from_sql)?
+            .get("count");
+            if level_count == 0 {
+                return Err(CommerceServiceError::validation(format!(
+                    "partner level {} does not exist",
+                    command.level_no
+                )));
+            }
             let updated = sqlx::query(
                 "UPDATE partner_partner SET name = $3, contact_name = $4, phone = $5, email = $6, \
                  level_no = $7, status = $8, remark = $9, updated_at = CURRENT_TIMESTAMP \
-                 WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL",
+                 WHERE id = $1 AND tenant_id = $2 AND organization_id = $10 AND deleted_at IS NULL",
             )
             .bind(command.partner_id)
             .bind(subject.tenant_id)
@@ -828,6 +892,7 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             .bind(command.level_no)
             .bind(&command.status)
             .bind(&command.remark)
+            .bind(subject.organization_id)
             .execute(&mut *tx)
             .await
             .map_err(error_from_sql)?;
@@ -841,6 +906,90 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 "partner_partner",
                 Some(command.partner_id),
                 json!({"status": command.status, "level_no": command.level_no}),
+            )
+            .await
+            .map_err(error_from_sql)?;
+            tx.commit().await.map_err(error_from_sql)?;
+            let row = sqlx::query(SELECT_PARTNER_BY_ID)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(command.partner_id)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(error_from_sql)?;
+            Ok(map_partner(&row))
+        })
+    }
+
+    fn bind_partner_user_account<'a>(
+        &'a self,
+        command: BindPartnerUserAccountCommand,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerItem> {
+        Box::pin(async move {
+            let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
+            // Lock the partner row so the CLOSED terminal-state check and the
+            // user-account uniqueness check are race-free.
+            let current = sqlx::query(
+                "SELECT status, user_account_id FROM partner_partner \
+                 WHERE id = $1 AND tenant_id = $2 AND organization_id = $3 AND deleted_at IS NULL \
+                 FOR UPDATE",
+            )
+            .bind(command.partner_id)
+            .bind(subject.tenant_id)
+            .bind(subject.organization_id)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(error_from_sql)?
+            .ok_or_else(|| CommerceServiceError::not_found("partner not found"))?;
+            let current_status: String = current.get("status");
+            if current_status == "CLOSED" {
+                return Err(CommerceServiceError::invalid_state(
+                    "closed partners cannot have their user account changed",
+                ));
+            }
+            // The IAM user account may only belong to one partner (unique
+            // index); check explicitly for a human-readable conflict instead
+            // of relying on the unique-violation mapping.
+            let occupying: i64 = sqlx::query(
+                "SELECT COUNT(*) FROM partner_partner \
+                 WHERE tenant_id = $1 AND organization_id = $2 AND user_account_id = $3 \
+                   AND id != $4 AND deleted_at IS NULL",
+            )
+            .bind(subject.tenant_id)
+            .bind(subject.organization_id)
+            .bind(command.user_account_id)
+            .bind(command.partner_id)
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(error_from_sql)?
+            .get("count");
+            if occupying > 0 {
+                return Err(CommerceServiceError::conflict(
+                    "the IAM user account is already bound to another partner",
+                ));
+            }
+            let updated = sqlx::query(
+                "UPDATE partner_partner SET user_account_id = $3, updated_at = CURRENT_TIMESTAMP \
+                 WHERE id = $1 AND tenant_id = $2 AND organization_id = $4 AND deleted_at IS NULL",
+            )
+            .bind(command.partner_id)
+            .bind(subject.tenant_id)
+            .bind(command.user_account_id)
+            .bind(subject.organization_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(error_from_sql)?;
+            if updated.rows_affected() == 0 {
+                return Err(CommerceServiceError::not_found("partner not found"));
+            }
+            insert_audit(
+                &mut tx,
+                subject,
+                "bind_user_account",
+                "partner_partner",
+                Some(command.partner_id),
+                json!({"user_account_id": command.user_account_id}),
             )
             .await
             .map_err(error_from_sql)?;
@@ -1060,15 +1209,18 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
         subject: &'a PartnerAdminSubject,
     ) -> PartnerAdminFuture<'a, PartnerAdminListPage<CustomerBindingItem>> {
         Box::pin(async move {
+            let q = query.list.q.as_deref();
             let count_sql = "SELECT COUNT(*) FROM partner_customer_binding b \
                              WHERE b.tenant_id = $1 AND b.organization_id = $2 \
                              AND ($3::bigint IS NULL OR b.partner_id = $3) \
-                             AND ($4::text IS NULL OR b.status = $4)";
+                             AND ($4::text IS NULL OR b.status = $4) \
+                             AND ($5::text IS NULL OR b.customer_user_id::text = $5 OR b.partner_id::text = $5)";
             let total = sqlx::query(count_sql)
                 .bind(subject.tenant_id)
                 .bind(subject.organization_id)
                 .bind(query.partner_id)
                 .bind(query.status.as_deref())
+                .bind(q)
                 .fetch_one(&self.pool)
                 .await
                 .map_err(error_from_sql)?
@@ -1081,12 +1233,14 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                  WHERE b.tenant_id = $1 AND b.organization_id = $2 \
                  AND ($3::bigint IS NULL OR b.partner_id = $3) \
                  AND ($4::text IS NULL OR b.status = $4) \
-                 ORDER BY b.created_at DESC, b.id DESC LIMIT $5 OFFSET $6",
+                 AND ($5::text IS NULL OR b.customer_user_id::text = $5 OR b.partner_id::text = $5) \
+                 ORDER BY b.created_at DESC, b.id DESC LIMIT $6 OFFSET $7",
             )
             .bind(subject.tenant_id)
             .bind(subject.organization_id)
             .bind(query.partner_id)
             .bind(query.status.as_deref())
+            .bind(q)
             .bind(query.list.page_size)
             .bind(offset)
             .fetch_all(&self.pool)
@@ -1532,6 +1686,61 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             .map_err(error_from_sql)?;
             Ok(PartnerAdminListPage {
                 items: rows.iter().map(map_ledger_entry).collect(),
+                page: query.list.page,
+                page_size: query.list.page_size,
+                total,
+            })
+        })
+    }
+
+    fn list_audit_logs<'a>(
+        &'a self,
+        query: ListAuditLogsQuery,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerAdminListPage<AuditLogItem>> {
+        Box::pin(async move {
+            let count_sql = "SELECT COUNT(*) FROM partner_audit_log a \
+                             WHERE a.tenant_id = $1 AND a.organization_id = $2 \
+                             AND ($3::text IS NULL OR a.action = $3) \
+                             AND ($4::text IS NULL OR a.target_type = $4) \
+                             AND ($5::bigint IS NULL OR a.target_id = $5) \
+                             AND ($6::bigint IS NULL OR a.operator_id = $6)";
+            let total = sqlx::query(count_sql)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(query.action.as_deref())
+                .bind(query.target_type.as_deref())
+                .bind(query.target_id)
+                .bind(query.operator_id)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(error_from_sql)?
+                .get::<i64, _>("count");
+            let offset = (query.list.page - 1) * query.list.page_size;
+            let rows = sqlx::query(
+                "SELECT a.id, a.operator_id, a.operator_type, a.action, a.target_type, \
+                        a.target_id, a.request_id, a.payload, a.created_at \
+                 FROM partner_audit_log a \
+                 WHERE a.tenant_id = $1 AND a.organization_id = $2 \
+                 AND ($3::text IS NULL OR a.action = $3) \
+                 AND ($4::text IS NULL OR a.target_type = $4) \
+                 AND ($5::bigint IS NULL OR a.target_id = $5) \
+                 AND ($6::bigint IS NULL OR a.operator_id = $6) \
+                 ORDER BY a.created_at DESC, a.id DESC LIMIT $7 OFFSET $8",
+            )
+            .bind(subject.tenant_id)
+            .bind(subject.organization_id)
+            .bind(query.action.as_deref())
+            .bind(query.target_type.as_deref())
+            .bind(query.target_id)
+            .bind(query.operator_id)
+            .bind(query.list.page_size)
+            .bind(offset)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(error_from_sql)?;
+            Ok(PartnerAdminListPage {
+                items: rows.iter().map(map_audit_log).collect(),
                 page: query.list.page,
                 page_size: query.list.page_size,
                 total,

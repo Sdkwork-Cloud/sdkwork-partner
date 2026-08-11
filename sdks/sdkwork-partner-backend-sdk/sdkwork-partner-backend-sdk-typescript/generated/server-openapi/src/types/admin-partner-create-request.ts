@@ -11,8 +11,8 @@ export interface AdminPartnerCreateRequest {
   levelNo: number;
   /** Parent partner id (null = top level). */
   parentPartnerId?: string | null;
-  /** Bound IAM user account id. */
-  userAccountId: string;
+  /** Bound IAM user account id (optional at creation; bind later from the partner list). */
+  userAccountId?: string | null;
   /** Remark. */
   remark?: string;
 }

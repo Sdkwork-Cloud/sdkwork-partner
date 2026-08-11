@@ -47,14 +47,30 @@ pub struct ListPartnersQuery {
     pub list: PartnerAdminListQuery,
     pub status: Option<String>,
     pub level_no: Option<i32>,
+    /// Inclusive created-at lower bound (RFC 3339).
+    pub created_from: Option<String>,
+    /// Exclusive created-at upper bound (RFC 3339).
+    pub created_to: Option<String>,
+    /// Join fee payment status (`PAID`/`UNPAID`).
+    pub join_fee_status: Option<String>,
 }
 
 impl ListPartnersQuery {
-    pub fn new(list: PartnerAdminListQuery, status: Option<String>, level_no: Option<i32>) -> Self {
+    pub fn new(
+        list: PartnerAdminListQuery,
+        status: Option<String>,
+        level_no: Option<i32>,
+        created_from: Option<String>,
+        created_to: Option<String>,
+        join_fee_status: Option<String>,
+    ) -> Self {
         Self {
             list,
             status,
             level_no,
+            created_from,
+            created_to,
+            join_fee_status,
         }
     }
 }
@@ -172,6 +188,34 @@ impl ListLedgerEntriesQuery {
             list,
             partner_id,
             entry_type,
+        }
+    }
+}
+
+/// Admin audit-log page query (partner_audit_log projection).
+#[derive(Clone, Debug)]
+pub struct ListAuditLogsQuery {
+    pub list: PartnerAdminListQuery,
+    pub action: Option<String>,
+    pub target_type: Option<String>,
+    pub target_id: Option<i64>,
+    pub operator_id: Option<i64>,
+}
+
+impl ListAuditLogsQuery {
+    pub fn new(
+        list: PartnerAdminListQuery,
+        action: Option<String>,
+        target_type: Option<String>,
+        target_id: Option<i64>,
+        operator_id: Option<i64>,
+    ) -> Self {
+        Self {
+            list,
+            action,
+            target_type,
+            target_id,
+            operator_id,
         }
     }
 }

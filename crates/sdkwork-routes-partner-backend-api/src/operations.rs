@@ -49,6 +49,13 @@ struct ListParams {
     entry_type: Option<String>,
     period_type: Option<String>,
     partner_id: Option<i64>,
+    action: Option<String>,
+    target_type: Option<String>,
+    target_id: Option<i64>,
+    operator_id: Option<i64>,
+    created_from: Option<String>,
+    created_to: Option<String>,
+    join_fee_status: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -82,10 +89,21 @@ struct PartnerRequest {
     phone: Option<String>,
     email: Option<String>,
     level_no: i32,
+    #[serde(with = "sdkwork_utils_rust::serde_int64::option", default)]
     parent_partner_id: Option<i64>,
-    user_account_id: i64,
+    /// Optional at creation: the IAM user account can be bound later from
+    /// the admin partner list (bind_partner_user_account).
+    #[serde(with = "sdkwork_utils_rust::serde_int64::option", default)]
+    user_account_id: Option<i64>,
     status: Option<String>,
     remark: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BindUserAccountRequest {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
+    user_account_id: i64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -100,7 +118,9 @@ struct JoinFeePaymentRequest {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct BindCustomerRequest {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     partner_id: i64,
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     customer_user_id: i64,
     binding_type: Option<String>,
 }
@@ -109,6 +129,7 @@ struct BindCustomerRequest {
 #[serde(rename_all = "camelCase")]
 struct ManualCommissionEventRequest {
     source_ref: String,
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     customer_user_id: i64,
     base_amount: String,
     event_at: Option<String>,
@@ -118,12 +139,14 @@ struct ManualCommissionEventRequest {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct SettlementRunRequest {
+    #[serde(with = "sdkwork_utils_rust::serde_int64::option", default)]
     limit: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct LedgerAdjustmentRequest {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     partner_id: i64,
     amount: String,
     remark: String,
@@ -132,6 +155,7 @@ struct LedgerAdjustmentRequest {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct WithdrawalRequest {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     partner_id: i64,
     amount: String,
     remark: Option<String>,
@@ -175,6 +199,10 @@ pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router
             get(fetch_partner).patch(update_partner),
         )
         .route(
+            "/backend/v3/api/partners/{partnerId}/user_account",
+            post(bind_partner_user_account),
+        )
+        .route(
             "/backend/v3/api/partners/{partnerId}/tree",
             get(fetch_partner_tree),
         )
@@ -194,11 +222,16 @@ pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router
         )
         .route(
             "/backend/v3/api/partners/customers",
-            post(post_customer_binding),
+            get(fetch_all_customer_bindings).post(post_customer_binding),
         )
         .route(
             "/backend/v3/api/partners/customers/{bindingId}",
             axum::routing::delete(delete_customer_binding),
+        )
+        // Join fees (global view)
+        .route(
+            "/backend/v3/api/partners/join_fee_payments",
+            get(fetch_all_join_fee_payments),
         )
         // Commission events & settlements
         .route(
@@ -221,6 +254,11 @@ pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router
         .route(
             "/backend/v3/api/partners/ledger/adjustments",
             post(post_ledger_adjustment),
+        )
+        // Audit log
+        .route(
+            "/backend/v3/api/partners/audit_logs",
+            get(fetch_audit_logs),
         )
         // Withdrawals
         .route(
@@ -469,7 +507,14 @@ async fn fetch_partners(
             PartnerAdminListQuery::new(params.page, params.page_size, q.q.clone())
                 .map_err(|e| validation(Some(&c), e.message()))
         );
-    let query = ListPartnersQuery::new(list, q.status.clone(), q.level_no);
+    let query = ListPartnersQuery::new(
+        list,
+        q.status.clone(),
+        q.level_no,
+        q.created_from.clone(),
+        q.created_to.clone(),
+        q.join_fee_status.clone(),
+    );
     match s.service.list_partners(query, &scope).await {
         Ok(page) => list_response(Some(&c), page, params),
         Err(e) => service_error(Some(&c), "list partners", e),
@@ -505,6 +550,23 @@ async fn create_partner(
     match s.service.create_partner(command, &scope).await {
         Ok(v) => success_created(Some(&c), v),
         Err(e) => service_error(Some(&c), "create partner", e),
+    }
+}
+
+async fn bind_partner_user_account(
+    State(s): State<PartnerAdminState>,
+    Extension(i): Extension<IamAppContext>,
+    Extension(c): Extension<WebRequestContext>,
+    Path(id): Path<String>,
+    Json(b): Json<BindUserAccountRequest>,
+) -> Response {
+    let scope = response_try!(manage_scope(&c, i));
+    let id = response_try!(parse_id(Some(&c), &id, "partnerId"));
+    let command = response_try!(BindPartnerUserAccountCommand::new(id, b.user_account_id)
+        .map_err(|e| validation(Some(&c), e.message())));
+    match s.service.bind_partner_user_account(command, &scope).await {
+        Ok(v) => success_created(Some(&c), v),
+        Err(e) => service_error(Some(&c), "bind partner user account", e),
     }
 }
 
@@ -656,6 +718,48 @@ async fn fetch_customer_bindings(
     match s.service.list_customer_bindings(query, &scope).await {
         Ok(page) => list_response(Some(&c), page, params),
         Err(e) => service_error(Some(&c), "list customer bindings", e),
+    }
+}
+
+/// Global customer-binding view across all partners (filter by partner/status).
+async fn fetch_all_customer_bindings(
+    State(s): State<PartnerAdminState>,
+    Extension(i): Extension<IamAppContext>,
+    Extension(c): Extension<WebRequestContext>,
+    Query(q): Query<ListParams>,
+) -> Response {
+    let scope = response_try!(read_scope(&c, i));
+    let params = response_try!(page_params(Some(&c), &q));
+    let list =
+        response_try!(
+            PartnerAdminListQuery::new(params.page, params.page_size, q.q.clone())
+                .map_err(|e| validation(Some(&c), e.message()))
+        );
+    let query = ListCustomerBindingsQuery::new(list, q.partner_id, q.status.clone());
+    match s.service.list_customer_bindings(query, &scope).await {
+        Ok(page) => list_response(Some(&c), page, params),
+        Err(e) => service_error(Some(&c), "list all customer bindings", e),
+    }
+}
+
+/// Global join-fee payment view across all partners (filter by partner/status).
+async fn fetch_all_join_fee_payments(
+    State(s): State<PartnerAdminState>,
+    Extension(i): Extension<IamAppContext>,
+    Extension(c): Extension<WebRequestContext>,
+    Query(q): Query<ListParams>,
+) -> Response {
+    let scope = response_try!(read_scope(&c, i));
+    let params = response_try!(page_params(Some(&c), &q));
+    let list =
+        response_try!(
+            PartnerAdminListQuery::new(params.page, params.page_size, q.q.clone())
+                .map_err(|e| validation(Some(&c), e.message()))
+        );
+    let query = ListJoinFeePaymentsQuery::new(list, q.partner_id, q.status.clone());
+    match s.service.list_join_fee_payments(query, &scope).await {
+        Ok(page) => list_response(Some(&c), page, params),
+        Err(e) => service_error(Some(&c), "list all join fee payments", e),
     }
 }
 
@@ -823,6 +927,33 @@ async fn post_ledger_adjustment(
     match s.service.create_ledger_adjustment(command, &scope).await {
         Ok(v) => success_created(Some(&c), v),
         Err(e) => service_error(Some(&c), "create ledger adjustment", e),
+    }
+}
+
+/// Pages the partner admin audit log (newest first) with optional filters.
+async fn fetch_audit_logs(
+    State(s): State<PartnerAdminState>,
+    Extension(i): Extension<IamAppContext>,
+    Extension(c): Extension<WebRequestContext>,
+    Query(q): Query<ListParams>,
+) -> Response {
+    let scope = response_try!(read_scope(&c, i));
+    let params = response_try!(page_params(Some(&c), &q));
+    let list =
+        response_try!(
+            PartnerAdminListQuery::new(params.page, params.page_size, q.q.clone())
+                .map_err(|e| validation(Some(&c), e.message()))
+        );
+    let query = ListAuditLogsQuery::new(
+        list,
+        q.action.clone(),
+        q.target_type.clone(),
+        q.target_id,
+        q.operator_id,
+    );
+    match s.service.list_audit_logs(query, &scope).await {
+        Ok(page) => list_response(Some(&c), page, params),
+        Err(e) => service_error(Some(&c), "list audit logs", e),
     }
 }
 

@@ -52,6 +52,11 @@ const HTTP_ROUTES: &[HttpRoute] = &[
         "/backend/v3/api/partners/{partnerId}",
         "partner.update",
     ),
+    manage(
+        HttpMethod::Post,
+        "/backend/v3/api/partners/{partnerId}/user_account",
+        "userAccount.create",
+    ),
     read(
         HttpMethod::Get,
         "/backend/v3/api/partners/{partnerId}/tree",

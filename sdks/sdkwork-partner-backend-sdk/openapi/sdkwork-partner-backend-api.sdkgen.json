@@ -816,6 +816,36 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "created_from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Inclusive created-at lower bound."
+          },
+          {
+            "name": "created_to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Exclusive created-at upper bound."
+          },
+          {
+            "name": "join_fee_status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PAID",
+                "UNPAID"
+              ]
+            },
+            "description": "Filter by join fee payment status."
           }
         ]
       },
@@ -1149,6 +1179,129 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "partnerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Partner id."
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/partners/{partnerId}/user_account": {
+      "post": {
+        "operationId": "userAccount.create",
+        "summary": "Bind an IAM user account to a partner",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPartnerBindUserAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
         "parameters": [
           {
             "name": "partnerId",
@@ -1903,6 +2056,135 @@
             }
           }
         }
+      },
+      "get": {
+        "operationId": "customerBindings.listAll",
+        "summary": "List customer bindings across all partners",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partner_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerBindingListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/backend/v3/api/partners/customers/{bindingId}": {
@@ -2009,6 +2291,137 @@
             "description": "Binding id."
           }
         ]
+      }
+    },
+    "/backend/v3/api/partners/join_fee_payments": {
+      "get": {
+        "operationId": "joinFeePayments.listAll",
+        "summary": "List join fee payments across all partners",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partner_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinFeePaymentListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/backend/v3/api/partners/commission_events": {
@@ -2797,6 +3210,156 @@
             }
           }
         }
+      }
+    },
+    "/backend/v3/api/partners/audit_logs": {
+      "get": {
+        "operationId": "auditLogs.list",
+        "summary": "List partner admin audit logs",
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by audit action."
+          },
+          {
+            "name": "target_type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by target entity type."
+          },
+          {
+            "name": "target_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Filter by target entity id."
+          },
+          {
+            "name": "operator_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Filter by operator id."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit log page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
       }
     },
     "/backend/v3/api/partners/withdrawals": {
@@ -4128,8 +4691,11 @@
             "format": "int64"
           },
           "userAccountId": {
-            "type": "integer",
-            "description": "Bound IAM user account id.",
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Bound IAM user account id (null = not bound yet).",
             "format": "int64"
           },
           "status": {
@@ -4244,8 +4810,7 @@
         "type": "object",
         "required": [
           "name",
-          "levelNo",
-          "userAccountId"
+          "levelNo"
         ],
         "properties": {
           "name": {
@@ -4278,8 +4843,11 @@
             "format": "int64"
           },
           "userAccountId": {
-            "type": "integer",
-            "description": "Bound IAM user account id.",
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Bound IAM user account id (optional at creation; bind later from the partner list).",
             "format": "int64"
           },
           "remark": {
@@ -5747,6 +6315,100 @@
             }
           }
         ]
+      },
+      "AuditLogItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "operatorId",
+          "operatorType",
+          "action",
+          "targetType",
+          "payload",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "operatorId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "operatorType": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "description": "Admin action performed (e.g. partner.create)."
+          },
+          "targetType": {
+            "type": "string",
+            "description": "Target entity type (partner/level/withdrawal/...)."
+          },
+          "targetId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "string",
+            "description": "JSON payload snapshot of the mutation."
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        }
+      },
+      "AuditLogListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AuditLogItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminPartnerBindUserAccountRequest": {
+        "type": "object",
+        "required": [
+          "userAccountId"
+        ],
+        "properties": {
+          "userAccountId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "IAM user account id to bind (replaces any existing binding)."
+          }
+        }
       }
     },
     "responses": {
@@ -5966,6 +6628,16 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/PartnerStatItemEnvelope"
+            }
+          }
+        }
+      },
+      "AuditLogListEnvelopeResponse": {
+        "description": "Audit log page",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AuditLogListEnvelope"
             }
           }
         }

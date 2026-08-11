@@ -53,3 +53,6 @@ export type { StatSnapshotItem } from './stat-snapshot-item';
 export type { StatSnapshotListEnvelope } from './stat-snapshot-list-envelope';
 export type { PartnerStatItem } from './partner-stat-item';
 export type { PartnerStatItemEnvelope } from './partner-stat-item-envelope';
+export type { AuditLogItem } from './audit-log-item';
+export type { AuditLogListEnvelope } from './audit-log-list-envelope';
+export type { AdminPartnerBindUserAccountRequest } from './admin-partner-bind-user-account-request';

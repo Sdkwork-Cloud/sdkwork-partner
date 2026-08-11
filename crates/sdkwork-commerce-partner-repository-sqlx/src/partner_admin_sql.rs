@@ -28,7 +28,10 @@ SELECT COUNT(*) FROM partner_partner p
 WHERE p.tenant_id = $1 AND p.organization_id = $2 AND p.deleted_at IS NULL
   AND ($3::text IS NULL OR p.status = $3)
   AND ($4::integer IS NULL OR p.level_no = $4)
-  AND ($5::text IS NULL OR p.name ILIKE '%' || $5 || '%' OR p.contact_name ILIKE '%' || $5 || '%' OR p.phone ILIKE '%' || $5 || '%')
+  AND ($5::text IS NULL OR p.name ILIKE '%' || $5 || '%' OR p.contact_name ILIKE '%' || $5 || '%' OR p.phone ILIKE '%' || $5 || '%' OR p.id::text = $5)
+  AND ($6::timestamptz IS NULL OR p.created_at >= $6::timestamptz)
+  AND ($7::timestamptz IS NULL OR p.created_at < $7::timestamptz)
+  AND ($8::text IS NULL OR p.join_fee_status = $8)
 "#;
 
 /// List partners (list query with filters, ordered).
@@ -40,9 +43,12 @@ FROM partner_partner p
 WHERE p.tenant_id = $1 AND p.organization_id = $2 AND p.deleted_at IS NULL
   AND ($3::text IS NULL OR p.status = $3)
   AND ($4::integer IS NULL OR p.level_no = $4)
-  AND ($5::text IS NULL OR p.name ILIKE '%' || $5 || '%' OR p.contact_name ILIKE '%' || $5 || '%' OR p.phone ILIKE '%' || $5 || '%')
+  AND ($5::text IS NULL OR p.name ILIKE '%' || $5 || '%' OR p.contact_name ILIKE '%' || $5 || '%' OR p.phone ILIKE '%' || $5 || '%' OR p.id::text = $5)
+  AND ($6::timestamptz IS NULL OR p.created_at >= $6::timestamptz)
+  AND ($7::timestamptz IS NULL OR p.created_at < $7::timestamptz)
+  AND ($8::text IS NULL OR p.join_fee_status = $8)
 ORDER BY p.created_at DESC, p.id DESC
-LIMIT $6 OFFSET $7
+LIMIT $9 OFFSET $10
 "#;
 
 /// Recursive ancestor chain (self first, then parents upward) with level
@@ -158,7 +164,9 @@ RETURNING id, partner_id, amount::text, currency, status, payment_method, paid_a
 /// Mark a partner's join fee as paid.
 pub const UPDATE_PARTNER_JOIN_FEE_PAID: &str = r#"
 UPDATE partner_partner
-SET join_fee_status = 'PAID', join_fee_amount = $3::numeric, joined_at = COALESCE(joined_at, CURRENT_TIMESTAMP),
+SET join_fee_status = 'PAID',
+    join_fee_amount = COALESCE(join_fee_amount, 0) + $3::numeric,
+    joined_at = COALESCE(joined_at, CURRENT_TIMESTAMP),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND tenant_id = $2
 "#;
@@ -173,11 +181,16 @@ RETURNING id, partner_id, amount::text, status, hold_id, reviewed_by, reviewed_a
 "#;
 
 /// Select a withdrawal by id.
+///
+/// Locked for update: every use site mutates the withdrawal inside its own
+/// write transaction (review/pay). The row lock serializes concurrent review
+/// attempts so a single withdrawal can never be both approved and rejected.
 pub const SELECT_WITHDRAWAL_BY_ID: &str = r#"
 SELECT id, partner_id, amount::text, status, hold_id, reviewed_by, reviewed_at, review_remark,
        paid_at, paid_by, remark, created_at, updated_at
 FROM partner_withdrawal
 WHERE tenant_id = $1 AND organization_id = $2 AND id = $3
+FOR UPDATE
 "#;
 
 /// Insert a partner audit log row.

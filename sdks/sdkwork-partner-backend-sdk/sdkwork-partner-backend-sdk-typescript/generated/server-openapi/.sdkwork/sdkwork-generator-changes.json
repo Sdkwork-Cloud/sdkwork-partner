@@ -3,18 +3,17 @@
   "generator": "@sdkwork/sdk-generator",
   "sdk": {
     "name": "sdkwork-partner-backend-sdk",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "language": "typescript",
     "sdkType": "backend",
     "protocol": "http",
-    "packageName": "@sdkwork/partner-backend-sdk"
+    "packageName": "sdkwork-partner-backend-sdk-generated-typescript"
   },
-  "changeFingerprint": "5c6e70748e1ee141afc7e688ace2f481f3cfa942a2e17564a4f5f830b0b62531",
+  "changeFingerprint": "2de986598427a1ba1d9b3b1d1233c1c0cc54bd4a4d07f732d8b217ad71af6521",
   "changes": {
     "createdGeneratedFiles": [],
     "updatedGeneratedFiles": [
-      "package.json",
-      "src/http/client.ts"
+      "src/api/partners.ts"
     ],
     "unchangedGeneratedFiles": [
       "bin/publish-core.mjs",
@@ -24,13 +23,14 @@
       "bin/sdk-gen.sh",
       "CHANGELOG.md",
       "LICENSE",
+      "package.json",
       "README.md",
       "sdkwork-sdk.json",
       "src/api/base.ts",
       "src/api/index.ts",
-      "src/api/partners.ts",
       "src/api/paths.ts",
       "src/auth/index.ts",
+      "src/http/client.ts",
       "src/http/index.ts",
       "src/index.ts",
       "src/sdk.ts",
@@ -39,6 +39,7 @@
       "src/types/admin-customer-bind-request.ts",
       "src/types/admin-join-fee-payment-create-request.ts",
       "src/types/admin-ledger-adjustment-request.ts",
+      "src/types/admin-partner-bind-user-account-request.ts",
       "src/types/admin-partner-create-request.ts",
       "src/types/admin-partner-level-create-request.ts",
       "src/types/admin-partner-level-update-request.ts",
@@ -47,6 +48,8 @@
       "src/types/admin-withdrawal-create-request.ts",
       "src/types/admin-withdrawal-pay-request.ts",
       "src/types/admin-withdrawal-review-request.ts",
+      "src/types/audit-log-item.ts",
+      "src/types/audit-log-list-envelope.ts",
       "src/types/commission-config-item-envelope.ts",
       "src/types/commission-config-item.ts",
       "src/types/commission-event-item-envelope.ts",
@@ -103,43 +106,29 @@
   "impact": {
     "schemaVersion": 1,
     "areas": [
-      "api-surface",
-      "runtime",
-      "build-metadata"
+      "api-surface"
     ],
     "details": [
       {
         "area": "api-surface",
         "paths": [
-          "src/http/client.ts"
-        ]
-      },
-      {
-        "area": "runtime",
-        "paths": [
-          "src/http/client.ts"
-        ]
-      },
-      {
-        "area": "build-metadata",
-        "paths": [
-          "package.json"
+          "src/api/partners.ts"
         ]
       }
     ],
     "requiresVerification": true,
-    "summary": "Detected impact areas: api-surface, runtime, build-metadata. Verification is required."
+    "summary": "Detected impact areas: api-surface. Verification is required."
   },
   "verificationPlan": {
     "shouldRun": true,
     "runPhase": "now",
-    "summary": "Detected impact areas: api-surface, runtime, build-metadata. Verification is required. Run the required verification commands now against the generated SDK output.",
+    "summary": "Detected impact areas: api-surface. Verification is required. Run the required verification commands now against the generated SDK output.",
     "steps": [
       {
         "id": "check",
         "title": "Unified package check",
         "required": true,
-        "rationale": "Validate the generated package with the unified publish helper. Triggered by: api-surface, runtime, build-metadata.",
+        "rationale": "Validate the generated package with the unified publish helper. Triggered by: api-surface.",
         "workingDirectory": "E:\\sdkwork-space\\sdkwork-partner\\sdks\\sdkwork-partner-backend-sdk\\sdkwork-partner-backend-sdk-typescript\\generated\\server-openapi",
         "command": "node",
         "args": [
@@ -157,7 +146,7 @@
         "id": "build",
         "title": "Unified package build",
         "required": true,
-        "rationale": "Run the full package build because this language uses a lighter check path than the final build. Triggered by: api-surface, runtime, build-metadata.",
+        "rationale": "Run the full package build because this language uses a lighter check path than the final build. Triggered by: api-surface.",
         "workingDirectory": "E:\\sdkwork-space\\sdkwork-partner\\sdks\\sdkwork-partner-backend-sdk\\sdkwork-partner-backend-sdk-typescript\\generated\\server-openapi",
         "command": "node",
         "args": [
