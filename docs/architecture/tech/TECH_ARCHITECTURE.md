@@ -21,11 +21,12 @@
 
 ## 3. 领域模型
 
-11 张表：`partner_level`、`partner_commission_config`、`partner`、`partner_customer_binding`、`partner_join_fee_payment`、`partner_commission_event`、`partner_commission_settlement`、`partner_commission_distribution`、`partner_withdrawal`、`partner_stat_snapshot`、`partner_audit_log`。合作伙伴钱包与流水不落本模块表：余额/冻结/累计/流水统一存于 sdkwork-account 账户域（`acct_account`/`acct_ledger_entry`，`owner_type=PARTNER`、`account_purpose=SETTLEMENT`、asset `cash`），提现冻结走 `acct_hold`（0002 迁移废弃 `partner_wallet`/`partner_ledger_entry`）。
+11 张表：`partner_level`、`partner_commission_config`、`partner`、`partner_customer_binding`、`partner_join_fee_payment`、`partner_commission_event`、`partner_commission_settlement`、`partner_commission_distribution`、`partner_withdrawal`、`partner_stat_snapshot`、`partner_audit_log`。`partner_level.benefits`（0004 迁移）为等级权益 JSONB 列（`[{code,name,value,sort}]`），由管理端维护。合作伙伴钱包与流水不落本模块表：余额/冻结/累计/流水统一存于 sdkwork-account 账户域（`acct_account`/`acct_ledger_entry`，`owner_type=PARTNER`、`account_purpose=SETTLEMENT`、asset `cash`），提现冻结走 `acct_hold`（0002 迁移废弃 `partner_wallet`/`partner_ledger_entry`）。
 
 ## 4. 提成引擎
 
 - 金额以分（i64）计算，落库 NUMERIC(18,2)。
+- 分配模型：**级差制（differential）**——收入归属者（offset 0）拿满本级提成池比例，上级按「本级比例 − 链条中已见最高比例」的正差提取；**链条总提成恒等于链条中最高比例**，平台毛利按构造可控（默认种子最坏 30%）。深度截断（`max_commission_depth`）只决定参与分配的节点数。
 - 舍入：逐级四舍五入，末位吸收剩余，保证 Σ = 总额。
 - 幂等：事件唯一键 `(source_type, source_ref)`；结算单事务内写 settlement + distributions + 审计；提成入账经账户端口（`PartnerWalletPort` → `PartnerAccountWalletAdapter`），幂等键 `commission:{event_id}:{partner_id}` / `join-fee:{payment_id}:{partner_id}`。
 - 余额写入只经账户端口：结算/加盟费提成 → Credit；提现 → Hold/Release/Settle（`partner_withdrawal.hold_id`）；调账 → Credit/Debit（`commission_adjustment`）。

@@ -12,6 +12,7 @@ import {
   PartnerPickerField,
   primaryButtonClass,
   secondaryButtonClass,
+  Tooltip,
 } from '@sdkwork/partner-pc-admin-core/ui';
 import { partnerService } from '../services/partnerService';
 import { useRequestGuard } from '@sdkwork/partner-pc-admin-core';
@@ -122,14 +123,16 @@ export function PartnerTreePage() {
                 void load(ids);
               }}
             />
-            <button
-              type="button"
-              className={secondaryButtonClass}
-              disabled={loading}
-              onClick={() => void load(appliedRootId)}
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            <Tooltip content={t('common.actions.refresh', { defaultValue: 'Refresh' })}>
+              <button
+                type="button"
+                className={secondaryButtonClass}
+                disabled={loading}
+                onClick={() => void load(appliedRootId)}
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            </Tooltip>
           </div>
           <div className="flex items-center gap-2">
             {tree.length > 0 ? (
@@ -239,18 +242,23 @@ function TreeNode({
         style={{ marginLeft: depth * 24 }}
         onClick={() => onSelect(node.id)}
       >
-        <button
-          type="button"
-          className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10"
-          disabled={!hasChildren}
-          aria-label={t('admin.partner.tree.toggle', { defaultValue: 'Expand / collapse' })}
-          onClick={(event) => {
-            event.stopPropagation();
-            onToggle(node.id);
-          }}
-        >
-          {hasChildren ? (isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />) : null}
-        </button>
+        {hasChildren ? (
+          <Tooltip content={t('admin.partner.tree.toggle', { defaultValue: 'Expand / collapse' })}>
+            <button
+              type="button"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10"
+              aria-label={t('admin.partner.tree.toggle', { defaultValue: 'Expand / collapse' })}
+              onClick={(event) => {
+                event.stopPropagation();
+                onToggle(node.id);
+              }}
+            >
+              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </button>
+          </Tooltip>
+        ) : (
+          <span className="h-5 w-5 shrink-0" aria-hidden="true" />
+        )}
         <span className="min-w-0">
           <span className="block truncate font-medium text-slate-800 dark:text-slate-100">{node.name}</span>
           <span className="block font-mono text-[11px] text-slate-400">

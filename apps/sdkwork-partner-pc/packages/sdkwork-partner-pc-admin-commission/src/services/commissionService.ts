@@ -22,6 +22,13 @@ export const commissionService = {
     update: (levelId: string, input: AdminPartnerLevelUpdateRequest) =>
       client().levels.update(levelId, input),
     delete: (levelId: string) => client().levels.delete(levelId),
+    /**
+     * Restores the commercial default level catalog (seven-tier pyramid).
+     * `fill` (default) revives only missing default levels; `reset` also
+     * overwrites the active default levels with catalog values.
+     */
+    restoreDefaults: (mode: 'fill' | 'reset' = 'fill') =>
+      getPartnerBackendClient().levels.levelsRestoreDefaults.create({ mode }),
   },
   /** One-item partner page used to count partners on a level (totalItems). */
   partnersCount: (levelNo: number) =>

@@ -16,6 +16,7 @@ import {
   secondaryButtonClass,
   selectClass,
   TableState,
+  Tooltip,
   UserPickerField,
 } from '@sdkwork/partner-pc-admin-core/ui';
 import { partnerService } from '../services/partnerService';
@@ -72,8 +73,8 @@ export function AuditLogsPage() {
     setError(null);
     try {
       const result = await partnerService.auditLogs.list({
-        page: String(page),
-        pageSize: String(pageSize),
+        page,
+        pageSize,
         action: actionFilter || undefined,
         targetType: targetTypeFilter || undefined,
         targetId: targetIdFilter || undefined,
@@ -186,7 +187,6 @@ export function AuditLogsPage() {
                     <tr key={log.id} className="text-slate-700 hover:bg-slate-50/80 dark:text-slate-200 dark:hover:bg-white/[0.03]">
                       <td className="px-4 py-3">
                         <span className="block font-mono text-xs font-semibold text-slate-800 dark:text-slate-100">{log.action}</span>
-                        {log.requestId ? <span className="block font-mono text-[11px] text-slate-400">{log.requestId}</span> : null}
                       </td>
                       <td className="px-4 py-3">
                         <span className="font-medium">{log.targetType || '-'}</span>
@@ -199,9 +199,11 @@ export function AuditLogsPage() {
                       <td className="px-4 py-3 text-xs text-slate-500">{formatDateTime(log.createdAt)}</td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end">
-                          <button type="button" className={secondaryButtonClass} title={t('admin.partner.audit.actions.detail', { defaultValue: 'View payload' })} onClick={() => setDetail(log)}>
-                            <FileJson className="h-4 w-4" />
-                          </button>
+                          <Tooltip content={t('admin.partner.audit.actions.detail', { defaultValue: 'View payload' })}>
+                            <button type="button" className={secondaryButtonClass} onClick={() => setDetail(log)}>
+                              <FileJson className="h-4 w-4" />
+                            </button>
+                          </Tooltip>
                         </div>
                       </td>
                     </tr>

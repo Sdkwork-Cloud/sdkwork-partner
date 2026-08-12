@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@sdkwork/partner-backend-sdk": "workspace:*",
-    "@sdkwork/partner-contracts": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
     "@sdkwork/partner-pc-admin-core": "workspace:*",
@@ -18,6 +17,7 @@
     "@sdkwork/partner-pc-admin-commission": "workspace:*",
     "@sdkwork/partner-pc-admin-withdrawal": "workspace:*",
     "@sdkwork/partner-pc-admin-stats": "workspace:*",
+    "@sdkwork/partner-pc-join": "workspace:*",
     "i18next": "catalog:",
     "react-i18next": "catalog:",
     "lucide-react": "catalog:"

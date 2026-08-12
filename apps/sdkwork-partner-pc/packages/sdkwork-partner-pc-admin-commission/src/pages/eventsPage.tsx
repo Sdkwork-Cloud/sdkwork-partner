@@ -20,6 +20,7 @@ import {
   selectClass,
   TableState,
   textAreaClass,
+  Tooltip,
   UserPickerField,
 } from '@sdkwork/partner-pc-admin-core/ui';
 import { EventStatusBadge } from '../components/status';
@@ -286,14 +287,15 @@ export function EventsPage() {
                         <tr className="text-slate-700 dark:text-slate-200">
                           <td className="px-4 py-2.5">
                             {settlement.distributions.length > 0 ? (
-                              <button
-                                type="button"
-                                className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10"
-                                title={t('admin.partner.events.settlements.toggle', { defaultValue: 'View distribution detail' })}
-                                onClick={() => setExpandedSettlement(isExpanded ? null : settlement.id)}
-                              >
-                                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                              </button>
+                              <Tooltip content={t('admin.partner.events.settlements.toggle', { defaultValue: 'View distribution detail' })}>
+                                <button
+                                  type="button"
+                                  className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10"
+                                  onClick={() => setExpandedSettlement(isExpanded ? null : settlement.id)}
+                                >
+                                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                </button>
+                              </Tooltip>
                             ) : null}
                           </td>
                           <td className="px-4 py-2.5 font-mono">{formatDecimal(settlement.baseAmount)}</td>

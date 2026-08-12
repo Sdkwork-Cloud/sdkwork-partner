@@ -11,4 +11,6 @@ export interface AdminPartnerLevelUpdateRequest {
   status: 'ACTIVE' | 'DISABLED';
   /** Display sort order. */
   sortOrder?: number;
+  /** Structured benefit (权益) ladder entries for this level. */
+  benefits?: { code: string; name: string; value?: string; sort?: number; }[];
 }

@@ -55,6 +55,7 @@ const client = new SdkworkBackendClient({
 ## API Modules
 
 - `client.partners` - partners API
+- `client.levels` - levels API
 
 ## Usage Examples
 
@@ -63,6 +64,16 @@ const client = new SdkworkBackendClient({
 ```typescript
 // List partner levels
 const result = await client.partners.levels.list();
+```
+
+### levels
+
+```typescript
+// Restore the commercial default level catalog (seven-tier pyramid).
+const body = {
+  mode: 'fill',
+};
+const result = await client.levels.levelsRestoreDefaults.create(body);
 ```
 
 ## Error Handling

@@ -31,6 +31,19 @@ export function LevelStatusBadge({ status }: { status: string }) {
   );
 }
 
+/** Partner join application status: SUBMITTED / APPROVED / REJECTED / CANCELLED. */
+export function ApplicationStatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
+  const map: Record<string, { key: string; fallback: string; tone: Tone }> = {
+    SUBMITTED: { key: 'admin.partner.application.status.submitted', fallback: 'Submitted', tone: 'amber' },
+    APPROVED: { key: 'admin.partner.application.status.approved', fallback: 'Approved', tone: 'emerald' },
+    REJECTED: { key: 'admin.partner.application.status.rejected', fallback: 'Rejected', tone: 'red' },
+    CANCELLED: { key: 'admin.partner.application.status.cancelled', fallback: 'Cancelled', tone: 'slate' },
+  };
+  const entry = map[status] ?? { key: 'admin.partner.application.status.unknown', fallback: status, tone: 'slate' as Tone };
+  return <StatusBadge label={t(entry.key, { defaultValue: entry.fallback })} tone={entry.tone} />;
+}
+
 /** Withdrawal status: PENDING / APPROVED / REJECTED / PAID. */
 export function WithdrawalStatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();

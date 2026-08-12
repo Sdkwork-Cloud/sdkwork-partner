@@ -1,3 +1,4 @@
+import { ApplicationsPage } from './pages/applicationsPage';
 import { AuditLogsPage } from './pages/auditLogsPage';
 import { CustomersPage } from './pages/customersPage';
 import { JoinFeePaymentsPage } from './pages/joinFeePaymentsPage';
@@ -5,11 +6,12 @@ import { PartnerHomePage } from './pages/partnerHomePage';
 import { PartnersPage } from './pages/partnersPage';
 import { PartnerTreePage } from './pages/partnerTreePage';
 
-type PartnerAdminTab = 'home' | 'partners' | 'tree' | 'customers' | 'join-fees' | 'audit-logs';
+type PartnerAdminTab = 'home' | 'applications' | 'partners' | 'tree' | 'customers' | 'join-fees' | 'audit-logs';
 
 const DEFAULT_TAB: PartnerAdminTab = 'home';
 
 function resolveTab(sectionId: string | undefined): PartnerAdminTab {
+  if (sectionId === 'applications') return 'applications';
   if (sectionId === 'partners') return 'partners';
   if (sectionId === 'tree') return 'tree';
   if (sectionId === 'customers') return 'customers';
@@ -21,6 +23,8 @@ function resolveTab(sectionId: string | undefined): PartnerAdminTab {
 export function PartnerAdmin({ sectionId }: { sectionId?: string } = {}) {
   const tab = resolveTab(sectionId);
   switch (tab) {
+    case 'applications':
+      return <ApplicationsPage />;
     case 'partners':
       return <PartnersPage />;
     case 'tree':

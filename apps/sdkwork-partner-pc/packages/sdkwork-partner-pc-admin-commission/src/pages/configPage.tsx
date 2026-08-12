@@ -50,6 +50,7 @@ export function ConfigPage() {
         maxCommissionDepth: config.maxCommissionDepth,
         currency: config.currency || 'CNY',
         minWithdrawalAmount: config.minWithdrawalAmount,
+        profitMarginRatio: config.profitMarginRatio || '40.00',
       });
       setSaved(true);
       await load();
@@ -115,6 +116,22 @@ export function ConfigPage() {
                 <input className={inputClass} value={config.minWithdrawalAmount} onChange={(event) => update({ minWithdrawalAmount: event.currentTarget.value })} />
               </Field>
             </div>
+            <Field
+              label={t('admin.partner.config.profitMargin', { defaultValue: 'Platform profit margin (%)' })}
+              hint={t('admin.partner.config.profitMarginHint', {
+                defaultValue: 'Profit-based rebate: the customer revenue commission base is revenue × margin (e.g. 30% pool on a 40% margin pays at most 12% of revenue). Join-fee commissions use the full join fee.',
+              })}
+            >
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                className={inputClass}
+                value={config.profitMarginRatio}
+                onChange={(event) => update({ profitMarginRatio: event.currentTarget.value })}
+              />
+            </Field>
             <div className="flex items-center gap-3">
               <button type="button" className={primaryButtonClass} onClick={() => void save()} disabled={busy}>
                 <Save className="h-4 w-4" />

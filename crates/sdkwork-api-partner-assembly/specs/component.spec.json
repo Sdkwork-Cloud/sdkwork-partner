@@ -21,18 +21,22 @@
     { "file": "TEST_SPEC.md", "path": "../../../sdkwork-specs/TEST_SPEC.md" }
   ],
   "contracts": {
-    "layerRole": "domain-service",
+    "layerRole": "runtime-composition",
     "publicExports": ["."],
     "providedPorts": [],
     "requiredPorts": [],
-    "runtimeEntrypoints": [],
+    "runtimeEntrypoints": [
+      "sdkwork_api_partner_assembly::assemble_api_router_from_env",
+      "sdkwork_api_partner_assembly::assemble_backend_business_router_from_env"
+    ],
+    "routeManifest": "assembly-manifest.json",
     "authMode": "dual-token",
     "sdkClients": [],
     "sdkDependencies": [],
     "dependencyApiExports": [],
     "dependencyApiSurfaces": [],
     "events": [],
-    "configKeys": []
+    "configKeys": ["SDKWORK_DATABASE_URL", "SDKWORK_PARTNER_APP_ROOT"]
   },
   "verification": {
     "commands": ["cargo test -p sdkwork-api-partner-assembly"]

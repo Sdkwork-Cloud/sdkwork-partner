@@ -7,7 +7,6 @@ export interface AuditLogItem {
   /** Target entity type (partner/level/withdrawal/...). */
   targetType: string;
   targetId?: string;
-  requestId?: string;
   /** JSON payload snapshot of the mutation. */
   payload: string;
   createdAt: string;

@@ -18,6 +18,7 @@ import {
   secondaryButtonClass,
   selectClass,
   TableState,
+  Tooltip,
 } from '@sdkwork/partner-pc-admin-core/ui';
 import { useRequestGuard } from '@sdkwork/partner-pc-admin-core';
 import { partnerService } from '../services/partnerService';
@@ -48,9 +49,9 @@ export function CustomersPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await partnerService.customerBindings.listAll({
-        page: String(page),
-        pageSize: String(pageSize),
+      const result = await partnerService.customerBindings.list({
+        page,
+        pageSize,
         q: appliedQuery || undefined,
         partnerId: partnerIdFilter || undefined,
         status: statusFilter || undefined,
@@ -251,22 +252,24 @@ export function CustomersPage() {
                         <div className="flex justify-end gap-1">
                           {binding.status === 'ACTIVE' ? (
                             <>
-                              <button
-                                type="button"
-                                className={secondaryButtonClass}
-                                title={t('admin.partner.customers.actions.transfer', { defaultValue: 'Transfer to partner' })}
-                                onClick={() => setTransferTarget(binding)}
-                              >
-                                <ArrowRightLeft className="h-4 w-4 text-indigo-500" />
-                              </button>
-                              <button
-                                type="button"
-                                className={secondaryButtonClass}
-                                title={t('admin.partner.customers.actions.unbind', { defaultValue: 'Unbind' })}
-                                onClick={() => setUnbindTarget(binding)}
-                              >
-                                <UserRoundX className="h-4 w-4 text-red-500" />
-                              </button>
+                              <Tooltip content={t('admin.partner.customers.actions.transfer', { defaultValue: 'Transfer to partner' })}>
+                                <button
+                                  type="button"
+                                  className={secondaryButtonClass}
+                                  onClick={() => setTransferTarget(binding)}
+                                >
+                                  <ArrowRightLeft className="h-4 w-4 text-indigo-500" />
+                                </button>
+                              </Tooltip>
+                              <Tooltip content={t('admin.partner.customers.actions.unbind', { defaultValue: 'Unbind' })}>
+                                <button
+                                  type="button"
+                                  className={secondaryButtonClass}
+                                  onClick={() => setUnbindTarget(binding)}
+                                >
+                                  <UserRoundX className="h-4 w-4 text-red-500" />
+                                </button>
+                              </Tooltip>
                             </>
                           ) : null}
                         </div>

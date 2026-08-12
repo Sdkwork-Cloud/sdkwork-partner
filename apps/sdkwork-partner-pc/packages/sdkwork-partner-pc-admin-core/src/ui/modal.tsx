@@ -9,6 +9,7 @@ export function Modal({
   description,
   busy,
   submitLabel,
+  submitDisabled = false,
   size = 'md',
   children,
   onSubmit,
@@ -18,6 +19,8 @@ export function Modal({
   description?: string;
   busy: boolean;
   submitLabel: string;
+  /** Disables the submit button until the form is complete (e.g. no selection made). */
+  submitDisabled?: boolean;
   /** 弹窗宽度档位：md 默认 768px，xl 用于左右分栏等宽表单场景 */
   size?: 'md' | 'xl';
   children: ReactNode;
@@ -56,7 +59,7 @@ export function Modal({
           <button type="button" className={secondaryButtonClass} onClick={onClose} disabled={busy}>
             {t('common.actions.cancel', { defaultValue: 'Cancel' })}
           </button>
-          <button type="submit" className={primaryButtonClass} disabled={busy}>
+          <button type="submit" className={primaryButtonClass} disabled={busy || submitDisabled}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             {submitLabel}
           </button>

@@ -2,10 +2,12 @@
 //!
 //! Development building block only; production routes are owned by the host
 //! application topology (e.g. sdkwork-cloudrouter).
+//!
+//! Mounts the full assembled API plane: the partner join (伙伴计划) app-api
+//! surface under `/app/v3/api/partner-join/*` and the partner backend-api
+//! surface under `/backend/v3/api/partners/*`.
 
-use sdkwork_api_partner_assembly::assemble_backend_business_router;
-use sdkwork_partner_service_host::PartnerServiceHost;
-use std::sync::Arc;
+use sdkwork_api_partner_assembly::assemble_api_router_from_env;
 
 const DEFAULT_BIND: &str = "0.0.0.0:18098";
 
@@ -19,17 +21,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let bind = std::env::var("PARTNER_API_BIND").unwrap_or_else(|_| DEFAULT_BIND.to_string());
-    let host = Arc::new(PartnerServiceHost::from_env().await.map_err(|error| {
-        tracing::error!("bootstrap partner service host failed: {error}");
-        error
-    })?);
 
-    let app = assemble_backend_business_router(host)
-        .await
-        .map_err(|error| {
-            tracing::error!("assemble partner router failed: {error}");
-            error
-        })?;
+    let app = assemble_api_router_from_env().await.map_err(|error| {
+        tracing::error!("assemble partner router failed: {error}");
+        error
+    })?;
 
     let listener = tokio::net::TcpListener::bind(&bind).await?;
     tracing::info!("partner-server listening on {bind}");

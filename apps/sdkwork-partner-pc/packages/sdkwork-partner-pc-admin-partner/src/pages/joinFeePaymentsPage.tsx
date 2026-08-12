@@ -37,9 +37,9 @@ export function JoinFeePaymentsPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await partnerService.joinFeePayments.listAll({
-        page: String(page),
-        pageSize: String(pageSize),
+      const result = await partnerService.joinFeePayments.list({
+        page,
+        pageSize,
         partnerId: partnerIdFilter || undefined,
         status: statusFilter || undefined,
       });

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { CheckCircle2, Download, Edit3, Plus, RefreshCw, RotateCcw, Search, Settings2, UserPlus, XCircle } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { Check, CheckCircle2, Download, Edit3, Loader2, Plus, RefreshCw, RotateCcw, Search, Settings2, UserPlus, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type {
   AdminPartnerCreateRequest,
@@ -33,10 +33,11 @@ import {
   SidePanel,
   TableState,
   textAreaClass,
+  Tooltip,
 } from '@sdkwork/partner-pc-admin-core/ui';
 import { PartnerStatusBadge, JoinFeeStatusBadge } from '../components/status';
 import { partnerService } from '../services/partnerService';
-import { useRequestGuard } from '@sdkwork/partner-pc-admin-core';
+import { useRequestGuard, getPartnerUserSearchPort, type PartnerUserOption } from '@sdkwork/partner-pc-admin-core';
 import { PartnerPickerField, UserPickerField } from '@sdkwork/partner-pc-admin-core/ui';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -430,31 +431,37 @@ export function PartnersPage() {
                       <td className="px-4 py-3 text-xs text-slate-500">{formatDateTime(partner.createdAt)}</td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-1">
-                          <button type="button" className={secondaryButtonClass} title={t('common.actions.edit', { defaultValue: 'Edit' })} onClick={() => setEditing(partner)}>
-                            <Edit3 className="h-4 w-4" />
-                          </button>
-                          <button type="button" className={secondaryButtonClass} title={t('admin.partner.partners.actions.detail', { defaultValue: 'Details' })} onClick={() => setSelected(partner)}>
-                            <Settings2 className="h-4 w-4" />
-                          </button>
-                          {partner.status !== 'CLOSED' ? (
-                            <button
-                              type="button"
-                              className={secondaryButtonClass}
-                              title={t(partner.userAccountId ? 'admin.partner.partners.actions.changeUser' : 'admin.partner.partners.actions.bindUser', { defaultValue: partner.userAccountId ? 'Change user' : 'Bind user' })}
-                              onClick={() => setBindTarget(partner)}
-                            >
-                              <UserPlus className="h-4 w-4" />
+                          <Tooltip content={t('common.actions.edit', { defaultValue: 'Edit' })}>
+                            <button type="button" className={secondaryButtonClass} onClick={() => setEditing(partner)}>
+                              <Edit3 className="h-4 w-4" />
                             </button>
+                          </Tooltip>
+                          <Tooltip content={t('admin.partner.partners.actions.detail', { defaultValue: 'Details' })}>
+                            <button type="button" className={secondaryButtonClass} onClick={() => setSelected(partner)}>
+                              <Settings2 className="h-4 w-4" />
+                            </button>
+                          </Tooltip>
+                          {partner.status !== 'CLOSED' ? (
+                            <Tooltip content={t(partner.userAccountId ? 'admin.partner.partners.actions.changeUser' : 'admin.partner.partners.actions.bindUser', { defaultValue: partner.userAccountId ? 'Change user' : 'Bind user' })}>
+                              <button
+                                type="button"
+                                className={secondaryButtonClass}
+                                onClick={() => setBindTarget(partner)}
+                              >
+                                <UserPlus className="h-4 w-4" />
+                              </button>
+                            </Tooltip>
                           ) : null}
                           {partner.status !== 'CLOSED' ? (
-                            <button
-                              type="button"
-                              className={secondaryButtonClass}
-                              title={t('admin.partner.partners.actions.close', { defaultValue: 'Close' })}
-                              onClick={() => setCloseTarget(partner)}
-                            >
-                              <XCircle className="h-4 w-4 text-red-500" />
-                            </button>
+                            <Tooltip content={t('admin.partner.partners.actions.close', { defaultValue: 'Close' })}>
+                              <button
+                                type="button"
+                                className={secondaryButtonClass}
+                                onClick={() => setCloseTarget(partner)}
+                              >
+                                <XCircle className="h-4 w-4 text-red-500" />
+                              </button>
+                            </Tooltip>
                           ) : null}
                         </div>
                       </td>
@@ -566,10 +573,10 @@ function PartnerModal({
           </select>
         </Field>
         <Field label={t('admin.partner.partners.form.parentPartnerId', { defaultValue: 'Parent partner' })} hint={t('admin.partner.partners.form.parentHint', { defaultValue: 'Leave empty for a top-level partner.' })}>
-          <PartnerPickerField name="parentPartnerId" initialValue={partner?.parentPartnerId ?? undefined} disabled={partner !== null} placeholder={t('admin.partner.partners.form.parentPlaceholder', { defaultValue: 'Select parent partner…' })} />
+          <PartnerPickerField name="parentPartnerId" initialValue={partner?.parentPartnerId ?? undefined} placeholder={t('admin.partner.partners.form.parentPlaceholder', { defaultValue: 'Select parent partner…' })} />
         </Field>
-        <Field label={t('admin.partner.partners.form.userAccountId', { defaultValue: 'IAM user account ID' })} hint={t('admin.partner.partners.form.userAccountOptionalHint', { defaultValue: 'Optional: bind the IAM user account later from the partner list.' })}>
-          <UserPickerField name="userAccountId" initialValue={partner?.userAccountId ?? undefined} disabled={partner !== null} />
+        <Field label={t('admin.partner.partners.form.userAccountId', { defaultValue: 'IAM user account ID' })} hint={t('admin.partner.partners.form.userAccountOptionalHint', { defaultValue: 'Optional: bind the IAM user account when creating or editing.' })}>
+          <UserPickerField name="userAccountId" initialValue={partner?.userAccountId ?? undefined} />
         </Field>
         <Field label={t('admin.partner.partners.form.contactName', { defaultValue: 'Contact name' })}>
           <input name="contactName" className={inputClass} defaultValue={partner?.contactName ?? ''} />
@@ -616,11 +623,49 @@ function BindUserModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const searchPort = useMemo(() => getPartnerUserSearchPort(), []);
+  const search = useMemo(
+    () => (keyword: string) => (searchPort ? searchPort(keyword) : Promise.resolve([])),
+    [searchPort],
+  );
+  const [keyword, setKeyword] = useState('');
+  const [options, setOptions] = useState<PartnerUserOption[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selected, setSelected] = useState<PartnerUserOption | null>(null);
+  const seqRef = useRef(0);
+
+  // Debounced keyword search with a stale-response guard (same interaction
+  // as the entity picker dialog, rendered inline so no second dialog opens).
+  useEffect(() => {
+    if (keyword.trim().length === 0) {
+      setOptions([]);
+      return;
+    }
+    const seq = ++seqRef.current;
+    setSearching(true);
+    const timer = setTimeout(() => {
+      void search(keyword.trim())
+        .then((items) => {
+          if (seq !== seqRef.current) return;
+          setOptions(items);
+        })
+        .catch(() => {
+          if (seq !== seqRef.current) return;
+          setOptions([]);
+        })
+        .finally(() => {
+          if (seq === seqRef.current) setSearching(false);
+        });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [keyword, search]);
+
   return (
     <Modal
       title={t('admin.partner.partners.bindUser.title', { defaultValue: 'Bind IAM user' })}
       busy={busy}
       submitLabel={t('admin.partner.partners.actions.bindUser', { defaultValue: 'Bind user' })}
+      submitDisabled={selected === null}
       onSubmit={onSubmit}
       onClose={onClose}
     >
@@ -631,13 +676,78 @@ function BindUserModal({
             name: partner.name,
           })}
         </p>
-        <Field label={t('admin.partner.partners.form.userAccountId', { defaultValue: 'IAM user account' })} required>
-          <UserPickerField
-            name="userAccountId"
-            required
-            placeholder={t('admin.partner.partners.bindUser.placeholder', { defaultValue: 'Search and select an IAM user' })}
-          />
-        </Field>
+        {searchPort === null ? (
+          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+            {t('admin.partner.picker.unavailable', { defaultValue: 'User search is unavailable in this environment.' })}
+          </p>
+        ) : (
+          <>
+            <Field label={t('admin.partner.partners.form.userAccountId', { defaultValue: 'IAM user account' })} required>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  autoFocus
+                  className={`${inputClass} pl-9`}
+                  placeholder={t('admin.partner.picker.searchPlaceholder', { defaultValue: 'Search username or display name' })}
+                  value={keyword}
+                  onChange={(event) => setKeyword(event.currentTarget.value)}
+                />
+              </div>
+            </Field>
+            <div className="max-h-72 min-h-36 overflow-auto rounded-md border border-slate-200 dark:border-white/10">
+              {keyword.trim() === '' ? (
+                <p className="flex items-center justify-center gap-2 py-10 text-sm text-slate-500">
+                  <Search className="h-4 w-4" />
+                  {t('admin.partner.picker.typeToSearch', { defaultValue: 'Type to search users.' })}
+                </p>
+              ) : searching ? (
+                <p className="flex items-center justify-center gap-2 py-10 text-sm text-slate-500">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t('admin.partner.picker.searching', { defaultValue: 'Searching…' })}
+                </p>
+              ) : options.length === 0 ? (
+                <p className="py-10 text-center text-sm text-slate-500">
+                  {t('admin.partner.picker.noResults', { defaultValue: 'No users match.' })}
+                </p>
+              ) : (
+                <div className="divide-y divide-slate-100 dark:divide-white/5">
+                  {options.map((option) => {
+                    const checked = selected?.id === option.id;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${
+                          checked ? 'bg-indigo-50 dark:bg-indigo-500/10' : 'hover:bg-slate-50 dark:hover:bg-white/[0.03]'
+                        }`}
+                        onClick={() => setSelected(option)}
+                      >
+                        <span
+                          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                            checked
+                              ? 'border-indigo-600 bg-indigo-600 text-white'
+                              : 'border-slate-300 dark:border-white/20'
+                          }`}
+                        >
+                          {checked ? <Check className="h-3 w-3" /> : null}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                        <span className="shrink-0 font-mono text-xs text-slate-400">#{option.id}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            {selected ? (
+              <span className="inline-flex items-center gap-1.5 self-start rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-2 text-xs font-medium text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300">
+                <span className="min-w-0 truncate">{selected.label}</span>
+                <span className="shrink-0 font-mono text-[10px] text-indigo-400">#{selected.id}</span>
+              </span>
+            ) : null}
+          </>
+        )}
+        <input type="hidden" name="userAccountId" value={selected?.id ?? ''} />
       </div>
     </Modal>
   );
@@ -663,14 +773,16 @@ function PartnerDetailPanel({
   const [joinFeeAmount, setJoinFeeAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Idempotency token for the join-fee submission intent (see recordJoinFee).
+  const joinFeeIdempotencyKey = useRef<string | null>(null);
 
   const loadRelations = useCallback(async () => {
     const seq = guard.next();
     setError(null);
     try {
       const [bindingPage, feePage, stats, ledgerPage] = await Promise.all([
-        partnerService.customerBindings.list(partner.id, { page: 1, pageSize: 50 }),
-        partnerService.joinFeePayments.list(partner.id, { page: 1, pageSize: 50 }),
+        partnerService.customerBindings.list({ page: 1, pageSize: 50, partnerId: partner.id }),
+        partnerService.joinFeePayments.list({ page: 1, pageSize: 50, partnerId: partner.id }),
         partnerService.stats.retrieve(partner.id),
         partnerService.ledger.list(partner.id, { page: 1, pageSize: 5 }),
       ]);
@@ -724,11 +836,20 @@ function PartnerDetailPanel({
     event.preventDefault();
     setBusy(true);
     setError(null);
+    // Idempotency token: kept for the lifetime of one submission intent so a
+    // retry after a network failure replays server-side instead of creating a
+    // duplicate payment (and duplicate ancestor commission). The token is
+    // regenerated once the submission succeeds or the amount changes.
+    joinFeeIdempotencyKey.current ??= crypto.randomUUID();
     try {
       const form = new FormData(event.currentTarget);
       const amount = String(form.get('amount') ?? '').trim();
       if (!amount) return;
-      await partnerService.joinFeePayments.create(partner.id, { amount });
+      await partnerService.joinFeePayments.create(partner.id, {
+        amount,
+        idempotencyKey: joinFeeIdempotencyKey.current,
+      });
+      joinFeeIdempotencyKey.current = null;
       setJoinFeeAmount('');
       await loadRelations();
       const refreshed = await partnerService.partners.retrieve(partner.id);
@@ -834,7 +955,12 @@ function PartnerDetailPanel({
               className={inputClass}
               placeholder={t('admin.partner.partners.detail.joinFeePlaceholder', { defaultValue: 'Amount (e.g. 10000)' })}
               value={joinFeeAmount}
-              onChange={(event) => setJoinFeeAmount(event.currentTarget.value)}
+              onChange={(event) => {
+                setJoinFeeAmount(event.currentTarget.value);
+                // A new amount is a new submission intent: reset the token so
+                // the next submit is a fresh (non-replay) payment.
+                joinFeeIdempotencyKey.current = null;
+              }}
               required
             />
             <button type="submit" className={primaryButtonClass} disabled={busy}>
@@ -941,10 +1067,14 @@ function partnerCreateInput(form: FormData): AdminPartnerCreateRequest {
 }
 
 function partnerUpdateInput(form: FormData, partner: PartnerItem): AdminPartnerUpdateRequest {
+  const parentPartnerId = String(form.get('parentPartnerId') ?? '').trim();
+  const userAccountId = String(form.get('userAccountId') ?? '').trim();
   return {
     name: String(form.get('name') ?? '').trim(),
     levelNo: Number(form.get('levelNo') ?? partner.levelNo),
     status: (String(form.get('status') ?? partner.status) || partner.status) as AdminPartnerUpdateRequest['status'],
+    parentPartnerId: parentPartnerId || null,
+    userAccountId: userAccountId || null,
     contactName: optional(form, 'contactName'),
     phone: optional(form, 'phone'),
     email: optional(form, 'email'),

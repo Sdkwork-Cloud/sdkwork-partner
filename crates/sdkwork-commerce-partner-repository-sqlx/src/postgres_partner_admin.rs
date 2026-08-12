@@ -12,6 +12,12 @@ use sdkwork_commerce_partner_service::domain::commission_engine::{
 use sdkwork_commerce_partner_service::domain::{
     cents_to_decimal, parse_money_to_cents, parse_ratio_per_10000,
 };
+use sdkwork_commerce_partner_service::join_apply::{
+    ApproveJoinApplicationCommand, CancelJoinApplicationCommand, InviteCodeValidation,
+    ListJoinApplicationsQuery, ListMyJoinApplicationsQuery, PartnerJoinApplicationItem,
+    PartnerJoinFuture, PartnerJoinRepositoryPort, PartnerJoinSubject, RejectJoinApplicationCommand,
+    SubmitJoinApplicationCommand,
+};
 use sdkwork_commerce_partner_service::queries::*;
 use sdkwork_contract_service::CommerceServiceError;
 use serde_json::json;
@@ -75,6 +81,51 @@ async fn insert_audit(
     Ok(())
 }
 
+/// Audit trail for app-surface join operations (operator_type `app`).
+async fn insert_app_audit(
+    tx: &mut Transaction<'_, Postgres>,
+    subject: &PartnerJoinSubject,
+    action: &str,
+    target_type: &str,
+    target_id: Option<i64>,
+    payload: serde_json::Value,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(INSERT_AUDIT_LOG)
+        .bind(next_bigint_id())
+        .bind(next_uuid())
+        .bind(subject.tenant_id)
+        .bind(subject.organization_id)
+        .bind(subject.user_id)
+        .bind("app")
+        .bind(action)
+        .bind(target_type)
+        .bind(target_id)
+        .bind(Option::<String>::None)
+        .bind(payload.to_string())
+        .execute(&mut **tx)
+        .await?;
+    Ok(())
+}
+
+/// Generate a 10-character uppercase alphanumeric partner invite code from a
+/// fresh uuid (36^10 candidates; the partial unique index keeps it unique).
+fn generate_invite_code() -> String {
+    const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let uuid = uuid::Uuid::new_v4();
+    let bytes = uuid.as_bytes();
+    let mut value = u64::from_be_bytes(bytes[..8].try_into().unwrap_or([0; 8]));
+    let mut code = String::with_capacity(10);
+    for _ in 0..10 {
+        code.push(ALPHABET[(value % 36) as usize] as char);
+        value /= 36;
+    }
+    code
+}
+
+fn is_unique_violation(error: &sqlx::Error) -> bool {
+    matches!(error, sqlx::Error::Database(database) if database.is_unique_violation())
+}
+
 /// Read the commission config for a tenant, creating the default row if absent.
 async fn load_commission_config(
     pool: &sqlx::PgPool,
@@ -83,7 +134,7 @@ async fn load_commission_config(
 ) -> Result<CommissionConfigItem, CommerceServiceError> {
     for _attempt in 0..2 {
         let row = sqlx::query(
-            "SELECT enabled, revenue_sources, max_commission_depth, currency, min_withdrawal_amount::text              FROM partner_commission_config WHERE tenant_id = $1 AND organization_id = $2",
+            "SELECT enabled, revenue_sources, max_commission_depth, currency, min_withdrawal_amount::text, profit_margin_ratio::text              FROM partner_commission_config WHERE tenant_id = $1 AND organization_id = $2",
         )
         .bind(tenant_id)
         .bind(organization_id)
@@ -106,11 +157,14 @@ async fn load_commission_config(
                 max_commission_depth: row.get::<i64, _>("max_commission_depth"),
                 currency: row.get::<String, _>("currency"),
                 min_withdrawal_amount: row.get::<String, _>("min_withdrawal_amount"),
+                profit_margin_ratio: row.get::<String, _>("profit_margin_ratio"),
             });
         }
         // Insert the default config row (single row per tenant); retry once.
+        // Commercial defaults mirror the install-time seed catalog: bounded
+        // commission depth (3) and a ¥100 minimum withdrawal.
         let _ = sqlx::query(
-            "INSERT INTO partner_commission_config              (id, uuid, tenant_id, organization_id, enabled, revenue_sources, max_commission_depth, currency, min_withdrawal_amount)              VALUES ($1, $2, $3, $4, TRUE, '{\"usage_settlement\":true,\"recharge\":true}', 0, 'CNY', 0::numeric)              ON CONFLICT (tenant_id, organization_id) DO NOTHING",
+            "INSERT INTO partner_commission_config              (id, uuid, tenant_id, organization_id, enabled, revenue_sources, max_commission_depth, currency, min_withdrawal_amount, profit_margin_ratio)              VALUES ($1, $2, $3, $4, TRUE, '{\"usage_settlement\":true,\"recharge\":true}', 3, 'CNY', 100::numeric, 40.00::numeric)              ON CONFLICT (tenant_id, organization_id) DO NOTHING",
         )
         .bind(next_bigint_id())
         .bind(next_uuid())
@@ -229,8 +283,8 @@ async fn load_commission_config_tx(
     subject: &PartnerAdminSubject,
 ) -> Result<CommissionConfigItem, CommerceServiceError> {
     let row = sqlx::query(
-        "SELECT enabled, revenue_sources, max_commission_depth, currency, min_withdrawal_amount::text \
-         FROM partner_commission_config WHERE tenant_id = $1 AND organization_id = $2",
+        "SELECT enabled, revenue_sources, max_commission_depth, currency, min_withdrawal_amount::text, \
+         profit_margin_ratio::text FROM partner_commission_config WHERE tenant_id = $1 AND organization_id = $2",
     )
     .bind(subject.tenant_id)
     .bind(subject.organization_id)
@@ -254,6 +308,7 @@ async fn load_commission_config_tx(
         max_commission_depth: row.get::<i64, _>("max_commission_depth"),
         currency: row.get::<String, _>("currency"),
         min_withdrawal_amount: row.get::<String, _>("min_withdrawal_amount"),
+        profit_margin_ratio: row.get::<String, _>("profit_margin_ratio"),
     })
 }
 
@@ -323,7 +378,17 @@ async fn settle_event(
             });
         }
     }
-    let allocations = allocate_commissions(base_amount_cents, &nodes, config.max_commission_depth)
+    // Profit-based rebate: commissions are allocated on the platform's gross
+    // profit of the customer transaction (`revenue × profit_margin_ratio`),
+    // never on the full revenue amount. The commission event keeps the
+    // original revenue amount; the settlement and distributions record the
+    // profit base actually allocated.
+    let margin = parse_ratio_per_10000("profit_margin_ratio", &config.profit_margin_ratio)
+        .map_err(|error| CommerceServiceError::invalid_state(error.message()))?;
+    let profit_base_cents =
+        sdkwork_commerce_partner_service::domain::profit_base_cents(base_amount_cents, margin)
+            .map_err(|error| CommerceServiceError::invalid_state(error.message()))?;
+    let allocations = allocate_commissions(profit_base_cents, &nodes, config.max_commission_depth)
         .map_err(|error| CommerceServiceError::invalid_state(error.message()))?;
     if allocations.is_empty() {
         sqlx::query(UPDATE_EVENT_SKIPPED)
@@ -344,7 +409,7 @@ async fn settle_event(
         .bind(subject.tenant_id)
         .bind(subject.organization_id)
         .bind(event_id)
-        .bind(cents_to_decimal(base_amount_cents))
+        .bind(cents_to_decimal(profit_base_cents))
         .bind(cents_to_decimal(distributed))
         .bind(allocations.len() as i64)
         .bind("SETTLED")
@@ -382,7 +447,7 @@ async fn settle_event(
             .bind(allocation.partner_id)
             .bind(allocation.level_offset)
             .bind(cents_to_decimal(allocation.ratio_per_10000))
-            .bind(cents_to_decimal(base_amount_cents))
+            .bind(cents_to_decimal(profit_base_cents))
             .bind(cents_to_decimal(allocation.amount_cents))
             .bind(account_ledger_id)
             .execute(&mut **tx)
@@ -499,12 +564,14 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
         Box::pin(async move {
             let sql = if query.include_disabled {
                 "SELECT id, level_no, name, customer_revenue_ratio::text, \
-                 join_fee_commission_ratio::text, join_fee::text, status, sort_order \
+                 join_fee_commission_ratio::text, join_fee::text, status, sort_order, \
+                 benefits::text AS benefits \
                  FROM partner_level WHERE tenant_id = $1 AND organization_id = $2 AND deleted_at IS NULL \
                  ORDER BY sort_order ASC, level_no ASC"
             } else {
                 "SELECT id, level_no, name, customer_revenue_ratio::text, \
-                 join_fee_commission_ratio::text, join_fee::text, status, sort_order \
+                 join_fee_commission_ratio::text, join_fee::text, status, sort_order, \
+                 benefits::text AS benefits \
                  FROM partner_level WHERE tenant_id = $1 AND organization_id = $2 AND deleted_at IS NULL AND status = 'ACTIVE' \
                  ORDER BY sort_order ASC, level_no ASC"
             };
@@ -529,8 +596,8 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             let result = sqlx::query(
                 "INSERT INTO partner_level \
                  (id, uuid, tenant_id, organization_id, level_no, name, customer_revenue_ratio, \
-                  join_fee_commission_ratio, join_fee, status, sort_order) \
-                 VALUES ($1, $2, $3, $4, $5, $6, $7::numeric, $8::numeric, $9::numeric, 'ACTIVE', $10)",
+                  join_fee_commission_ratio, join_fee, status, sort_order, benefits) \
+                 VALUES ($1, $2, $3, $4, $5, $6, $7::numeric, $8::numeric, $9::numeric, 'ACTIVE', $10, $11::jsonb)",
             )
             .bind(level_id)
             .bind(next_uuid())
@@ -542,6 +609,7 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             .bind(cents_to_decimal(command.join_fee_commission_ratio_per_10000))
             .bind(cents_to_decimal(command.join_fee_cents))
             .bind(command.sort_order)
+            .bind(serde_json::to_string(&command.benefits).unwrap_or_else(|_| "[]".to_string()))
             .execute(&mut *tx)
             .await;
             if let Err(error) = result {
@@ -569,6 +637,7 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 join_fee: cents_to_decimal(command.join_fee_cents),
                 status: "ACTIVE".to_string(),
                 sort_order: command.sort_order,
+                benefits: command.benefits,
             };
             Ok(item)
         })
@@ -584,8 +653,9 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             let updated = sqlx::query(
                 "UPDATE partner_level SET name = $3, customer_revenue_ratio = $4::numeric, \
                  join_fee_commission_ratio = $5::numeric, join_fee = $6::numeric, status = $7, \
-                 sort_order = $8, updated_at = CURRENT_TIMESTAMP \
-                 WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL",
+                 sort_order = $8, benefits = $9::jsonb, updated_at = CURRENT_TIMESTAMP \
+                 WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL \
+                 RETURNING level_no",
             )
             .bind(command.level_id)
             .bind(subject.tenant_id)
@@ -597,26 +667,28 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             .bind(cents_to_decimal(command.join_fee_cents))
             .bind(&command.status)
             .bind(command.sort_order)
-            .execute(&mut *tx)
+            .bind(serde_json::to_string(&command.benefits).unwrap_or_else(|_| "[]".to_string()))
+            .fetch_optional(&mut *tx)
             .await
             .map_err(error_from_sql)?;
-            if updated.rows_affected() == 0 {
+            let Some(updated) = updated else {
                 return Err(CommerceServiceError::not_found("partner level not found"));
-            }
+            };
+            let level_no: i32 = updated.get("level_no");
             insert_audit(
                 &mut tx,
                 subject,
                 "update_level",
                 "partner_level",
                 Some(command.level_id),
-                json!({"status": command.status}),
+                json!({"status": command.status, "benefit_count": command.benefits.len()}),
             )
             .await
             .map_err(error_from_sql)?;
             tx.commit().await.map_err(error_from_sql)?;
             Ok(PartnerLevelItem {
                 id: command.level_id,
-                level_no: 0,
+                level_no,
                 name: command.name,
                 customer_revenue_ratio: cents_to_decimal(command.customer_revenue_ratio_per_10000),
                 join_fee_commission_ratio: cents_to_decimal(
@@ -625,6 +697,7 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 join_fee: cents_to_decimal(command.join_fee_cents),
                 status: command.status,
                 sort_order: command.sort_order,
+                benefits: command.benefits,
             })
         })
     }
@@ -678,6 +751,136 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             .map_err(error_from_sql)?;
             tx.commit().await.map_err(error_from_sql)?;
             Ok(())
+        })
+    }
+
+    fn restore_default_levels<'a>(
+        &'a self,
+        mode: RestoreDefaultLevelsMode,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, RestoreDefaultLevelsResult> {
+        Box::pin(async move {
+            let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
+            let mut result = RestoreDefaultLevelsResult {
+                restored: 0,
+                reset: 0,
+                skipped: 0,
+            };
+            for entry in
+                sdkwork_commerce_partner_service::domain::default_catalog::DEFAULT_LEVEL_CATALOG
+            {
+                // Find any row (active or soft-deleted) for this level_no.
+                let existing = sqlx::query(
+                    "SELECT id, deleted_at FROM partner_level \
+                     WHERE tenant_id = $1 AND organization_id = $2 AND level_no = $3 \
+                     ORDER BY deleted_at IS NULL DESC, id DESC LIMIT 1",
+                )
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(entry.level_no)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(error_from_sql)?;
+                let benefits_json = serde_json::to_string(&entry.benefits_as_items())
+                    .unwrap_or_else(|_| "[]".to_string());
+                match existing {
+                    Some(row) => {
+                        let level_id: i64 = row.get("id");
+                        let deleted_at: Option<DateTime<Utc>> = row.get("deleted_at");
+                        if deleted_at.is_some() {
+                            // Revive the soft-deleted default level and restore its catalog data.
+                            sqlx::query(
+                                "UPDATE partner_level SET deleted_at = NULL, deleted_by = NULL, \
+                                 name = $4, customer_revenue_ratio = $5::numeric, \
+                                 join_fee_commission_ratio = $6::numeric, join_fee = $7::numeric, \
+                                 status = 'ACTIVE', sort_order = $8, benefits = $9::jsonb, \
+                                 updated_at = CURRENT_TIMESTAMP \
+                                 WHERE id = $1 AND tenant_id = $2 AND organization_id = $3",
+                            )
+                            .bind(level_id)
+                            .bind(subject.tenant_id)
+                            .bind(subject.organization_id)
+                            .bind(entry.name)
+                            .bind(cents_to_decimal(entry.customer_revenue_ratio_per_10000))
+                            .bind(cents_to_decimal(entry.join_fee_commission_ratio_per_10000))
+                            .bind(cents_to_decimal(entry.join_fee_cents))
+                            .bind(entry.sort_order)
+                            .bind(&benefits_json)
+                            .execute(&mut *tx)
+                            .await
+                            .map_err(error_from_sql)?;
+                            result.restored += 1;
+                        } else if mode == RestoreDefaultLevelsMode::Reset {
+                            sqlx::query(
+                                "UPDATE partner_level SET name = $4, \
+                                 customer_revenue_ratio = $5::numeric, \
+                                 join_fee_commission_ratio = $6::numeric, join_fee = $7::numeric, \
+                                 status = 'ACTIVE', sort_order = $8, benefits = $9::jsonb, \
+                                 updated_at = CURRENT_TIMESTAMP \
+                                 WHERE id = $1 AND tenant_id = $2 AND organization_id = $3",
+                            )
+                            .bind(level_id)
+                            .bind(subject.tenant_id)
+                            .bind(subject.organization_id)
+                            .bind(entry.name)
+                            .bind(cents_to_decimal(entry.customer_revenue_ratio_per_10000))
+                            .bind(cents_to_decimal(entry.join_fee_commission_ratio_per_10000))
+                            .bind(cents_to_decimal(entry.join_fee_cents))
+                            .bind(entry.sort_order)
+                            .bind(&benefits_json)
+                            .execute(&mut *tx)
+                            .await
+                            .map_err(error_from_sql)?;
+                            result.reset += 1;
+                        } else {
+                            result.skipped += 1;
+                        }
+                    }
+                    None => {
+                        let level_id = next_bigint_id();
+                        sqlx::query(
+                            "INSERT INTO partner_level \
+                             (id, uuid, tenant_id, organization_id, level_no, name, \
+                              customer_revenue_ratio, join_fee_commission_ratio, join_fee, \
+                              status, sort_order, benefits) \
+                             VALUES ($1, $2, $3, $4, $5, $6, $7::numeric, $8::numeric, \
+                                     $9::numeric, 'ACTIVE', $10, $11::jsonb)",
+                        )
+                        .bind(level_id)
+                        .bind(next_uuid())
+                        .bind(subject.tenant_id)
+                        .bind(subject.organization_id)
+                        .bind(entry.level_no)
+                        .bind(entry.name)
+                        .bind(cents_to_decimal(entry.customer_revenue_ratio_per_10000))
+                        .bind(cents_to_decimal(entry.join_fee_commission_ratio_per_10000))
+                        .bind(cents_to_decimal(entry.join_fee_cents))
+                        .bind(entry.sort_order)
+                        .bind(&benefits_json)
+                        .execute(&mut *tx)
+                        .await
+                        .map_err(error_from_sql)?;
+                        result.restored += 1;
+                    }
+                }
+            }
+            insert_audit(
+                &mut tx,
+                subject,
+                "restore_default_levels",
+                "partner_level",
+                None,
+                json!({
+                    "mode": if mode == RestoreDefaultLevelsMode::Reset { "reset" } else { "fill" },
+                    "restored": result.restored,
+                    "reset": result.reset,
+                    "skipped": result.skipped,
+                }),
+            )
+            .await
+            .map_err(error_from_sql)?;
+            tx.commit().await.map_err(error_from_sql)?;
+            Ok(result)
         })
     }
 
@@ -787,6 +990,9 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 )));
             }
             let partner_id = next_bigint_id();
+            // Every partner receives an invite code (伙伴计划 referral code)
+            // at creation; the partial unique index keeps codes unique.
+            let invite_code = generate_invite_code();
             let result = sqlx::query(INSERT_PARTNER)
                 .bind(partner_id)
                 .bind(next_uuid())
@@ -805,6 +1011,7 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 .bind(Option::<DateTime<Utc>>::None)
                 .bind(subject.user_id)
                 .bind(&command.remark)
+                .bind(&invite_code)
                 .execute(&mut *tx)
                 .await;
             if let Err(error) = result {
@@ -839,10 +1046,11 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
     ) -> PartnerAdminFuture<'a, PartnerItem> {
         Box::pin(async move {
             let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
-            // Lock the partner row so the CLOSED terminal-state check is
-            // race-free against a concurrent close.
+            // Lock the partner row so the CLOSED terminal-state check and the
+            // parent/user validations below are race-free against a
+            // concurrent close or rebind.
             let current = sqlx::query(
-                "SELECT status FROM partner_partner \
+                "SELECT status, parent_partner_id, user_account_id FROM partner_partner \
                  WHERE id = $1 AND tenant_id = $2 AND organization_id = $3 AND deleted_at IS NULL \
                  FOR UPDATE",
             )
@@ -854,10 +1062,61 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             .map_err(error_from_sql)?
             .ok_or_else(|| CommerceServiceError::not_found("partner not found"))?;
             let current_status: String = current.get("status");
+            let current_parent: Option<i64> = current.get("parent_partner_id");
+            let current_user: Option<i64> = current.get("user_account_id");
             if current_status == "CLOSED" && command.status != "CLOSED" {
                 return Err(CommerceServiceError::invalid_state(
                     "closed partners cannot be reactivated",
                 ));
+            }
+            // Closed partners keep their relations frozen: neither the parent
+            // nor the bound user account may change once closed (same policy
+            // as bind_partner_user_account).
+            if current_status == "CLOSED"
+                && (command.parent_partner_id != current_parent
+                    || command.user_account_id != current_user)
+            {
+                return Err(CommerceServiceError::invalid_state(
+                    "closed partners cannot have their parent or user account changed",
+                ));
+            }
+            // The new parent must exist, be active, and must not create a
+            // cycle: a partner cannot become the parent of itself or of one
+            // of its descendants.
+            if let Some(parent_id) = command.parent_partner_id {
+                if parent_id == command.partner_id {
+                    return Err(CommerceServiceError::validation(
+                        "a partner cannot be its own parent",
+                    ));
+                }
+                let parent = sqlx::query(SELECT_PARTNER_BY_ID)
+                    .bind(subject.tenant_id)
+                    .bind(subject.organization_id)
+                    .bind(parent_id)
+                    .fetch_optional(&mut *tx)
+                    .await
+                    .map_err(error_from_sql)?
+                    .ok_or_else(|| CommerceServiceError::not_found("parent partner not found"))?;
+                let parent_status: String = parent.get("status");
+                if parent_status != "ACTIVE" {
+                    return Err(CommerceServiceError::invalid_state(
+                        "parent partner is not active",
+                    ));
+                }
+                let cycle_count: i64 = sqlx::query(COUNT_PARTNER_DESCENDANTS)
+                    .bind(subject.tenant_id)
+                    .bind(subject.organization_id)
+                    .bind(command.partner_id)
+                    .bind(parent_id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map_err(error_from_sql)?
+                    .get("count");
+                if cycle_count > 0 {
+                    return Err(CommerceServiceError::validation(
+                        "parent partner cannot be a descendant of the partner",
+                    ));
+                }
             }
             // The level must exist; an unknown level would silently break the
             // commission policy of the partner.
@@ -878,10 +1137,35 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                     command.level_no
                 )));
             }
+            // The IAM user account may only belong to one partner (unique
+            // index); check explicitly for a human-readable conflict instead
+            // of relying on the unique-violation mapping (same check as
+            // bind_partner_user_account).
+            if let Some(user_account_id) = command.user_account_id {
+                let occupying: i64 = sqlx::query(
+                    "SELECT COUNT(*) FROM partner_partner \
+                     WHERE tenant_id = $1 AND organization_id = $2 AND user_account_id = $3 \
+                       AND id != $4 AND deleted_at IS NULL",
+                )
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(user_account_id)
+                .bind(command.partner_id)
+                .fetch_one(&mut *tx)
+                .await
+                .map_err(error_from_sql)?
+                .get("count");
+                if occupying > 0 {
+                    return Err(CommerceServiceError::conflict(
+                        "the IAM user account is already bound to another partner",
+                    ));
+                }
+            }
             let updated = sqlx::query(
                 "UPDATE partner_partner SET name = $3, contact_name = $4, phone = $5, email = $6, \
-                 level_no = $7, status = $8, remark = $9, updated_at = CURRENT_TIMESTAMP \
-                 WHERE id = $1 AND tenant_id = $2 AND organization_id = $10 AND deleted_at IS NULL",
+                 level_no = $7, status = $8, remark = $9, parent_partner_id = $10, \
+                 user_account_id = $11, updated_at = CURRENT_TIMESTAMP \
+                 WHERE id = $1 AND tenant_id = $2 AND organization_id = $12 AND deleted_at IS NULL",
             )
             .bind(command.partner_id)
             .bind(subject.tenant_id)
@@ -892,6 +1176,8 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
             .bind(command.level_no)
             .bind(&command.status)
             .bind(&command.remark)
+            .bind(command.parent_partner_id)
+            .bind(command.user_account_id)
             .bind(subject.organization_id)
             .execute(&mut *tx)
             .await
@@ -905,7 +1191,12 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 "update_partner",
                 "partner_partner",
                 Some(command.partner_id),
-                json!({"status": command.status, "level_no": command.level_no}),
+                json!({
+                    "status": command.status,
+                    "level_no": command.level_no,
+                    "parent_partner_id": command.parent_partner_id,
+                    "user_account_id": command.user_account_id,
+                }),
             )
             .await
             .map_err(error_from_sql)?;
@@ -1157,7 +1448,7 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 return Err(CommerceServiceError::not_found("partner not found"));
             }
             let payment_id = next_bigint_id();
-            let row = sqlx::query(INSERT_JOIN_FEE_PAYMENT)
+            let inserted = sqlx::query(INSERT_JOIN_FEE_PAYMENT)
                 .bind(payment_id)
                 .bind(next_uuid())
                 .bind(subject.tenant_id)
@@ -1168,9 +1459,25 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 .bind(&command.payment_method)
                 .bind(subject.user_id)
                 .bind(&command.remark)
-                .fetch_one(&mut *tx)
+                .bind(&command.idempotency_key)
+                .fetch_optional(&mut *tx)
                 .await
                 .map_err(error_from_sql)?;
+            let Some(row) = inserted else {
+                // Idempotent replay: a payment with the same idempotency key
+                // already exists (its commission was already distributed), so
+                // return the existing payment without re-triggering anything.
+                let key = command.idempotency_key.as_deref().unwrap_or_default();
+                let row = sqlx::query(SELECT_JOIN_FEE_PAYMENT_BY_IDEMPOTENCY_KEY)
+                    .bind(subject.tenant_id)
+                    .bind(subject.organization_id)
+                    .bind(key)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map_err(error_from_sql)?;
+                tx.commit().await.map_err(error_from_sql)?;
+                return Ok(map_join_fee_payment(&row));
+            };
             sqlx::query(UPDATE_PARTNER_JOIN_FEE_PAID)
                 .bind(command.partner_id)
                 .bind(subject.tenant_id)
@@ -2028,7 +2335,10 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                     .release_withdrawal_hold(
                         subject.tenant_id,
                         hold_id,
-                        &format!("withdraw-release:{0}:{1}", command.withdrawal_id, partner_id),
+                        &format!(
+                            "withdraw-release:{0}:{1}",
+                            command.withdrawal_id, partner_id
+                        ),
                     )
                     .await?;
                 sqlx::query(
@@ -2315,6 +2625,473 @@ impl PartnerAdminRepositoryPort for PostgresPartnerAdminRepository {
                 withdrawn_amount: cents_to_decimal(withdrawn_cents),
                 customer_count: customer_row.get("count"),
                 downstream_partner_count: downstream_row.get::<i64, _>("count").max(0),
+            })
+        })
+    }
+
+    fn list_join_applications<'a>(
+        &'a self,
+        query: ListJoinApplicationsQuery,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerAdminListPage<PartnerJoinApplicationItem>> {
+        Box::pin(async move {
+            let total = sqlx::query(COUNT_APPLICATIONS_BY_FILTERS)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(query.status.as_deref())
+                .bind(query.applicant_type.as_deref())
+                .bind(query.keyword.as_deref())
+                .fetch_one(&self.pool)
+                .await
+                .map_err(error_from_sql)?
+                .get::<i64, _>("count");
+            let offset = (query.list.page - 1) * query.list.page_size;
+            let rows = sqlx::query(SELECT_APPLICATIONS_BY_FILTERS)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(query.status.as_deref())
+                .bind(query.applicant_type.as_deref())
+                .bind(query.keyword.as_deref())
+                .bind(query.list.page_size)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await
+                .map_err(error_from_sql)?;
+            Ok(PartnerAdminListPage {
+                items: rows.iter().map(map_partner_application).collect(),
+                page: query.list.page,
+                page_size: query.list.page_size,
+                total,
+            })
+        })
+    }
+
+    fn retrieve_join_application<'a>(
+        &'a self,
+        application_id: i64,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerJoinApplicationItem> {
+        Box::pin(async move {
+            let row = sqlx::query(SELECT_PARTNER_APPLICATION_BY_ID)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(application_id)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(error_from_sql)?
+                .ok_or_else(|| CommerceServiceError::not_found("join application not found"))?;
+            Ok(map_partner_application(&row))
+        })
+    }
+
+    fn approve_join_application<'a>(
+        &'a self,
+        command: ApproveJoinApplicationCommand,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerJoinApplicationItem> {
+        Box::pin(async move {
+            // The approval is atomic in ONE transaction: lock the application
+            // row, verify SUBMITTED, verify the assigned level is ACTIVE,
+            // create the partner record (PENDING, join fee unpaid, bound to
+            // the applicant, hung on the inviter chain, invite code
+            // generated), mark the application APPROVED, and audit. When the
+            // generated invite code collides (partial unique index) the
+            // transaction rolls back and retries with a fresh code.
+            for attempt in 0..3 {
+                let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
+                let row = sqlx::query(SELECT_PARTNER_APPLICATION_BY_ID_FOR_UPDATE)
+                    .bind(subject.tenant_id)
+                    .bind(subject.organization_id)
+                    .bind(command.application_id)
+                    .fetch_optional(&mut *tx)
+                    .await
+                    .map_err(error_from_sql)?
+                    .ok_or_else(|| CommerceServiceError::not_found("join application not found"))?;
+                let status: String = row.get("status");
+                if status != "SUBMITTED" {
+                    return Err(CommerceServiceError::invalid_state(format!(
+                        "application is not submittable (current status {status})"
+                    )));
+                }
+                let level_row = sqlx::query(
+                    "SELECT level_no FROM partner_level \
+                     WHERE tenant_id = $1 AND organization_id = $2 AND level_no = $3 \
+                       AND status = 'ACTIVE' AND deleted_at IS NULL",
+                )
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(command.level_no)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(error_from_sql)?;
+                if level_row.is_none() {
+                    return Err(CommerceServiceError::validation(format!(
+                        "partner level {} is not active",
+                        command.level_no
+                    )));
+                }
+                let applicant_user_id: i64 = row.get("applicant_user_id");
+                let subject_name: String = row.get("subject_name");
+                let contact_name: String = row.get("contact_name");
+                let contact_phone: String = row.get("contact_phone");
+                let contact_email: String = row.get("contact_email");
+                let inviter_partner_id: Option<i64> = row.get("inviter_partner_id");
+                // Partner name prefers the subject name; individual applicants
+                // fall back to their contact name.
+                let partner_name = if subject_name.trim().is_empty() {
+                    contact_name.clone()
+                } else {
+                    subject_name.clone()
+                };
+                let partner_id = next_bigint_id();
+                let insert = sqlx::query(INSERT_PARTNER)
+                    .bind(partner_id)
+                    .bind(next_uuid())
+                    .bind(subject.tenant_id)
+                    .bind(subject.organization_id)
+                    .bind(&partner_name)
+                    .bind(&contact_name)
+                    .bind(&contact_phone)
+                    .bind(&contact_email)
+                    .bind(command.level_no)
+                    .bind(inviter_partner_id)
+                    .bind(applicant_user_id)
+                    .bind("PENDING")
+                    .bind("0.00")
+                    .bind("UNPAID")
+                    .bind(Option::<DateTime<Utc>>::None)
+                    .bind(applicant_user_id) // owner_id = applicant
+                    .bind("joined via partner join application")
+                    .bind(&generate_invite_code())
+                    .execute(&mut *tx)
+                    .await;
+                if let Err(error) = insert {
+                    if is_unique_violation(&error) && attempt < 2 {
+                        // Roll back (drop) and retry with a fresh invite code.
+                        continue;
+                    }
+                    return Err(error_from_sql(error));
+                }
+                sqlx::query(UPDATE_PARTNER_APPLICATION_APPROVED)
+                    .bind(command.application_id)
+                    .bind(subject.tenant_id)
+                    .bind(subject.user_id)
+                    .bind(&command.remark)
+                    .bind(partner_id)
+                    .bind(subject.organization_id)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(error_from_sql)?;
+                insert_audit(
+                    &mut tx,
+                    subject,
+                    "approve_join_application",
+                    "partner_application",
+                    Some(command.application_id),
+                    json!({
+                        "level_no": command.level_no,
+                        "partner_id": partner_id,
+                        "remark": command.remark,
+                    }),
+                )
+                .await
+                .map_err(error_from_sql)?;
+                tx.commit().await.map_err(error_from_sql)?;
+                let row = sqlx::query(SELECT_PARTNER_APPLICATION_BY_ID)
+                    .bind(subject.tenant_id)
+                    .bind(subject.organization_id)
+                    .bind(command.application_id)
+                    .fetch_one(&self.pool)
+                    .await
+                    .map_err(error_from_sql)?;
+                return Ok(map_partner_application(&row));
+            }
+            Err(CommerceServiceError::conflict(
+                "could not allocate a unique partner invite code",
+            ))
+        })
+    }
+
+    fn reject_join_application<'a>(
+        &'a self,
+        command: RejectJoinApplicationCommand,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerJoinApplicationItem> {
+        Box::pin(async move {
+            let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
+            let row = sqlx::query(SELECT_PARTNER_APPLICATION_BY_ID_FOR_UPDATE)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(command.application_id)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(error_from_sql)?
+                .ok_or_else(|| CommerceServiceError::not_found("join application not found"))?;
+            let status: String = row.get("status");
+            if status != "SUBMITTED" {
+                return Err(CommerceServiceError::invalid_state(format!(
+                    "application is not submittable (current status {status})"
+                )));
+            }
+            sqlx::query(UPDATE_PARTNER_APPLICATION_REJECTED)
+                .bind(command.application_id)
+                .bind(subject.tenant_id)
+                .bind(subject.user_id)
+                .bind(&command.reason)
+                .bind(subject.organization_id)
+                .execute(&mut *tx)
+                .await
+                .map_err(error_from_sql)?;
+            insert_audit(
+                &mut tx,
+                subject,
+                "reject_join_application",
+                "partner_application",
+                Some(command.application_id),
+                json!({"reason": command.reason}),
+            )
+            .await
+            .map_err(error_from_sql)?;
+            tx.commit().await.map_err(error_from_sql)?;
+            let row = sqlx::query(SELECT_PARTNER_APPLICATION_BY_ID)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(command.application_id)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(error_from_sql)?;
+            Ok(map_partner_application(&row))
+        })
+    }
+}
+
+impl PartnerJoinRepositoryPort for PostgresPartnerAdminRepository {
+    fn submit_application<'a>(
+        &'a self,
+        command: SubmitJoinApplicationCommand,
+        subject: &'a PartnerJoinSubject,
+    ) -> PartnerJoinFuture<'a, PartnerJoinApplicationItem> {
+        Box::pin(async move {
+            let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
+            // Optional invite code: lock the inviter at submit time. The code
+            // must belong to an ACTIVE partner of the same tenant.
+            let inviter_partner_id = if command.invite_code.is_empty() {
+                None
+            } else {
+                let partner = sqlx::query(SELECT_PARTNER_BY_INVITE_CODE)
+                    .bind(subject.tenant_id)
+                    .bind(subject.organization_id)
+                    .bind(&command.invite_code)
+                    .fetch_optional(&mut *tx)
+                    .await
+                    .map_err(error_from_sql)?;
+                let Some(partner) = partner else {
+                    return Err(CommerceServiceError::conflict(
+                        "invite code is invalid or not found",
+                    ));
+                };
+                let status: String = partner.get("status");
+                if status != "ACTIVE" {
+                    return Err(CommerceServiceError::conflict(
+                        "invite code belongs to an inactive partner",
+                    ));
+                }
+                Some(partner.get::<i64, _>("id"))
+            };
+            // One active SUBMITTED application per applicant (partial unique
+            // index); check explicitly for a human-readable conflict and map
+            // any race lost to the index onto the same conflict.
+            let existing = sqlx::query(SELECT_ACTIVE_SUBMITTED_APPLICATION_BY_USER)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(subject.user_id)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(error_from_sql)?;
+            if existing.is_some() {
+                return Err(CommerceServiceError::conflict(
+                    "an active join application already exists for this user",
+                ));
+            }
+            let application_id = next_bigint_id();
+            let result = sqlx::query(INSERT_PARTNER_APPLICATION)
+                .bind(application_id)
+                .bind(next_uuid())
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(subject.user_id)
+                .bind(&command.applicant_type)
+                .bind(&command.subject_name)
+                .bind(&command.contact_name)
+                .bind(&command.contact_phone)
+                .bind(&command.contact_email)
+                .bind(command.target_level_no)
+                .bind(&command.invite_code)
+                .bind(inviter_partner_id)
+                .bind(&command.business_intro)
+                .execute(&mut *tx)
+                .await;
+            if let Err(error) = result {
+                return Err(error_from_sql(error));
+            }
+            insert_app_audit(
+                &mut tx,
+                subject,
+                "submit_join_application",
+                "partner_application",
+                Some(application_id),
+                json!({
+                    "applicant_type": command.applicant_type,
+                    "target_level_no": command.target_level_no,
+                    "inviter_partner_id": inviter_partner_id,
+                }),
+            )
+            .await
+            .map_err(error_from_sql)?;
+            tx.commit().await.map_err(error_from_sql)?;
+            let row = sqlx::query(SELECT_PARTNER_APPLICATION_BY_ID)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(application_id)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(error_from_sql)?;
+            Ok(map_partner_application(&row))
+        })
+    }
+
+    fn list_my_applications<'a>(
+        &'a self,
+        query: ListMyJoinApplicationsQuery,
+        subject: &'a PartnerJoinSubject,
+    ) -> PartnerJoinFuture<'a, PartnerAdminListPage<PartnerJoinApplicationItem>> {
+        Box::pin(async move {
+            let total = sqlx::query(COUNT_APPLICATIONS_BY_USER)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(subject.user_id)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(error_from_sql)?
+                .get::<i64, _>("count");
+            let offset = (query.list.page - 1) * query.list.page_size;
+            let rows = sqlx::query(SELECT_APPLICATIONS_BY_USER)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(subject.user_id)
+                .bind(query.list.page_size)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await
+                .map_err(error_from_sql)?;
+            Ok(PartnerAdminListPage {
+                items: rows.iter().map(map_partner_application).collect(),
+                page: query.list.page,
+                page_size: query.list.page_size,
+                total,
+            })
+        })
+    }
+
+    fn cancel_application<'a>(
+        &'a self,
+        command: CancelJoinApplicationCommand,
+        subject: &'a PartnerJoinSubject,
+    ) -> PartnerJoinFuture<'a, PartnerJoinApplicationItem> {
+        Box::pin(async move {
+            let mut tx = self.pool.begin().await.map_err(error_from_sql)?;
+            // Lock the application row so the ownership and SUBMITTED checks
+            // below are race-free against a concurrent review.
+            let row = sqlx::query(SELECT_PARTNER_APPLICATION_BY_ID_FOR_UPDATE)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(command.application_id)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(error_from_sql)?
+                .ok_or_else(|| CommerceServiceError::not_found("join application not found"))?;
+            let applicant_user_id: i64 = row.get("applicant_user_id");
+            if applicant_user_id != subject.user_id {
+                // Own application only; do not leak the existence of other
+                // applicants' rows.
+                return Err(CommerceServiceError::not_found(
+                    "join application not found",
+                ));
+            }
+            let status: String = row.get("status");
+            if status != "SUBMITTED" {
+                return Err(CommerceServiceError::invalid_state(format!(
+                    "application is not submittable (current status {status})"
+                )));
+            }
+            sqlx::query(UPDATE_PARTNER_APPLICATION_CANCELLED)
+                .bind(command.application_id)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .execute(&mut *tx)
+                .await
+                .map_err(error_from_sql)?;
+            insert_app_audit(
+                &mut tx,
+                subject,
+                "cancel_join_application",
+                "partner_application",
+                Some(command.application_id),
+                json!({}),
+            )
+            .await
+            .map_err(error_from_sql)?;
+            tx.commit().await.map_err(error_from_sql)?;
+            let row = sqlx::query(SELECT_PARTNER_APPLICATION_BY_ID)
+                .bind(subject.tenant_id)
+                .bind(subject.organization_id)
+                .bind(command.application_id)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(error_from_sql)?;
+            Ok(map_partner_application(&row))
+        })
+    }
+
+    fn validate_invite_code<'a>(
+        &'a self,
+        tenant_id: i64,
+        organization_id: i64,
+        code: &'a str,
+    ) -> PartnerJoinFuture<'a, InviteCodeValidation> {
+        Box::pin(async move {
+            let code = code.trim().to_string();
+            let invalid = || InviteCodeValidation {
+                code: code.clone(),
+                valid: false,
+                partner_id: None,
+                partner_name: String::new(),
+                level_no: None,
+            };
+            if code.is_empty() {
+                return Ok(invalid());
+            }
+            let row = sqlx::query(SELECT_PARTNER_BY_INVITE_CODE)
+                .bind(tenant_id)
+                .bind(organization_id)
+                .bind(&code)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(error_from_sql)?;
+            let Some(row) = row else {
+                // Not found is a plain invalid result, never a 404.
+                return Ok(invalid());
+            };
+            let status: String = row.get("status");
+            if status != "ACTIVE" {
+                return Ok(invalid());
+            }
+            Ok(InviteCodeValidation {
+                code,
+                valid: true,
+                partner_id: Some(row.get("id")),
+                partner_name: row.get("name"),
+                level_no: Some(row.get("level_no")),
             })
         })
     }

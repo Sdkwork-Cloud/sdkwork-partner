@@ -14,9 +14,7 @@ export * from "../generated/server-openapi/src/auth";
 export type {
   PartnersAuditLogsListParams,
   PartnersCommissionEventsListParams,
-  PartnersCustomerBindingsListAllParams,
   PartnersCustomerBindingsListParams,
-  PartnersJoinFeePaymentsListAllParams,
   PartnersJoinFeePaymentsListParams,
   PartnersLedgerEntriesListParams,
   PartnersListParams,

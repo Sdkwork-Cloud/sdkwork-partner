@@ -1,0 +1,1062 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "SDKWork Partner App API",
+    "version": "0.1.0",
+    "description": "User-facing API for the SDKWork partner join (伙伴计划) marketing module: public partner program catalog, join applications, application tracking, and invite-code validation. Applications are reviewed on the management surface (sdkwork-partner-backend-api).",
+    "x-sdkwork-api-authority": "sdkwork-partner-app-api",
+    "x-sdkwork-sdk-family": "sdkwork-partner-app-sdk",
+    "x-sdkwork-owner": "sdkwork-partner"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8080"
+    }
+  ],
+  "tags": [
+    {
+      "name": "join",
+      "description": "Partner join (伙伴计划) marketing module."
+    }
+  ],
+  "paths": {
+    "/app/v3/api/partner_join": {
+      "get": {
+        "operationId": "partnerJoin.retrieve",
+        "summary": "Retrieve partner program catalog",
+        "description": "Public partner program information: level catalog (join fees, commission pools, benefits), global commission rules, and the join policy summary. Powers the public landing page.",
+        "tags": [
+          "join"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-auth-mode": "anonymous",
+        "x-sdkwork-domain": "commerce",
+        "x-sdkwork-resource": "partnerJoin",
+        "security": [],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PartnerJoinProgramEnvelopeResponse"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/app/v3/api/partner_join/applications": {
+      "post": {
+        "operationId": "partnerJoin.application.create",
+        "summary": "Submit a partner join application",
+        "description": "Submits a partner join application for the current session user. Idempotent per applicant: a repeat submission with no active SUBMITTED application creates a new record; an active SUBMITTED application returns a conflict. Invite codes are validated at submit time and lock the inviter partner.",
+        "tags": [
+          "join"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-auth-mode": "dual-token",
+        "x-sdkwork-domain": "commerce",
+        "x-sdkwork-resource": "partnerJoin.application",
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartnerJoinApplicationSubmitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/PartnerJoinApplicationItemEnvelopeResponse"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict (an active SUBMITTED application already exists or the invite code is invalid)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/app/v3/api/partner_join/applications/mine": {
+      "get": {
+        "operationId": "partnerJoin.application.list",
+        "summary": "List my join applications",
+        "description": "Lists the current session user's join applications (including rejected/cancelled history), newest first.",
+        "tags": [
+          "join"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-auth-mode": "dual-token",
+        "x-sdkwork-domain": "commerce",
+        "x-sdkwork-resource": "partnerJoin.application",
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PartnerJoinApplicationListEnvelopeResponse"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/app/v3/api/partner_join/applications/{applicationId}/cancel": {
+      "post": {
+        "operationId": "partnerJoin.application.cancel",
+        "summary": "Cancel my join application",
+        "description": "Cancels (withdraws) the current session user's own application. Only allowed on SUBMITTED applications owned by the caller.",
+        "tags": [
+          "join"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-auth-mode": "dual-token",
+        "x-sdkwork-domain": "commerce",
+        "x-sdkwork-resource": "partnerJoin.application",
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
+            },
+            "description": "Join application id."
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PartnerJoinApplicationItemEnvelopeResponse"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (not the owner or not cancellable)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/app/v3/api/partner_join/invite_codes/{code}": {
+      "get": {
+        "operationId": "partnerJoin.inviteCode.retrieve",
+        "summary": "Validate an invite code",
+        "description": "Validates a partner invite code for the apply form. Returns the inviter partner name and level when valid; an ACTIVE partner with a non-deleted invite code is required.",
+        "tags": [
+          "join"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-auth-mode": "anonymous",
+        "x-sdkwork-domain": "commerce",
+        "x-sdkwork-resource": "partnerJoin.inviteCode",
+        "security": [],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "description": "Invite code to validate."
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/InviteCodeValidateEnvelopeResponse"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AccessToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Access-Token"
+      },
+      "AuthToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "SDKWork auth token"
+      }
+    },
+    "schemas": {
+      "SdkWorkApiResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "ProblemDetail": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "code",
+          "traceId"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PageInfo": {
+        "type": "object",
+        "required": [
+          "mode",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages",
+          "hasMore"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "offset"
+            ]
+          },
+          "page": {
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
+          },
+          "pageSize": {
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
+          },
+          "totalItems": {
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
+          },
+          "totalPages": {
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        }
+      },
+      "LevelBenefitItem": {
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Stable machine-readable benefit key (e.g. account_manager)."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the benefit."
+          },
+          "value": {
+            "type": "string",
+            "description": "Display value of the benefit (e.g. 10 qualified leads per month)."
+          },
+          "sort": {
+            "type": "integer",
+            "description": "Display sort order within the level benefit list.",
+            "format": "int32"
+          }
+        }
+      },
+      "PartnerJoinLevelItem": {
+        "type": "object",
+        "required": [
+          "levelNo",
+          "name",
+          "joinFee",
+          "customerRevenueRatio",
+          "joinFeeCommissionRatio",
+          "status",
+          "benefits"
+        ],
+        "properties": {
+          "levelNo": {
+            "type": "integer",
+            "description": "Level number (1-based).",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "description": "Level name."
+          },
+          "joinFee": {
+            "type": "string",
+            "description": "Join fee amount for this level."
+          },
+          "customerRevenueRatio": {
+            "type": "string",
+            "description": "Customer revenue commission pool ratio (percent, e.g. 20.00)."
+          },
+          "joinFeeCommissionRatio": {
+            "type": "string",
+            "description": "Join fee commission pool ratio (percent, e.g. 10.00)."
+          },
+          "status": {
+            "type": "string",
+            "description": "Level status.",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          },
+          "benefits": {
+            "type": "array",
+            "description": "Structured benefit (权益) ladder granted by this level.",
+            "items": {
+              "$ref": "#/components/schemas/LevelBenefitItem"
+            }
+          }
+        }
+      },
+      "PartnerJoinRulesItem": {
+        "type": "object",
+        "required": [
+          "currency",
+          "profitMarginRatio",
+          "minWithdrawalAmount",
+          "joinFeePolicy"
+        ],
+        "properties": {
+          "currency": {
+            "type": "string",
+            "description": "Commission currency (e.g. CNY)."
+          },
+          "profitMarginRatio": {
+            "type": "string",
+            "description": "Platform gross profit margin ratio (percent, default 40.00): customer revenue commissions are profit-based."
+          },
+          "minWithdrawalAmount": {
+            "type": "string",
+            "description": "Minimum withdrawal amount."
+          },
+          "joinFeePolicy": {
+            "type": "string",
+            "description": "Join fee policy summary text (display copy)."
+          }
+        }
+      },
+      "PartnerJoinProgramItem": {
+        "type": "object",
+        "required": [
+          "levels",
+          "rules"
+        ],
+        "properties": {
+          "levels": {
+            "type": "array",
+            "description": "Active partner level catalog (join fees, pools, benefits).",
+            "items": {
+              "$ref": "#/components/schemas/PartnerJoinLevelItem"
+            }
+          },
+          "rules": {
+            "$ref": "#/components/schemas/PartnerJoinRulesItem"
+          }
+        }
+      },
+      "PartnerJoinApplicationSubmitRequest": {
+        "type": "object",
+        "required": [
+          "applicantType",
+          "contactName",
+          "contactPhone",
+          "contactEmail"
+        ],
+        "properties": {
+          "applicantType": {
+            "type": "string",
+            "description": "Applicant entity type.",
+            "enum": [
+              "INDIVIDUAL",
+              "ORGANIZATION"
+            ]
+          },
+          "subjectName": {
+            "type": "string",
+            "description": "Subject name (organization name when applicantType=ORGANIZATION; personal name otherwise)."
+          },
+          "contactName": {
+            "type": "string",
+            "description": "Contact name."
+          },
+          "contactPhone": {
+            "type": "string",
+            "description": "Contact phone."
+          },
+          "contactEmail": {
+            "type": "string",
+            "description": "Contact email."
+          },
+          "targetLevelNo": {
+            "type": "integer",
+            "description": "Target (aspirational) level number; the final level is decided by the reviewer.",
+            "format": "int32",
+            "minimum": 1
+          },
+          "inviteCode": {
+            "type": "string",
+            "description": "Optional inviter invite code; validated at submit time."
+          },
+          "businessIntro": {
+            "type": "string",
+            "description": "Optional business introduction."
+          }
+        }
+      },
+      "PartnerJoinApplicationItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "uuid",
+          "applicantType",
+          "subjectName",
+          "contactName",
+          "contactPhone",
+          "contactEmail",
+          "targetLevelNo",
+          "inviteCode",
+          "status",
+          "reviewComment",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Application id.",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Application uuid."
+          },
+          "applicantType": {
+            "type": "string",
+            "description": "Applicant entity type.",
+            "enum": [
+              "INDIVIDUAL",
+              "ORGANIZATION"
+            ]
+          },
+          "subjectName": {
+            "type": "string",
+            "description": "Subject name."
+          },
+          "contactName": {
+            "type": "string",
+            "description": "Contact name."
+          },
+          "contactPhone": {
+            "type": "string",
+            "description": "Contact phone."
+          },
+          "contactEmail": {
+            "type": "string",
+            "description": "Contact email."
+          },
+          "targetLevelNo": {
+            "type": "integer",
+            "description": "Target (aspirational) level number.",
+            "format": "int32"
+          },
+          "inviteCode": {
+            "type": "string",
+            "description": "Invite code submitted with the application (original input)."
+          },
+          "inviterPartnerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Inviter partner id locked at submit time (null = no invite code).",
+            "format": "int64",
+            "x-sdkwork-int64-string": true
+          },
+          "businessIntro": {
+            "type": "string",
+            "description": "Business introduction."
+          },
+          "status": {
+            "type": "string",
+            "description": "Application status.",
+            "enum": [
+              "SUBMITTED",
+              "APPROVED",
+              "REJECTED",
+              "CANCELLED"
+            ]
+          },
+          "reviewComment": {
+            "type": "string",
+            "description": "Review comment (approval note or rejection reason)."
+          },
+          "reviewedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Review timestamp.",
+            "format": "date-time"
+          },
+          "approvedPartnerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Partner record created on approval (closed loop reference).",
+            "format": "int64",
+            "x-sdkwork-int64-string": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created timestamp.",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Updated timestamp.",
+            "format": "date-time"
+          }
+        }
+      },
+      "InviteCodeValidateItem": {
+        "type": "object",
+        "required": [
+          "code",
+          "valid"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The validated invite code."
+          },
+          "valid": {
+            "type": "boolean",
+            "description": "Whether the invite code is valid."
+          },
+          "partnerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Inviter partner id (null when invalid).",
+            "format": "int64",
+            "x-sdkwork-int64-string": true
+          },
+          "partnerName": {
+            "type": "string",
+            "description": "Inviter partner display name (empty when invalid)."
+          },
+          "levelNo": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Inviter partner level number (null when invalid).",
+            "format": "int32"
+          }
+        }
+      },
+      "PartnerJoinProgramEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/PartnerJoinProgramItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PartnerJoinApplicationItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/PartnerJoinApplicationItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PartnerJoinApplicationListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/PartnerJoinApplicationItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "InviteCodeValidateEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/InviteCodeValidateItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "responses": {
+      "PartnerJoinProgramEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PartnerJoinProgramEnvelope"
+            }
+          }
+        }
+      },
+      "PartnerJoinApplicationItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PartnerJoinApplicationItemEnvelope"
+            }
+          }
+        }
+      },
+      "PartnerJoinApplicationListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PartnerJoinApplicationListEnvelope"
+            }
+          }
+        }
+      },
+      "InviteCodeValidateEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/InviteCodeValidateEnvelope"
+            }
+          }
+        }
+      }
+    }
+  }
+}

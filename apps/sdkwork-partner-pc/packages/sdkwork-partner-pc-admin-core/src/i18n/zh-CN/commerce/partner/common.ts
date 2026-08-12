@@ -1,0 +1,15 @@
+export const adminCoreZhCnMessages = {
+  'common.actions.cancel': '取消',
+  'common.actions.clear': '清空',
+  'common.actions.close': '关闭',
+  'common.actions.confirm': '确认',
+  'common.actions.delete': '删除',
+  'common.actions.dismiss': '忽略',
+  'common.actions.edit': '编辑',
+  'common.actions.refresh': '刷新',
+  'common.actions.remove': '移除',
+  'common.actions.reset': '重置',
+  'common.actions.save': '保存',
+  'common.actions.saveChanges': '保存修改',
+  'common.actions.search': '搜索',
+};

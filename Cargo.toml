@@ -4,6 +4,7 @@ members = [
   "crates/sdkwork-api-partner-assembly",
   "crates/sdkwork-commerce-partner-service",
   "crates/sdkwork-commerce-partner-repository-sqlx",
+  "crates/sdkwork-routes-partner-app-api",
   "crates/sdkwork-routes-partner-backend-api",
   "crates/sdkwork-partner-database-host",
   "crates/sdkwork-partner-service-host",
@@ -47,7 +48,8 @@ sdkwork_database_spi = { path = "../sdkwork-database/crates/sdkwork-database-spi
 sdkwork_database_sqlx = { path = "../sdkwork-database/crates/sdkwork-database-sqlx", package = "sdkwork-database-sqlx", features = ["postgres"] }
 sdkwork_commerce_partner_service = { path = "crates/sdkwork-commerce-partner-service", package = "sdkwork-commerce-partner-service" }
 sdkwork_commerce_partner_repository_sqlx = { path = "crates/sdkwork-commerce-partner-repository-sqlx", package = "sdkwork-commerce-partner-repository-sqlx" }
-sdkwork_routes_partner_backend_api = { path = "crates/sdkwork-routes-partner-backend-api", package = "sdkwork-routes-partner-backend-api" }
+sdkwork-routes-partner-app-api = { path = "crates/sdkwork-routes-partner-app-api" }
+sdkwork-routes-partner-backend-api = { path = "crates/sdkwork-routes-partner-backend-api" }
 sdkwork_partner_database_host = { path = "crates/sdkwork-partner-database-host", package = "sdkwork-partner-database-host" }
 sdkwork_partner_service_host = { path = "crates/sdkwork-partner-service-host", package = "sdkwork-partner-service-host" }
 sdkwork_api_partner_assembly = { path = "crates/sdkwork-api-partner-assembly", package = "sdkwork-api-partner-assembly" }

@@ -15,4 +15,5 @@ tokio.workspace = true
 sdkwork-web-bootstrap.workspace = true
 sdkwork-web-core.workspace = true
 sdkwork_partner_service_host.workspace = true
-sdkwork-routes-partner-backend-api = { path = "../sdkwork-routes-partner-backend-api" }
+sdkwork-routes-partner-app-api = { workspace = true }
+sdkwork-routes-partner-backend-api = { workspace = true }

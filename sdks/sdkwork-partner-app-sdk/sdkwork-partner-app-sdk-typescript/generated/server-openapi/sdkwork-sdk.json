@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "name": "sdkwork-partner-app-sdk",
+  "version": "0.1.0",
+  "language": "typescript",
+  "sdkType": "app",
+  "packageName": "sdkwork-partner-app-sdk-generated-typescript",
+  "transportPackageName": "sdkwork-partner-app-sdk-generated-typescript",
+  "consumerPackageName": "@sdkwork/partner-app-sdk",
+  "generator": "@sdkwork/sdk-generator",
+  "capabilities": {
+    "supportsGeneratedTests": true,
+    "supportsReadme": true,
+    "supportsCustomScaffold": true,
+    "supportsPublishWorkflow": true,
+    "hasDistinctBuildStep": true
+  },
+  "generation": {
+    "readme": true,
+    "tests": false
+  },
+  "ownership": {
+    "generatedOwnership": "generated",
+    "scaffoldOwnership": "scaffold",
+    "scaffoldRoots": [
+      "custom/"
+    ],
+    "stateRoots": [
+      ".sdkwork/"
+    ]
+  }
+}

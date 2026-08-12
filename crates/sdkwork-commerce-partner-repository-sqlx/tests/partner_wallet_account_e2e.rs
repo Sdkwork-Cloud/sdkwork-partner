@@ -22,9 +22,7 @@ use sdkwork_commerce_partner_service::backend_admin::{
 use sdkwork_commerce_partner_service::commands::{
     CreateWithdrawalCommand, PayWithdrawalCommand, ReviewWithdrawalCommand,
 };
-use sdkwork_commerce_partner_service::queries::{
-    ListLedgerEntriesQuery, PartnerAdminListQuery,
-};
+use sdkwork_commerce_partner_service::queries::{ListLedgerEntriesQuery, PartnerAdminListQuery};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{PgPool, Row};
 use std::env;
@@ -34,9 +32,8 @@ const POSTGRES_TEST_DATABASE_URL: &str = "SDKWORK_DATABASE_URL";
 const ACCOUNT_BASELINE: &str = include_str!(
     "../../../../sdkwork-account/database/ddl/baseline/postgres/0001_account_baseline.sql"
 );
-const PARTNER_BASELINE: &str = include_str!(
-    "../../../database/ddl/baseline/postgres/0001_partner_baseline.sql"
-);
+const PARTNER_BASELINE: &str =
+    include_str!("../../../database/ddl/baseline/postgres/0001_partner_baseline.sql");
 
 const TENANT_ID: i64 = 100_001;
 const ORGANIZATION_ID: i64 = 0;
@@ -81,7 +78,10 @@ async fn commission_credit_replays_idempotently_without_double_credit() {
         )
         .await
         .expect("replay must succeed, not double-credit");
-    assert_eq!(first, replay, "idempotent replay returns the same ledger id");
+    assert_eq!(
+        first, replay,
+        "idempotent replay returns the same ledger id"
+    );
 
     assert_eq!(
         5000,
@@ -147,7 +147,10 @@ async fn withdrawal_hold_freezes_balance_and_settle_moves_funds_out() {
 
     let account = partner_settlement_account(&ctx.pool).await;
     assert_eq!(6000, account.available_amount);
-    assert_eq!(0, account.frozen_amount, "settle must unfreeze the paid amount");
+    assert_eq!(
+        0, account.frozen_amount,
+        "settle must unfreeze the paid amount"
+    );
 
     let paid = ledger_total(&ctx.pool, "commission_withdraw_paid", "DEBIT").await;
     assert_eq!(4000, paid, "exactly one settle DEBIT must exist");
@@ -190,7 +193,10 @@ async fn withdrawal_hold_release_returns_funds() {
         .expect("release rejected withdrawal hold");
 
     let account = partner_settlement_account(&ctx.pool).await;
-    assert_eq!(10000, account.available_amount, "release must restore funds");
+    assert_eq!(
+        10000, account.available_amount,
+        "release must restore funds"
+    );
     assert_eq!(0, account.frozen_amount);
 
     ctx.cleanup().await;
@@ -241,11 +247,10 @@ async fn withdrawal_workflow_through_repository_holds_reviews_and_pays() {
         return;
     };
     let adapter = PartnerAccountWalletAdapter::new(ctx.pool.clone());
+    seed_commission_config(&ctx.pool, 1000).await;
     credit(&adapter, 10000).await;
-    let repository = PostgresPartnerAdminRepository::new(
-        ctx.pool.clone(),
-        Arc::new(adapter.clone()),
-    );
+    let repository =
+        PostgresPartnerAdminRepository::new(ctx.pool.clone(), Arc::new(adapter.clone()));
     let subject = PartnerAdminSubject::new(TENANT_ID, ORGANIZATION_ID, ADMIN_USER_ID)
         .expect("build admin subject");
 
@@ -274,7 +279,10 @@ async fn withdrawal_workflow_through_repository_holds_reviews_and_pays() {
         .expect("approve withdrawal");
     assert_eq!("APPROVED", approved.status);
     let account = partner_settlement_account(&ctx.pool).await;
-    assert_eq!(3000, account.frozen_amount, "approval keeps the hold frozen");
+    assert_eq!(
+        3000, account.frozen_amount,
+        "approval keeps the hold frozen"
+    );
 
     let paid = repository
         .pay_withdrawal(
@@ -328,11 +336,10 @@ async fn rejected_withdrawal_releases_the_hold_and_leaves_no_ledger_entry() {
         return;
     };
     let adapter = PartnerAccountWalletAdapter::new(ctx.pool.clone());
+    seed_commission_config(&ctx.pool, 1000).await;
     credit(&adapter, 10000).await;
-    let repository = PostgresPartnerAdminRepository::new(
-        ctx.pool.clone(),
-        Arc::new(adapter.clone()),
-    );
+    let repository =
+        PostgresPartnerAdminRepository::new(ctx.pool.clone(), Arc::new(adapter.clone()));
     let subject = PartnerAdminSubject::new(TENANT_ID, ORGANIZATION_ID, ADMIN_USER_ID)
         .expect("build admin subject");
 
@@ -357,8 +364,7 @@ async fn rejected_withdrawal_releases_the_hold_and_leaves_no_ledger_entry() {
     assert_eq!(0, account.frozen_amount);
     // A rejection is a hold-domain release, not a money movement: the account
     // ledger must stay untouched.
-    let release_entries =
-        ledger_total(&ctx.pool, "commission_withdraw_release", "CREDIT").await;
+    let release_entries = ledger_total(&ctx.pool, "commission_withdraw_release", "CREDIT").await;
     assert_eq!(0, release_entries, "release must not create ledger entries");
 
     ctx.cleanup().await;
@@ -380,6 +386,32 @@ async fn credit(adapter: &PartnerAccountWalletAdapter, amount_cents: i64) {
         )
         .await
         .expect("credit commission");
+}
+
+/// Seed a commission config row so withdrawal validation uses a test minimum
+/// (¥10) instead of the schema-default ¥100 inserted by the repository when
+/// no config row exists.
+async fn seed_commission_config(pool: &PgPool, min_withdrawal_cents: i64) {
+    sqlx::query(
+        "INSERT INTO partner_commission_config \
+         (id, uuid, tenant_id, organization_id, enabled, revenue_sources, \
+          max_commission_depth, currency, min_withdrawal_amount, profit_margin_ratio) \
+         VALUES ($1, $2, $3, $4, TRUE, $5, 3, 'CNY', $6::numeric, 40.00::numeric) \
+         ON CONFLICT (tenant_id, organization_id) DO NOTHING",
+    )
+    .bind(1i64)
+    .bind("00000000-0000-0000-0000-00000000CONFIG")
+    .bind(TENANT_ID)
+    .bind(ORGANIZATION_ID)
+    .bind("{\"usage_settlement\":true,\"recharge\":true}")
+    .bind(cents_to_decimal(min_withdrawal_cents))
+    .execute(pool)
+    .await
+    .expect("seed commission config");
+}
+
+fn cents_to_decimal(cents: i64) -> String {
+    format!("{:.2}", cents as f64 / 100.0)
 }
 
 struct PartnerSettlementAccount {
@@ -418,18 +450,18 @@ async fn partner_settlement_account(pool: &PgPool) -> PartnerSettlementAccount {
 }
 
 async fn withdrawal_hold_id(pool: &PgPool, withdrawal_id: i64) -> Option<i64> {
-    let row = sqlx::query(
-        "SELECT hold_id FROM partner_withdrawal WHERE tenant_id = $1 AND id = $2",
-    )
-    .bind(TENANT_ID)
-    .bind(withdrawal_id)
-    .fetch_one(pool)
-    .await
-    .expect("read withdrawal hold id");
+    let row =
+        sqlx::query("SELECT hold_id FROM partner_withdrawal WHERE tenant_id = $1 AND id = $2")
+            .bind(TENANT_ID)
+            .bind(withdrawal_id)
+            .fetch_one(pool)
+            .await
+            .expect("read withdrawal hold id");
     row.get("hold_id")
 }
 
-async fn ledger_total(pool: &PgPool, business_type: &str, direction: &str) -> i64 {    let row = sqlx::query(
+async fn ledger_total(pool: &PgPool, business_type: &str, direction: &str) -> i64 {
+    let row = sqlx::query(
         r#"
         SELECT CAST(COALESCE(SUM(amount), 0) AS BIGINT) AS total
         FROM acct_ledger_entry
@@ -560,6 +592,17 @@ fn split_statements(baseline: &str) -> Vec<String> {
         .split(';')
         .map(str::trim)
         .filter(|statement| !statement.is_empty())
+        // The baselines wrap groups of idempotent DDL in BEGIN;...COMMIT;
+        // blocks. Executing BEGIN; alone on a pooled connection would leave
+        // that connection idle in transaction holding its locks while the
+        // matching COMMIT; lands on another connection as a no-op, so every
+        // later ALTER TABLE blocks forever. Drop the bare transaction
+        // markers: each remaining statement is idempotent and safe to apply
+        // in autocommit, preserving the original statement order.
+        .filter(|statement| {
+            let upper = statement.to_uppercase();
+            upper != "BEGIN" && upper != "COMMIT"
+        })
         .map(str::to_owned)
         .collect()
 }

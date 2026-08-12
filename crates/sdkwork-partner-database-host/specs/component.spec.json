@@ -21,7 +21,7 @@
     { "file": "TEST_SPEC.md", "path": "../../../sdkwork-specs/TEST_SPEC.md" }
   ],
   "contracts": {
-    "layerRole": "domain-service",
+    "layerRole": "backend-provider",
     "publicExports": ["."],
     "providedPorts": [],
     "requiredPorts": [],

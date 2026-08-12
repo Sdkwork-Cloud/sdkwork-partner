@@ -3,8 +3,8 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use sdkwork_utils_rust::{
     offset_list_page_info, validated_offset_list_params, OffsetListPageParams, SdkWorkApiResponse,
-    SdkWorkCommandData, SdkWorkPageData, SdkWorkProblemDetail, SdkWorkResourceData,
-    SdkWorkResultCode, MAX_LIST_PAGE_SIZE,
+    SdkWorkPageData, SdkWorkProblemDetail, SdkWorkResourceData, SdkWorkResultCode,
+    MAX_LIST_PAGE_SIZE,
 };
 use sdkwork_web_core::WebRequestContext;
 
@@ -52,23 +52,6 @@ pub(crate) fn success_items<T: serde::Serialize>(
         SdkWorkPageData {
             items,
             page_info: offset_list_page_info(total_items, params),
-        },
-        trace_id.clone(),
-    );
-    attach_trace((StatusCode::OK, Json(envelope)).into_response(), &trace_id)
-}
-
-pub(crate) fn success_command(
-    context: Option<&WebRequestContext>,
-    resource_id: String,
-    status: String,
-) -> Response {
-    let trace_id = trace_id(context);
-    let envelope = SdkWorkApiResponse::success(
-        SdkWorkCommandData {
-            accepted: true,
-            resource_id: Some(resource_id),
-            status: Some(status),
         },
         trace_id.clone(),
     );

@@ -18,7 +18,7 @@ impl PartnerAdminListQuery {
                 "page must be a positive integer",
             ));
         }
-        if page_size < 1 || page_size > MAX_PAGE_SIZE {
+        if !(1..=MAX_PAGE_SIZE).contains(&page_size) {
             return Err(CommerceServiceError::validation(format!(
                 "page_size must be between 1 and {MAX_PAGE_SIZE}"
             )));

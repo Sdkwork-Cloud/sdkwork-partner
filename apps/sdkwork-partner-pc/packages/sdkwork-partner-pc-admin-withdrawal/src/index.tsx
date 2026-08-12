@@ -23,6 +23,7 @@ import {
   selectClass,
   TableState,
   textAreaClass,
+  Tooltip,
 } from '@sdkwork/partner-pc-admin-core/ui';
 import { WithdrawalStatusBadge } from './components/status';
 import { withdrawalService } from './services/withdrawalService';
@@ -391,33 +392,36 @@ export function WithdrawalAdmin() {
                         <div className="flex justify-end gap-1">
                           {withdrawal.status === 'PENDING' ? (
                             <>
-                              <button
-                                type="button"
-                                className={secondaryButtonClass}
-                                title={t('admin.partner.withdrawal.actions.approve', { defaultValue: 'Approve' })}
-                                onClick={() => void openReview(withdrawal, true)}
-                              >
-                                <Check className="h-4 w-4 text-emerald-600" />
-                              </button>
-                              <button
-                                type="button"
-                                className={secondaryButtonClass}
-                                title={t('admin.partner.withdrawal.actions.reject', { defaultValue: 'Reject' })}
-                                onClick={() => void openReview(withdrawal, false)}
-                              >
-                                <X className="h-4 w-4 text-red-500" />
-                              </button>
+                              <Tooltip content={t('admin.partner.withdrawal.actions.approve', { defaultValue: 'Approve' })}>
+                                <button
+                                  type="button"
+                                  className={secondaryButtonClass}
+                                  onClick={() => void openReview(withdrawal, true)}
+                                >
+                                  <Check className="h-4 w-4 text-emerald-600" />
+                                </button>
+                              </Tooltip>
+                              <Tooltip content={t('admin.partner.withdrawal.actions.reject', { defaultValue: 'Reject' })}>
+                                <button
+                                  type="button"
+                                  className={secondaryButtonClass}
+                                  onClick={() => void openReview(withdrawal, false)}
+                                >
+                                  <X className="h-4 w-4 text-red-500" />
+                                </button>
+                              </Tooltip>
                             </>
                           ) : null}
                           {withdrawal.status === 'APPROVED' ? (
-                            <button
-                              type="button"
-                              className={secondaryButtonClass}
-                              title={t('admin.partner.withdrawal.actions.markPaid', { defaultValue: 'Mark as paid' })}
-                              onClick={() => setPayTarget(withdrawal)}
-                            >
-                              <Banknote className="h-4 w-4 text-emerald-600" />
-                            </button>
+                            <Tooltip content={t('admin.partner.withdrawal.actions.markPaid', { defaultValue: 'Mark as paid' })}>
+                              <button
+                                type="button"
+                                className={secondaryButtonClass}
+                                onClick={() => setPayTarget(withdrawal)}
+                              >
+                                <Banknote className="h-4 w-4 text-emerald-600" />
+                              </button>
+                            </Tooltip>
                           ) : null}
                         </div>
                       </td>

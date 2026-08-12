@@ -3,15 +3,19 @@ import type { SdkworkBackendConfig } from './types/common';
 import type { AuthTokenManager } from '@sdkwork/sdk-common';
 
 import { PartnersApi, createPartnersApi } from './api/partners';
+import { LevelsApi, createLevelsApi } from './api/levels';
 
 export class SdkworkBackendClient {
   private httpClient: HttpClient;
 
   public readonly partners: PartnersApi;
+  public readonly levels: LevelsApi;
 
   constructor(config: SdkworkBackendConfig) {
     this.httpClient = createHttpClient(config);
     this.partners = createPartnersApi(this.httpClient);
+
+    this.levels = createLevelsApi(this.httpClient);
   }
   setAuthToken(token: string): this {
     this.httpClient.setAuthToken(token);

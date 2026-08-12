@@ -34,6 +34,7 @@ pub type PartnerWalletFuture<'a, T> =
 pub trait PartnerWalletPort: Send + Sync {
     /// Credits commission earnings (join fee / usage / recharge commission or
     /// a manual adjustment IN). Returns the account ledger entry id.
+    #[allow(clippy::too_many_arguments)]
     fn credit_commission<'a>(
         &'a self,
         tenant_id: i64,
@@ -49,6 +50,7 @@ pub trait PartnerWalletPort: Send + Sync {
     ) -> PartnerWalletFuture<'a, i64>;
 
     /// Debits a manual adjustment OUT. Returns the account ledger entry id.
+    #[allow(clippy::too_many_arguments)]
     fn debit_commission<'a>(
         &'a self,
         tenant_id: i64,
@@ -64,6 +66,7 @@ pub trait PartnerWalletPort: Send + Sync {
 
     /// Freezes commission for a withdrawal application. Returns the account
     /// hold id.
+    #[allow(clippy::too_many_arguments)]
     fn create_withdrawal_hold<'a>(
         &'a self,
         tenant_id: i64,
@@ -136,17 +139,15 @@ async fn hold_uuid_for_internal_id(
     tenant_id: i64,
     hold_id: i64,
 ) -> Result<String, CommerceServiceError> {
-    let row = sqlx::query(
-        "SELECT uuid FROM acct_hold WHERE tenant_id = $1 AND id = $2",
-    )
-    .bind(tenant_id)
-    .bind(hold_id)
-    .fetch_optional(pool)
-    .await
-    .map_err(|error| {
-        CommerceServiceError::storage(format!("failed to load account hold: {error}"))
-    })?
-    .ok_or_else(|| CommerceServiceError::not_found("account hold was not found"))?;
+    let row = sqlx::query("SELECT uuid FROM acct_hold WHERE tenant_id = $1 AND id = $2")
+        .bind(tenant_id)
+        .bind(hold_id)
+        .fetch_optional(pool)
+        .await
+        .map_err(|error| {
+            CommerceServiceError::storage(format!("failed to load account hold: {error}"))
+        })?
+        .ok_or_else(|| CommerceServiceError::not_found("account hold was not found"))?;
     Ok(row.get("uuid"))
 }
 
@@ -174,7 +175,7 @@ impl PartnerWalletPort for PartnerAccountWalletAdapter {
                 currency_code: Some(currency.to_owned()),
                 direction: CommerceLedgerDirection::Credit,
                 amount: CommerceMoney::new(&amount_cents.to_string())
-                    .map_err(|message| CommerceServiceError::validation(message))?,
+                    .map_err(CommerceServiceError::validation)?,
                 business_type: business_type.to_owned(),
                 transaction_no: idempotency_key.to_owned(),
                 request_no: idempotency_key.to_owned(),
@@ -225,7 +226,7 @@ impl PartnerWalletPort for PartnerAccountWalletAdapter {
                 currency_code: Some(currency.to_owned()),
                 direction: CommerceLedgerDirection::Debit,
                 amount: CommerceMoney::new(&amount_cents.to_string())
-                    .map_err(|message| CommerceServiceError::validation(message))?,
+                    .map_err(CommerceServiceError::validation)?,
                 business_type: "commission_adjustment".to_owned(),
                 transaction_no: idempotency_key.to_owned(),
                 request_no: idempotency_key.to_owned(),
@@ -272,7 +273,7 @@ impl PartnerWalletPort for PartnerAccountWalletAdapter {
                 account_id: String::new(),
                 asset_type: PARTNER_WALLET_ASSET,
                 amount: CommerceMoney::new(&amount_cents.to_string())
-                    .map_err(|message| CommerceServiceError::validation(message))?,
+                    .map_err(CommerceServiceError::validation)?,
                 business_type: "commission_withdraw_hold".to_owned(),
                 business_no: business_no.to_owned(),
                 source_type: "PARTNER_WITHDRAWAL".to_owned(),

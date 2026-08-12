@@ -7,4 +7,6 @@ export interface AdminJoinFeePaymentCreateRequest {
   paymentMethod?: string;
   /** Remark. */
   remark?: string;
+  /** Client-generated idempotency key: replaying the same submission returns the original payment instead of creating a duplicate (and duplicate ancestor commission). */
+  idempotencyKey?: string;
 }

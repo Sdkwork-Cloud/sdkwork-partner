@@ -67,6 +67,12 @@
       "owner": "sdkwork-partner",
       "compliance_level": "L2",
       "lifecycle_status": "active"
+    },
+    {
+      "table_name": "partner_application",
+      "owner": "sdkwork-partner",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
     }
   ]
 }

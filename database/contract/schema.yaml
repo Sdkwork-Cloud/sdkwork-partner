@@ -42,3 +42,6 @@ tables:
   - name: partner_audit_log
     lifecycle_status: active
     owner: sdkwork-partner
+  - name: partner_application
+    lifecycle_status: active
+    owner: sdkwork-partner

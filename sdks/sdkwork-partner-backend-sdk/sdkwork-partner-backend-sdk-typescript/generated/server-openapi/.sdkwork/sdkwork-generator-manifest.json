@@ -44,7 +44,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "e3730b6a2c82078b8b77c2de4d907f68073466f2e344e467801a7d566fa810c1"
+      "sha256": "48ca788df7bd71a97271c1008e1d0696c2d2d6535e5ec4a4c7fc4c784c6f3d83"
     },
     {
       "path": "sdkwork-sdk.json",
@@ -56,11 +56,15 @@
     },
     {
       "path": "src/api/index.ts",
-      "sha256": "895e9e7062d7db465c327b318f8ebc8d4fd2361792f8cef267db5a84ca79eaab"
+      "sha256": "d7b4ee86df6fa4e90489c26a10bac3fd053cd47fe88296ac5530b5f37c8f4bda"
+    },
+    {
+      "path": "src/api/levels.ts",
+      "sha256": "b75709d34d7818c0c2ebd8b17d2f6a47e4560d44fbe34abf386ff44917beeee9"
     },
     {
       "path": "src/api/partners.ts",
-      "sha256": "150bc86c93ee717e2027396aba79f32df61b5b43e3a0894abdfe26b858609458"
+      "sha256": "2e919d604810d48281c6de9224a7e83eaac515081f6462d827c97e7d80041da8"
     },
     {
       "path": "src/api/paths.ts",
@@ -84,11 +88,11 @@
     },
     {
       "path": "src/sdk.ts",
-      "sha256": "af4ec70069bc9183e850d12509d4eb51748b6ed0e6e0e8daac41cbbb463e349f"
+      "sha256": "73e5136319df5041a7874cf2d136d33eb8f4786a99fff3cb087dc3cb630fce49"
     },
     {
       "path": "src/types/admin-commission-config-update-request.ts",
-      "sha256": "901d040cb12a7a28466264ddd51681f1edeb3cf54ab2be547c7a4feb3f981eb2"
+      "sha256": "7c6a39e98df4295eb5159c560f477e44cbe3b4b677e7a4840fb8189baffd2caa"
     },
     {
       "path": "src/types/admin-commission-event-create-request.ts",
@@ -100,11 +104,35 @@
     },
     {
       "path": "src/types/admin-join-fee-payment-create-request.ts",
-      "sha256": "5e4d0d3e8ee7c9f3ea37d9095403d9d21e2930d1cf7c875c4464763c207e0a82"
+      "sha256": "ce4a9514edd77829d0a996406ade830869ddf514254f9b797e4b1473d281f64c"
     },
     {
       "path": "src/types/admin-ledger-adjustment-request.ts",
       "sha256": "eccc7f0c78332bea4672c5ce71dbe808b2f6e6d90f05cb930e8307cea4481cf4"
+    },
+    {
+      "path": "src/types/admin-levels-restore-defaults-request.ts",
+      "sha256": "bce7aea12919a410fe8e3b09fef1a4817bd59bad40fc4ea99014a5df8b01e9ac"
+    },
+    {
+      "path": "src/types/admin-partner-application-approve-request.ts",
+      "sha256": "b9e8145a6409d6c13d737a6558eaff905c2dba9d0fad32d759b98f50269be1b9"
+    },
+    {
+      "path": "src/types/admin-partner-application-item-envelope.ts",
+      "sha256": "140ca00258fd9f0be44d9b77eead4968ed479445d8ca9e61e5c36be9fb09465b"
+    },
+    {
+      "path": "src/types/admin-partner-application-item.ts",
+      "sha256": "5d80d0f629835ac54482e539634d26d7d65fcb0510ebc0d9bbb4416afe604436"
+    },
+    {
+      "path": "src/types/admin-partner-application-list-envelope.ts",
+      "sha256": "b8ca68d992606171751cc56c08bdfcd46576543097546fb517db16610550aced"
+    },
+    {
+      "path": "src/types/admin-partner-application-reject-request.ts",
+      "sha256": "ca30b4356e66b4bf464a141a920fed5238ac90f5a51a6aadf06b379e471a576f"
     },
     {
       "path": "src/types/admin-partner-bind-user-account-request.ts",
@@ -116,15 +144,15 @@
     },
     {
       "path": "src/types/admin-partner-level-create-request.ts",
-      "sha256": "8906ea816a4a695c427b41ff2c9d37624d104bea585714b8e16385111e3fa488"
+      "sha256": "ed505bbdcd6ecdc5097e6bcec2dcdc39e64398c16339e1a610b4d843da663ad3"
     },
     {
       "path": "src/types/admin-partner-level-update-request.ts",
-      "sha256": "6627f2a38f6b9baca739af1353caba537b4ccbe132bf922864d8ddc8623f161b"
+      "sha256": "94d2b6f25f3bf7b560efe6065530000835d311d7eced2dd8e54831a574c9e829"
     },
     {
       "path": "src/types/admin-partner-update-request.ts",
-      "sha256": "1e68adfd9820adf7bc14a0f7cff7fc8ee4cc2f8e3ea12488a65947c0a8f58025"
+      "sha256": "60254cd5bb29b53a703c8d770671e2dddcdc15c29b41ccf6c8d31d3e1a06fd11"
     },
     {
       "path": "src/types/admin-settlement-run-request.ts",
@@ -144,7 +172,7 @@
     },
     {
       "path": "src/types/audit-log-item.ts",
-      "sha256": "53993ffcb7eee3249a7484f1876101f53ac0c4c5ae919b7c3dfd39e578646552"
+      "sha256": "89849f3cf39462ec1540961d57742acada520d5a799e1ac643fc264bac8c79a9"
     },
     {
       "path": "src/types/audit-log-list-envelope.ts",
@@ -156,7 +184,7 @@
     },
     {
       "path": "src/types/commission-config-item.ts",
-      "sha256": "be32fe0555b1210837dd643a2e1b04800dded5264cce45f848ee0fc129f374d5"
+      "sha256": "04b929f256552a5a3ad3ac037484c3d15e80300686f4b322fac553bd0bbd1ac7"
     },
     {
       "path": "src/types/commission-event-item-envelope.ts",
@@ -192,7 +220,7 @@
     },
     {
       "path": "src/types/index.ts",
-      "sha256": "44bd92a6248af7567d78c349175b6919130da5c5a21f596fe62c82b068ac45b7"
+      "sha256": "c0ef885c90738bd614bc25663cc71414edc5789fac33fe987a453f36b23e4203"
     },
     {
       "path": "src/types/join-fee-payment-item-envelope.ts",
@@ -217,6 +245,10 @@
     {
       "path": "src/types/ledger-entry-list-envelope.ts",
       "sha256": "0e234cc1fe6e379fd5828f15511dfdb2fdbb3c3c6facee192137ba2cc3d497d3"
+    },
+    {
+      "path": "src/types/level-benefit-item.ts",
+      "sha256": "5a2cd700c7e2045945c92df8571846f9948e53a1ae713644fbdd9194bbf23e4e"
     },
     {
       "path": "src/types/page-info.ts",
@@ -244,7 +276,7 @@
     },
     {
       "path": "src/types/partner-level-item.ts",
-      "sha256": "91dabf208ed973f92631961e6111dd2e3d0fcf2911efb8e042c349922c18611d"
+      "sha256": "d637db0a14f28f33bf059b49e9350201ac649288dda7e43a6392643d4a78b55c"
     },
     {
       "path": "src/types/partner-level-list-envelope.ts",
@@ -273,6 +305,14 @@
     {
       "path": "src/types/problem-detail.ts",
       "sha256": "0a8cde29adcdcec871de1abc6d3b9964afb2c470506706b5f03c83e75015051e"
+    },
+    {
+      "path": "src/types/restore-default-levels-result-envelope.ts",
+      "sha256": "ae563ec25534537f54e741d9d44815a4173dee362e746ed8a16a6c3584ed136d"
+    },
+    {
+      "path": "src/types/restore-default-levels-result.ts",
+      "sha256": "86094b6ec1965655216afd90aed8f89e02edce2ab8ecd096e5565aaeec0c5486"
     },
     {
       "path": "src/types/sdk-work-api-response.ts",

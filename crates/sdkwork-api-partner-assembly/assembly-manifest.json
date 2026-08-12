@@ -7,12 +7,23 @@
   "crateDir": "crates/sdkwork-api-partner-assembly",
   "routeCrates": [
     {
+      "packageName": "sdkwork-routes-partner-app-api",
+      "memberDir": "crates/sdkwork-routes-partner-app-api",
+      "libName": "sdkwork_routes_partner_app_api",
+      "surface": "app-api",
+      "pathPrefix": null,
+      "mountOrder": 0,
+      "componentRef": "crates/sdkwork-routes-partner-app-api/specs/component.spec.json",
+      "routeManifestRef": "crates/sdkwork-routes-partner-app-api/src/http_route_manifest.rs#app_route_manifest",
+      "sourceRef": "crates/sdkwork-routes-partner-app-api/Cargo.toml"
+    },
+    {
       "packageName": "sdkwork-routes-partner-backend-api",
       "memberDir": "crates/sdkwork-routes-partner-backend-api",
       "libName": "sdkwork_routes_partner_backend_api",
       "surface": "backend-api",
       "pathPrefix": null,
-      "mountOrder": 0,
+      "mountOrder": 1,
       "componentRef": "crates/sdkwork-routes-partner-backend-api/specs/component.spec.json",
       "routeManifestRef": "crates/sdkwork-routes-partner-backend-api/src/http_route_manifest.rs#backend_route_manifest",
       "sourceRef": "crates/sdkwork-routes-partner-backend-api/Cargo.toml"

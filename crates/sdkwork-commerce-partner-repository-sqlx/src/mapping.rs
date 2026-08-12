@@ -1,7 +1,44 @@
 //! Row -> item mapping helpers for the partner admin repository.
 
+use chrono::{DateTime, Utc};
 use sdkwork_commerce_partner_service::backend_admin::*;
+use sdkwork_commerce_partner_service::commands::LevelBenefitItem;
+use sdkwork_commerce_partner_service::join_apply::PartnerJoinApplicationItem;
 use sqlx::Row;
+
+/// Map a `partner_application` row (any projection that selects the full
+/// column list) onto the join-application item.
+pub fn map_partner_application(row: &sqlx::postgres::PgRow) -> PartnerJoinApplicationItem {
+    PartnerJoinApplicationItem {
+        id: row.get("id"),
+        uuid: row.get("uuid"),
+        applicant_type: row.get("applicant_type"),
+        subject_name: row.get("subject_name"),
+        contact_name: row.get("contact_name"),
+        contact_phone: row.get("contact_phone"),
+        contact_email: row.get("contact_email"),
+        target_level_no: row.get("target_level_no"),
+        invite_code: row.get("invite_code"),
+        inviter_partner_id: row.get("inviter_partner_id"),
+        inviter_partner_name: row
+            .try_get::<Option<String>, _>("inviter_partner_name")
+            .unwrap_or(None)
+            .unwrap_or_default(),
+        inviter_level_no: row
+            .try_get::<Option<i32>, _>("inviter_level_no")
+            .unwrap_or(None),
+        business_intro: row.get("business_intro"),
+        status: row.get("status"),
+        review_comment: row.get("review_comment"),
+        reviewer_user_id: row.get("reviewer_user_id"),
+        reviewed_at: row
+            .try_get::<Option<DateTime<Utc>>, _>("reviewed_at")
+            .unwrap_or(None),
+        approved_partner_id: row.get("approved_partner_id"),
+        created_at: row.get("created_at"),
+        updated_at: row.get("updated_at"),
+    }
+}
 
 pub fn map_partner(row: &sqlx::postgres::PgRow) -> PartnerItem {
     PartnerItem {
@@ -42,7 +79,31 @@ pub fn map_partner_level(row: &sqlx::postgres::PgRow) -> PartnerLevelItem {
         join_fee: row.get("join_fee"),
         status: row.get("status"),
         sort_order: row.get("sort_order"),
+        benefits: map_level_benefits(row),
     }
+}
+
+/// Decode the `benefits` JSONB column into the structured benefit ladder.
+///
+/// The SELECT aliases `benefits::text` so the column decodes as a plain
+/// string without requiring sqlx's json feature. Missing or malformed rows
+/// (e.g. pre-migration databases) fall back to an empty ladder so level
+/// reads never fail on schema lag. When individual entries are malformed the
+/// parser falls back to per-item decoding so one broken entry cannot wipe
+/// the whole ladder.
+fn map_level_benefits(row: &sqlx::postgres::PgRow) -> Vec<LevelBenefitItem> {
+    let raw = row.try_get::<Option<String>, _>("benefits").ok().flatten();
+    let Some(raw) = raw else {
+        return Vec::new();
+    };
+    if let Ok(items) = serde_json::from_str::<Vec<LevelBenefitItem>>(&raw) {
+        return items;
+    }
+    serde_json::from_str::<Vec<serde_json::Value>>(&raw)
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|entry| serde_json::from_value::<LevelBenefitItem>(entry).ok())
+        .collect()
 }
 
 pub fn map_join_fee_payment(row: &sqlx::postgres::PgRow) -> JoinFeePaymentItem {

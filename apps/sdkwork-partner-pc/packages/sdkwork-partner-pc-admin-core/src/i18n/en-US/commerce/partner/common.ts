@@ -1,0 +1,15 @@
+export const adminCoreEnUsMessages = {
+  'common.actions.cancel': 'Cancel',
+  'common.actions.clear': 'Clear',
+  'common.actions.close': 'Close',
+  'common.actions.confirm': 'Confirm',
+  'common.actions.delete': 'Delete',
+  'common.actions.dismiss': 'Dismiss',
+  'common.actions.edit': 'Edit',
+  'common.actions.refresh': 'Refresh',
+  'common.actions.remove': 'Remove',
+  'common.actions.reset': 'Reset',
+  'common.actions.save': 'Save',
+  'common.actions.saveChanges': 'Save changes',
+  'common.actions.search': 'Search',
+};

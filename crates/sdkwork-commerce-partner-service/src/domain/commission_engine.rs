@@ -4,6 +4,25 @@
 //! integers, so the engine never touches floats. Rounding is "round half up
 //! per node, last node absorbs the remainder" so the allocated total always
 //! equals the base amount.
+//!
+//! # Commission base (利润返佣)
+//!
+//! `base_cents` is the platform's profit base for the transaction: customer
+//! revenue commissions are computed on `revenue × profit_margin_ratio`
+//! (converted by `domain::profit_base_cents` at the settlement call site),
+//! never on the full customer revenue. Join-fee commissions pass the full
+//! join fee as the base. This module only allocates whatever base it is
+//! given.
+//!
+//! # Differential (级差) allocation
+//!
+//! Ratios follow the industry-standard differential scheme used by cloud
+//! vendor partner programs and distribution channels: the partner that owns
+//! the revenue source keeps its full level ratio, and each ancestor earns the
+//! positive difference between its own level ratio and the highest ratio
+//! below it in the chain. The aggregated payout therefore equals the highest
+//! ratio in the chain and can never exceed it, which keeps the platform
+//! margin bounded by construction regardless of chain depth.
 
 use sdkwork_contract_service::CommerceServiceError;
 
@@ -24,6 +43,9 @@ pub struct CommissionNode {
 pub struct CommissionAllocation {
     pub partner_id: i64,
     pub level_offset: i32,
+    /// Effective (级差) ratio applied to this node, per-10000. For the direct
+    /// earner this equals its level ratio; for ancestors it is the positive
+    /// difference against the node below.
     pub ratio_per_10000: i64,
     pub amount_cents: i64,
 }
@@ -38,16 +60,21 @@ fn round_half_up(numerator: i64, denominator: i64) -> i64 {
     }
 }
 
-/// Allocate `base_cents` across the ancestor chain.
+/// Allocate `base_cents` across the ancestor chain using differential (级差)
+/// allocation.
 ///
 /// - `max_depth == 0` means unlimited; otherwise only nodes with
 ///   `level_offset < max_depth` receive a share.
-/// - Nodes with a zero ratio are skipped.
+/// - Nodes with a zero ratio are skipped. The first eligible node (the one
+///   closest to the revenue source) keeps its full level ratio; each
+///   subsequent node earns only the positive difference between its own ratio
+///   and the highest ratio below it in the chain. The aggregated payout
+///   therefore equals the highest ratio in the chain and never exceeds it.
 /// - When the aggregated ratios equal exactly 100%, the last eligible node
 ///   absorbs the rounding remainder so the total allocated equals `base_cents`.
 ///   Otherwise each node receives its own rounded share and the unallocated
 ///   remainder stays with the platform.
-/// - If the configured ratios exceed 100%, the allocation is rejected.
+/// - If the aggregated ratios exceed 100%, the allocation is rejected.
 pub fn allocate_commissions(
     base_cents: i64,
     nodes: &[CommissionNode],
@@ -63,7 +90,7 @@ pub fn allocate_commissions(
             "max commission depth must not be negative",
         ));
     }
-    let eligible: Vec<&CommissionNode> = nodes
+    let mut eligible: Vec<&CommissionNode> = nodes
         .iter()
         .filter(|node| {
             node.ratio_per_10000 > 0 && (max_depth == 0 || (node.level_offset as i64) < max_depth)
@@ -72,7 +99,22 @@ pub fn allocate_commissions(
     if eligible.is_empty() {
         return Ok(Vec::new());
     }
-    let total_ratio: i64 = eligible.iter().map(|node| node.ratio_per_10000).sum();
+    // The callers already build the chain in order, but sort defensively so
+    // the differential math never depends on input order.
+    eligible.sort_by_key(|node| node.level_offset);
+    // Differential (级差): the direct earner keeps its full ratio; each
+    // ancestor earns the positive difference between its own ratio and the
+    // highest ratio seen below it in the chain. Each level therefore claims
+    // only the increment over the best-rated node below it, and the sum
+    // telescopes to the highest ratio in the chain — never above it.
+    let mut effective_ratios = Vec::with_capacity(eligible.len());
+    let mut best_below = 0_i64;
+    for node in &eligible {
+        let effective = (node.ratio_per_10000 - best_below).max(0);
+        best_below = best_below.max(node.ratio_per_10000);
+        effective_ratios.push(effective);
+    }
+    let total_ratio: i64 = effective_ratios.iter().sum();
     if total_ratio > 10_000 {
         return Err(CommerceServiceError::validation(format!(
             "aggregated commission ratio {total_ratio}/10000 exceeds 100%"
@@ -90,12 +132,12 @@ pub fn allocate_commissions(
                 .sum();
             base_cents - allocated
         } else {
-            round_half_up(base_cents * node.ratio_per_10000, 10_000)
+            round_half_up(base_cents * effective_ratios[index], 10_000)
         };
         allocations.push(CommissionAllocation {
             partner_id: node.partner_id,
             level_offset: node.level_offset,
-            ratio_per_10000: node.ratio_per_10000,
+            ratio_per_10000: effective_ratios[index],
             amount_cents,
         });
     }
@@ -110,7 +152,7 @@ mod tests {
         CommissionNode {
             partner_id,
             level_offset: offset,
-            level_no: (offset + 1) as i32,
+            level_no: offset + 1,
             ratio_per_10000: ratio,
         }
     }
@@ -125,38 +167,166 @@ mod tests {
     }
 
     #[test]
-    fn allocates_multi_level_with_rounding() {
-        // base 100.00 (10000 cents), levels: 20% / 10% / 5% -> 2000 / 1000 / 500
-        let nodes = vec![node(1, 0, 2000), node(2, 1, 1000), node(3, 2, 500)];
+    fn direct_partner_keeps_full_ratio_above_lower_ancestors() {
+        // Direct partner at the top of the ladder (30%) with lower-rated
+        // ancestors earns its full ratio; the ancestors earn 0.
+        let nodes = vec![node(1, 0, 3000), node(2, 1, 2500), node(3, 2, 2000)];
         let result = allocate_commissions(10_000, &nodes, 0).unwrap();
         assert_eq!(result.len(), 3);
-        assert_eq!(result[0].amount_cents, 2_000);
+        assert_eq!(result[0].ratio_per_10000, 3_000);
+        assert_eq!(result[0].amount_cents, 3_000);
+        assert_eq!(result[1].ratio_per_10000, 0);
+        assert_eq!(result[2].ratio_per_10000, 0);
+        let total: i64 = result.iter().map(|a| a.amount_cents).sum();
+        assert_eq!(total, 3_000);
+    }
+
+    #[test]
+    fn differential_allocation_telescopes_to_top_ratio() {
+        // Chain L1 10% / L3 20% / L5 30%: direct keeps 10%, each ancestor
+        // earns the 10% difference; the aggregated payout equals the top 30%.
+        let nodes = vec![node(1, 0, 1000), node(2, 1, 2000), node(3, 2, 3000)];
+        let result = allocate_commissions(10_000, &nodes, 0).unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].ratio_per_10000, 1_000);
+        assert_eq!(result[0].amount_cents, 1_000);
+        assert_eq!(result[1].ratio_per_10000, 1_000);
         assert_eq!(result[1].amount_cents, 1_000);
+        assert_eq!(result[2].ratio_per_10000, 1_000);
+        assert_eq!(result[2].amount_cents, 1_000);
+        let total: i64 = result.iter().map(|a| a.amount_cents).sum();
+        assert_eq!(total, 3_000);
+    }
+
+    #[test]
+    fn non_monotonic_chain_zeroes_lower_ancestors() {
+        // 15% / 10% / 20%: the 10% ancestor earns 0 (below the direct
+        // partner), the 20% ancestor earns the 5% increment over the highest
+        // ratio below it; total equals the highest ratio.
+        let nodes = vec![node(1, 0, 1500), node(2, 1, 1000), node(3, 2, 2000)];
+        let result = allocate_commissions(10_000, &nodes, 0).unwrap();
+        assert_eq!(result[0].amount_cents, 1_500);
+        assert_eq!(result[1].amount_cents, 0);
         assert_eq!(result[2].amount_cents, 500);
         let total: i64 = result.iter().map(|a| a.amount_cents).sum();
-        assert_eq!(total, 3_500);
+        assert_eq!(total, 2_000);
+    }
+
+    #[test]
+    fn aggregated_payout_never_exceeds_highest_ratio() {
+        // Property: for any chain the aggregated ratio equals the maximum
+        // ratio in the chain, so the payout is bounded by construction.
+        let cases = vec![
+            (
+                vec![node(1, 0, 500), node(2, 1, 4000), node(3, 2, 1000)],
+                4_000,
+            ),
+            (vec![node(1, 0, 3000), node(2, 1, 3000)], 3_000),
+            (
+                vec![
+                    node(1, 0, 1000),
+                    node(2, 1, 1500),
+                    node(3, 2, 1200),
+                    node(4, 3, 2500),
+                ],
+                2_500,
+            ),
+        ];
+        for (nodes, expected_total) in cases {
+            let result = allocate_commissions(10_000, &nodes, 0).unwrap();
+            let total_ratio: i64 = result.iter().map(|a| a.ratio_per_10000).sum();
+            assert_eq!(total_ratio, expected_total);
+        }
+    }
+
+    #[test]
+    fn differential_is_bounded_for_all_small_chains() {
+        // Exhaustive property test: for every 3-node chain drawn from a
+        // realistic ratio ladder (0% to 60%), the aggregated payout equals
+        // the highest ratio in the chain — the margin-safety invariant.
+        let ratios = [0, 500, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000];
+        for &r0 in &ratios {
+            for &r1 in &ratios {
+                for &r2 in &ratios {
+                    let nodes = vec![node(1, 0, r0), node(2, 1, r1), node(3, 2, r2)];
+                    let result = allocate_commissions(10_000, &nodes, 0).unwrap();
+                    let total_ratio: i64 = result.iter().map(|a| a.ratio_per_10000).sum();
+                    assert_eq!(
+                        total_ratio,
+                        r0.max(r1).max(r2),
+                        "chain ratios {r0}/{r1}/{r2} must aggregate to the max"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn differential_is_bounded_for_four_node_chains() {
+        // Exhaustive 4-node property test over a coarser ratio ladder; the
+        // invariant must hold for deeper chains too.
+        let ratios = [0, 1000, 1500, 2000, 3000, 5000];
+        for &r0 in &ratios {
+            for &r1 in &ratios {
+                for &r2 in &ratios {
+                    for &r3 in &ratios {
+                        let nodes = vec![
+                            node(1, 0, r0),
+                            node(2, 1, r1),
+                            node(3, 2, r2),
+                            node(4, 3, r3),
+                        ];
+                        let result = allocate_commissions(10_000, &nodes, 0).unwrap();
+                        let total_ratio: i64 = result.iter().map(|a| a.ratio_per_10000).sum();
+                        assert_eq!(
+                            total_ratio,
+                            r0.max(r1).max(r2).max(r3),
+                            "chain ratios {r0}/{r1}/{r2}/{r3} must aggregate to the max"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn differential_respects_depth_cap_in_aggregate() {
+        // With a depth cap the aggregate is bounded by the highest ratio
+        // among the eligible (uncapped) nodes only.
+        let nodes = vec![node(1, 0, 1000), node(2, 1, 3000), node(3, 2, 5000)];
+        let result = allocate_commissions(10_000, &nodes, 2).unwrap();
+        assert_eq!(result.len(), 2);
+        let total_ratio: i64 = result.iter().map(|a| a.ratio_per_10000).sum();
+        assert_eq!(total_ratio, 3_000);
+        assert_eq!(result[0].amount_cents, 1_000);
+        assert_eq!(result[1].amount_cents, 2_000);
     }
 
     #[test]
     fn last_node_absorbs_rounding_remainder() {
-        // base 0.01 (1 cent), ratios 33.33% each x3: 0/0/1 -> sum must equal base
-        let nodes = vec![node(1, 0, 3333), node(2, 1, 3333), node(3, 2, 3334)];
+        // Effective ratios 50% + 50% = 100%: base 0.01 -> 1/0 with the last
+        // node absorbing the rounding remainder so the sum equals the base.
+        let nodes = vec![node(1, 0, 5000), node(2, 1, 10000)];
         let result = allocate_commissions(1, &nodes, 0).unwrap();
+        assert_eq!(result[0].amount_cents, 1);
+        assert_eq!(result[1].amount_cents, 0);
         let total: i64 = result.iter().map(|a| a.amount_cents).sum();
         assert_eq!(total, 1);
-        assert_eq!(result[0].amount_cents, 0);
-        assert_eq!(result[2].amount_cents, 1);
     }
 
     #[test]
     fn depth_cap_truncates_chain() {
+        // Equal ratios across the chain: the direct partner keeps its full
+        // ratio and the parent earns 0 (no differential remains).
         let nodes = vec![node(1, 0, 1000), node(2, 1, 1000), node(3, 2, 1000)];
         let result = allocate_commissions(10_000, &nodes, 2).unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].level_offset, 0);
         assert_eq!(result[1].level_offset, 1);
+        assert_eq!(result[0].amount_cents, 1_000);
+        assert_eq!(result[1].amount_cents, 0);
         let total: i64 = result.iter().map(|a| a.amount_cents).sum();
-        assert_eq!(total, 2_000);
+        assert_eq!(total, 1_000);
     }
 
     #[test]
@@ -176,7 +346,9 @@ mod tests {
 
     #[test]
     fn over_100_percent_is_rejected() {
-        let nodes = vec![node(1, 0, 6000), node(2, 1, 5000)];
+        // A single level ratio above 100% pushes the telescoped aggregate
+        // above 100%.
+        let nodes = vec![node(1, 0, 6000), node(2, 1, 11000)];
         assert!(allocate_commissions(10_000, &nodes, 0).is_err());
     }
 

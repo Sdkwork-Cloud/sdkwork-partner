@@ -14,6 +14,11 @@
       "types": "./src/ui/index.ts",
       "import": "./src/ui/index.ts",
       "default": "./src/ui/index.ts"
+    },
+    "./i18n": {
+      "types": "./src/i18n/index.ts",
+      "import": "./src/i18n/index.ts",
+      "default": "./src/i18n/index.ts"
     }
   },
   "files": [

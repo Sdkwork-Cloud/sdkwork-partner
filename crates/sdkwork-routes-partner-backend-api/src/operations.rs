@@ -2,12 +2,15 @@ use std::sync::Arc;
 
 use axum::extract::{Extension, Path, Query, State};
 use axum::response::Response;
-use axum::routing::{delete, get, patch, post};
+use axum::routing::{get, patch, post};
 use axum::{Json, Router};
 use sdkwork_commerce_partner_service::backend_admin::{
-    PartnerAdminListPage, PartnerAdminService, PartnerAdminSubject,
+    PartnerAdminListPage, PartnerAdminService, PartnerAdminSubject, RestoreDefaultLevelsMode,
 };
 use sdkwork_commerce_partner_service::commands::*;
+use sdkwork_commerce_partner_service::join_apply::{
+    ApproveJoinApplicationCommand, ListJoinApplicationsQuery, RejectJoinApplicationCommand,
+};
 use sdkwork_commerce_partner_service::queries::*;
 use sdkwork_contract_service::CommerceServiceError;
 use sdkwork_iam_context_service::IamAppContext;
@@ -56,6 +59,7 @@ struct ListParams {
     created_from: Option<String>,
     created_to: Option<String>,
     join_fee_status: Option<String>,
+    applicant_type: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -67,6 +71,9 @@ struct CommissionConfigRequest {
     max_commission_depth: i64,
     currency: String,
     min_withdrawal_amount: String,
+    /// Platform gross profit margin (percent, e.g. 40.00); the customer
+    /// revenue commission base equals `revenue × margin`.
+    profit_margin_ratio: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -79,6 +86,18 @@ struct LevelRequest {
     join_fee: String,
     status: Option<String>,
     sort_order: Option<i32>,
+    /// Structured benefit (权益) ladder entries for this level; empty by
+    /// default so legacy clients keep working.
+    #[serde(default)]
+    benefits: Vec<LevelBenefitItem>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RestoreLevelsRequest {
+    /// "fill" (default) revives only missing default levels; "reset" also
+    /// overwrites the active default levels with the catalog values.
+    mode: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -113,6 +132,7 @@ struct JoinFeePaymentRequest {
     currency: Option<String>,
     payment_method: Option<String>,
     remark: Option<String>,
+    idempotency_key: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -174,6 +194,23 @@ struct WithdrawalPayRequest {
     remark: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct JoinApplicationApproveRequest {
+    /// Partner level number assigned on approval (must reference an ACTIVE
+    /// level).
+    level_no: i32,
+    /// Optional approval note.
+    remark: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct JoinApplicationRejectRequest {
+    /// Rejection reason (required).
+    reason: String,
+}
+
 pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router {
     Router::new()
         // Levels & commission config
@@ -184,6 +221,10 @@ pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router
         .route(
             "/backend/v3/api/partners/levels/{levelId}",
             patch(update_level).delete(delete_level),
+        )
+        .route(
+            "/backend/v3/api/partners/levels/restore_defaults",
+            post(restore_levels),
         )
         .route(
             "/backend/v3/api/partners/commission_config",
@@ -213,13 +254,9 @@ pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router
         // Join fees
         .route(
             "/backend/v3/api/partners/{partnerId}/join_fee_payments",
-            get(fetch_join_fee_payments).post(create_join_fee_payment),
+            post(create_join_fee_payment),
         )
         // Customer bindings
-        .route(
-            "/backend/v3/api/partners/{partnerId}/customers",
-            get(fetch_customer_bindings),
-        )
         .route(
             "/backend/v3/api/partners/customers",
             get(fetch_all_customer_bindings).post(post_customer_binding),
@@ -256,10 +293,7 @@ pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router
             post(post_ledger_adjustment),
         )
         // Audit log
-        .route(
-            "/backend/v3/api/partners/audit_logs",
-            get(fetch_audit_logs),
-        )
+        .route("/backend/v3/api/partners/audit_logs", get(fetch_audit_logs))
         // Withdrawals
         .route(
             "/backend/v3/api/partners/withdrawals",
@@ -283,17 +317,43 @@ pub fn build_backend_partner_router(service: Arc<PartnerAdminService>) -> Router
             "/backend/v3/api/partners/{partnerId}/stats",
             get(fetch_partner_stats),
         )
+        // Partner join (伙伴计划) application review
+        .route(
+            "/backend/v3/api/partners/applications",
+            get(fetch_join_applications),
+        )
+        .route(
+            "/backend/v3/api/partners/applications/{applicationId}",
+            get(fetch_join_application),
+        )
+        .route(
+            "/backend/v3/api/partners/applications/{applicationId}/approve",
+            post(approve_join_application),
+        )
+        .route(
+            "/backend/v3/api/partners/applications/{applicationId}/reject",
+            post(reject_join_application),
+        )
         .with_state(PartnerAdminState { service })
 }
 
+// axum handler helpers return `Result<_, Response>` by framework convention;
+// boxing the error type adds no benefit at these call sites.
+#[allow(clippy::result_large_err)]
 fn read_scope(c: &WebRequestContext, i: IamAppContext) -> Result<PartnerAdminSubject, Response> {
     require_backend_operator(Some(c), i, READ_PERMISSION).map_err(|r| *r)
 }
 
+// axum handler helpers return `Result<_, Response>` by framework convention;
+// boxing the error type adds no benefit at these call sites.
+#[allow(clippy::result_large_err)]
 fn manage_scope(c: &WebRequestContext, i: IamAppContext) -> Result<PartnerAdminSubject, Response> {
     require_backend_operator(Some(c), i, MANAGE_PERMISSION).map_err(|r| *r)
 }
 
+// axum handler helpers return `Result<_, Response>` by framework convention;
+// boxing the error type adds no benefit at these call sites.
+#[allow(clippy::result_large_err)]
 fn parse_id(c: Option<&WebRequestContext>, value: &str, name: &str) -> Result<i64, Response> {
     value
         .trim()
@@ -308,6 +368,9 @@ fn parse_id(c: Option<&WebRequestContext>, value: &str, name: &str) -> Result<i6
         })
 }
 
+// axum handler helpers return `Result<_, Response>` by framework convention;
+// boxing the error type adds no benefit at these call sites.
+#[allow(clippy::result_large_err)]
 fn page_params(
     c: Option<&WebRequestContext>,
     q: &ListParams,
@@ -368,6 +431,13 @@ async fn update_commission_config(
             )
             .map_err(|e| validation(Some(&c), e.message()))
         ),
+        response_try!(
+            sdkwork_commerce_partner_service::domain::parse_ratio_per_10000(
+                "profit_margin_ratio",
+                &b.profit_margin_ratio,
+            )
+            .map_err(|e| validation(Some(&c), e.message()))
+        ),
     )
     .map_err(|e| validation(Some(&c), e.message())));
     match s.service.update_commission_config(command, &scope).await {
@@ -406,6 +476,9 @@ async fn create_level(
     }
 }
 
+// axum handler helpers return `Result<_, Response>` by framework convention;
+// boxing the error type adds no benefit at these call sites.
+#[allow(clippy::result_large_err)]
 fn build_create_level(
     c: &WebRequestContext,
     b: &LevelRequest,
@@ -430,6 +503,7 @@ fn build_create_level(
         join_fee_ratio,
         join_fee,
         b.sort_order.unwrap_or(0),
+        b.benefits.clone(),
     )
     .map_err(|e| validation(Some(c), e.message()))
 }
@@ -469,6 +543,7 @@ async fn update_level(
         join_fee,
         b.status.as_deref().unwrap_or("ACTIVE"),
         b.sort_order.unwrap_or(0),
+        b.benefits.clone(),
     )
     .map_err(|e| validation(Some(&c), e.message())));
     match s.service.update_level(command, &scope).await {
@@ -491,6 +566,21 @@ async fn delete_level(
     match s.service.delete_level(command, &scope).await {
         Ok(()) => no_content(Some(&c)),
         Err(e) => service_error(Some(&c), "delete level", e),
+    }
+}
+
+async fn restore_levels(
+    State(s): State<PartnerAdminState>,
+    Extension(i): Extension<IamAppContext>,
+    Extension(c): Extension<WebRequestContext>,
+    Json(b): Json<RestoreLevelsRequest>,
+) -> Response {
+    let scope = response_try!(manage_scope(&c, i));
+    let mode = response_try!(RestoreDefaultLevelsMode::parse(b.mode.as_deref())
+        .map_err(|e| validation(Some(&c), e.message())));
+    match s.service.restore_default_levels(mode, &scope).await {
+        Ok(v) => success_created(Some(&c), v),
+        Err(e) => service_error(Some(&c), "restore default levels", e),
     }
 }
 
@@ -602,6 +692,8 @@ async fn update_partner(
         b.phone.as_deref().unwrap_or(""),
         b.email.as_deref().unwrap_or(""),
         b.level_no,
+        b.parent_partner_id,
+        b.user_account_id,
         b.status.as_deref().unwrap_or("ACTIVE"),
         b.remark.as_deref().unwrap_or(""),
     )
@@ -650,28 +742,6 @@ async fn fetch_partner_ancestors(
     }
 }
 
-async fn fetch_join_fee_payments(
-    State(s): State<PartnerAdminState>,
-    Extension(i): Extension<IamAppContext>,
-    Extension(c): Extension<WebRequestContext>,
-    Path(id): Path<String>,
-    Query(q): Query<ListParams>,
-) -> Response {
-    let scope = response_try!(read_scope(&c, i));
-    let id = response_try!(parse_id(Some(&c), &id, "partnerId"));
-    let params = response_try!(page_params(Some(&c), &q));
-    let list =
-        response_try!(
-            PartnerAdminListQuery::new(params.page, params.page_size, q.q.clone())
-                .map_err(|e| validation(Some(&c), e.message()))
-        );
-    let query = ListJoinFeePaymentsQuery::new(list, Some(id), q.status.clone());
-    match s.service.list_join_fee_payments(query, &scope).await {
-        Ok(page) => list_response(Some(&c), page, params),
-        Err(e) => service_error(Some(&c), "list join fee payments", e),
-    }
-}
-
 async fn create_join_fee_payment(
     State(s): State<PartnerAdminState>,
     Extension(i): Extension<IamAppContext>,
@@ -691,33 +761,12 @@ async fn create_join_fee_payment(
         b.currency.as_deref().unwrap_or("CNY"),
         b.payment_method.as_deref().unwrap_or(""),
         b.remark.as_deref().unwrap_or(""),
+        b.idempotency_key.as_deref(),
     )
     .map_err(|e| validation(Some(&c), e.message())));
     match s.service.create_join_fee_payment(command, &scope).await {
         Ok(v) => success_created(Some(&c), v),
         Err(e) => service_error(Some(&c), "create join fee payment", e),
-    }
-}
-
-async fn fetch_customer_bindings(
-    State(s): State<PartnerAdminState>,
-    Extension(i): Extension<IamAppContext>,
-    Extension(c): Extension<WebRequestContext>,
-    Path(id): Path<String>,
-    Query(q): Query<ListParams>,
-) -> Response {
-    let scope = response_try!(read_scope(&c, i));
-    let id = response_try!(parse_id(Some(&c), &id, "partnerId"));
-    let params = response_try!(page_params(Some(&c), &q));
-    let list =
-        response_try!(
-            PartnerAdminListQuery::new(params.page, params.page_size, q.q.clone())
-                .map_err(|e| validation(Some(&c), e.message()))
-        );
-    let query = ListCustomerBindingsQuery::new(list, Some(id), q.status.clone());
-    match s.service.list_customer_bindings(query, &scope).await {
-        Ok(page) => list_response(Some(&c), page, params),
-        Err(e) => service_error(Some(&c), "list customer bindings", e),
     }
 }
 
@@ -1085,5 +1134,89 @@ async fn fetch_partner_stats(
     match s.service.retrieve_partner_stats(query, &scope).await {
         Ok(v) => success_item(Some(&c), v),
         Err(e) => service_error(Some(&c), "retrieve partner stats", e),
+    }
+}
+
+/// Pages the partner join (伙伴计划) application review queue (newest first)
+/// with status/applicant-type/keyword filters.
+async fn fetch_join_applications(
+    State(s): State<PartnerAdminState>,
+    Extension(i): Extension<IamAppContext>,
+    Extension(c): Extension<WebRequestContext>,
+    Query(q): Query<ListParams>,
+) -> Response {
+    let scope = response_try!(read_scope(&c, i));
+    let params = response_try!(page_params(Some(&c), &q));
+    let list =
+        response_try!(
+            PartnerAdminListQuery::new(params.page, params.page_size, q.q.clone())
+                .map_err(|e| validation(Some(&c), e.message()))
+        );
+    let query = ListJoinApplicationsQuery::new(
+        list,
+        q.status.clone(),
+        q.applicant_type.clone(),
+        q.q.clone(),
+    );
+    match s.service.list_join_applications(query, &scope).await {
+        Ok(page) => list_response(Some(&c), page, params),
+        Err(e) => service_error(Some(&c), "list join applications", e),
+    }
+}
+
+async fn fetch_join_application(
+    State(s): State<PartnerAdminState>,
+    Extension(i): Extension<IamAppContext>,
+    Extension(c): Extension<WebRequestContext>,
+    Path(id): Path<String>,
+) -> Response {
+    let scope = response_try!(read_scope(&c, i));
+    let id = response_try!(parse_id(Some(&c), &id, "applicationId"));
+    match s.service.retrieve_join_application(id, &scope).await {
+        Ok(v) => success_item(Some(&c), v),
+        Err(e) => service_error(Some(&c), "retrieve join application", e),
+    }
+}
+
+/// Approves a SUBMITTED join application: creates the partner record
+/// (PENDING, join fee unpaid, bound to the applicant, hung on the inviter
+/// chain, invite code generated) and marks the application APPROVED in the
+/// same transaction.
+async fn approve_join_application(
+    State(s): State<PartnerAdminState>,
+    Extension(i): Extension<IamAppContext>,
+    Extension(c): Extension<WebRequestContext>,
+    Path(id): Path<String>,
+    Json(b): Json<JoinApplicationApproveRequest>,
+) -> Response {
+    let scope = response_try!(manage_scope(&c, i));
+    let id = response_try!(parse_id(Some(&c), &id, "applicationId"));
+    let command = response_try!(ApproveJoinApplicationCommand::new(
+        id,
+        b.level_no,
+        b.remark.as_deref().unwrap_or(""),
+    )
+    .map_err(|e| validation(Some(&c), e.message())));
+    match s.service.approve_join_application(command, &scope).await {
+        Ok(v) => success_item(Some(&c), v),
+        Err(e) => service_error(Some(&c), "approve join application", e),
+    }
+}
+
+/// Rejects a SUBMITTED join application (reason required).
+async fn reject_join_application(
+    State(s): State<PartnerAdminState>,
+    Extension(i): Extension<IamAppContext>,
+    Extension(c): Extension<WebRequestContext>,
+    Path(id): Path<String>,
+    Json(b): Json<JoinApplicationRejectRequest>,
+) -> Response {
+    let scope = response_try!(manage_scope(&c, i));
+    let id = response_try!(parse_id(Some(&c), &id, "applicationId"));
+    let command = response_try!(RejectJoinApplicationCommand::new(id, &b.reason)
+        .map_err(|e| validation(Some(&c), e.message())));
+    match s.service.reject_join_application(command, &scope).await {
+        Ok(v) => success_item(Some(&c), v),
+        Err(e) => service_error(Some(&c), "reject join application", e),
     }
 }

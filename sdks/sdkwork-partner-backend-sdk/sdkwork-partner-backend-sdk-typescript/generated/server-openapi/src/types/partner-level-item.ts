@@ -15,4 +15,6 @@ export interface PartnerLevelItem {
   status: 'ACTIVE' | 'DISABLED';
   /** Display sort order. */
   sortOrder: number;
+  /** Structured benefit (权益) ladder entries granted by this level. */
+  benefits: { code: string; name: string; value?: string; sort?: number; }[];
 }

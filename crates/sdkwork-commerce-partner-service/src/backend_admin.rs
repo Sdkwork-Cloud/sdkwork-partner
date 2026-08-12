@@ -5,9 +5,13 @@ use crate::commands::{
     BindCustomerCommand, BindPartnerUserAccountCommand, CreateJoinFeePaymentCommand,
     CreateLedgerAdjustmentCommand, CreateManualCommissionEventCommand, CreatePartnerCommand,
     CreatePartnerLevelCommand, CreateWithdrawalCommand, DeletePartnerLevelCommand,
-    PayWithdrawalCommand, ReviewWithdrawalCommand, RunCommissionSettlementCommand,
-    UnbindCustomerCommand, UpdateCommissionConfigCommand, UpdatePartnerCommand,
-    UpdatePartnerLevelCommand,
+    LevelBenefitItem, PayWithdrawalCommand, ReviewWithdrawalCommand,
+    RunCommissionSettlementCommand, UnbindCustomerCommand, UpdateCommissionConfigCommand,
+    UpdatePartnerCommand, UpdatePartnerLevelCommand,
+};
+use crate::join_apply::{
+    ApproveJoinApplicationCommand, ListJoinApplicationsQuery, PartnerJoinApplicationItem,
+    RejectJoinApplicationCommand,
 };
 use crate::queries::{
     ListAuditLogsQuery, ListCommissionEventsQuery, ListCustomerBindingsQuery,
@@ -57,14 +61,20 @@ pub struct CommissionConfigItem {
     pub enabled: bool,
     pub usage_settlement_enabled: bool,
     pub recharge_enabled: bool,
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub max_commission_depth: i64,
     pub currency: String,
     pub min_withdrawal_amount: String,
+    /// Platform gross profit margin (percent, e.g. 40.00). The customer
+    /// revenue commission base equals `revenue × margin` (profit-based
+    /// rebate); join-fee commissions are paid on the full join fee.
+    pub profit_margin_ratio: String,
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PartnerLevelItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub level_no: i32,
     pub name: String,
@@ -73,11 +83,14 @@ pub struct PartnerLevelItem {
     pub join_fee: String,
     pub status: String,
     pub sort_order: i32,
+    /// Structured benefit (权益) ladder entries planned for this level.
+    pub benefits: Vec<LevelBenefitItem>,
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PartnerItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub uuid: String,
     pub name: String,
@@ -85,6 +98,7 @@ pub struct PartnerItem {
     pub phone: String,
     pub email: String,
     pub level_no: i32,
+    #[serde(with = "sdkwork_utils_rust::serde_int64::option")]
     pub parent_partner_id: Option<i64>,
     /// None = no IAM user account bound yet (bindable later).
     #[serde(with = "sdkwork_utils_rust::serde_int64::option")]
@@ -102,6 +116,7 @@ pub struct PartnerItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PartnerTreeItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub name: String,
     pub level_no: i32,
@@ -112,6 +127,7 @@ pub struct PartnerTreeItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PartnerAncestorItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub name: String,
     pub level_no: i32,
@@ -123,6 +139,7 @@ pub struct PartnerAncestorItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JoinFeePaymentItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub partner_id: i64,
     pub amount: String,
@@ -138,6 +155,7 @@ pub struct JoinFeePaymentItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CustomerBindingItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub partner_id: i64,
     pub customer_user_id: i64,
@@ -153,6 +171,7 @@ pub struct CustomerBindingItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommissionEventItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub source_type: String,
     pub source_ref: String,
@@ -168,6 +187,7 @@ pub struct CommissionEventItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SettlementItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub event_id: i64,
     pub base_amount: String,
@@ -182,6 +202,7 @@ pub struct SettlementItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DistributionItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub settlement_id: i64,
     pub receiver_partner_id: i64,
@@ -195,6 +216,7 @@ pub struct DistributionItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LedgerEntryItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub partner_id: i64,
     pub entry_type: String,
@@ -211,6 +233,7 @@ pub struct LedgerEntryItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WithdrawalItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub partner_id: i64,
     pub amount: String,
@@ -229,12 +252,16 @@ pub struct WithdrawalItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AuditLogItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub operator_id: i64,
     pub operator_type: String,
     pub action: String,
     pub target_type: String,
     pub target_id: Option<i64>,
+    /// Internal request correlation id (persisted for audit tracing; not
+    /// exposed on the wire — the HTTP response envelope forbids `requestId`).
+    #[serde(skip)]
     pub request_id: Option<String>,
     pub payload: String,
     pub created_at: String,
@@ -243,10 +270,13 @@ pub struct AuditLogItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatsOverviewItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub total_partners: i64,
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub active_partners: i64,
     pub total_join_fee: String,
     pub total_commission: String,
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub pending_withdrawal_count: i64,
     pub pending_withdrawal_amount: String,
 }
@@ -254,6 +284,7 @@ pub struct StatsOverviewItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatSnapshotItem {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub id: i64,
     pub partner_id: i64,
     pub period_start: String,
@@ -282,10 +313,58 @@ pub struct PartnerStatItem {
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SettlementRunResult {
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub processed: i64,
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub settled: i64,
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub skipped: i64,
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
     pub failed: i64,
+}
+
+/// Result of restoring the commercial default level catalog.
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RestoreDefaultLevelsResult {
+    /// Levels inserted or revived from soft-delete.
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
+    pub restored: i64,
+    /// Levels overwritten with the default catalog (`reset` mode only).
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
+    pub reset: i64,
+    /// Existing active levels left untouched (`fill` mode only).
+    #[serde(with = "sdkwork_utils_rust::serde_int64")]
+    pub skipped: i64,
+}
+
+/// Restore mode for the commercial default level catalog.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RestoreDefaultLevelsMode {
+    /// Insert or revive only the missing default levels; never touch active
+    /// levels the operator has configured.
+    Fill,
+    /// Overwrite all seven default levels with the catalog values (keeps the
+    /// existing row ids). Operator-created levels beyond the catalog are
+    /// never touched.
+    Reset,
+}
+
+impl RestoreDefaultLevelsMode {
+    pub fn parse(value: Option<&str>) -> Result<Self, CommerceServiceError> {
+        match value
+            .map(str::trim)
+            .unwrap_or("fill")
+            .to_lowercase()
+            .as_str()
+        {
+            "" | "fill" => Ok(Self::Fill),
+            "reset" => Ok(Self::Reset),
+            other => Err(CommerceServiceError::validation(format!(
+                "unknown restore mode '{other}' (expected 'fill' or 'reset')"
+            ))),
+        }
+    }
 }
 
 /// Repository contract for the partner admin surface.
@@ -324,6 +403,16 @@ pub trait PartnerAdminRepositoryPort: Send + Sync {
         command: DeletePartnerLevelCommand,
         subject: &'a PartnerAdminSubject,
     ) -> PartnerAdminFuture<'a, ()>;
+
+    /// Restores the commercial default level catalog (seven-tier pyramid)
+    /// for the tenant. `Fill` revives missing or soft-deleted default levels
+    /// only; `Reset` additionally overwrites the active default levels with
+    /// the catalog values.
+    fn restore_default_levels<'a>(
+        &'a self,
+        mode: RestoreDefaultLevelsMode,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, RestoreDefaultLevelsResult>;
 
     fn list_partners<'a>(
         &'a self,
@@ -484,6 +573,40 @@ pub trait PartnerAdminRepositoryPort: Send + Sync {
         query: RetrievePartnerQuery,
         subject: &'a PartnerAdminSubject,
     ) -> PartnerAdminFuture<'a, PartnerStatItem>;
+
+    /// Pages the partner join (伙伴计划) application review queue, newest
+    /// first, with status/applicant-type/keyword filters.
+    fn list_join_applications<'a>(
+        &'a self,
+        query: ListJoinApplicationsQuery,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerAdminListPage<PartnerJoinApplicationItem>>;
+
+    /// Retrieves one join application (tenant-scoped).
+    fn retrieve_join_application<'a>(
+        &'a self,
+        application_id: i64,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerJoinApplicationItem>;
+
+    /// Approves a SUBMITTED join application in one transaction: locks the
+    /// application row, verifies the assigned level is ACTIVE, creates the
+    /// partner record (PENDING, join fee unpaid, bound to the applicant, hung
+    /// on the inviter chain, invite code generated), marks the application
+    /// APPROVED with reviewer fields, and writes the audit trail.
+    fn approve_join_application<'a>(
+        &'a self,
+        command: ApproveJoinApplicationCommand,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerJoinApplicationItem>;
+
+    /// Rejects a SUBMITTED join application in one transaction (reason
+    /// required) and writes the audit trail.
+    fn reject_join_application<'a>(
+        &'a self,
+        command: RejectJoinApplicationCommand,
+        subject: &'a PartnerAdminSubject,
+    ) -> PartnerAdminFuture<'a, PartnerJoinApplicationItem>;
 }
 
 /// Admin service facade over the repository port.
@@ -545,6 +668,14 @@ impl PartnerAdminService {
         subject: &PartnerAdminSubject,
     ) -> Result<(), CommerceServiceError> {
         self.repository.delete_level(command, subject).await
+    }
+
+    pub async fn restore_default_levels(
+        &self,
+        mode: RestoreDefaultLevelsMode,
+        subject: &PartnerAdminSubject,
+    ) -> Result<RestoreDefaultLevelsResult, CommerceServiceError> {
+        self.repository.restore_default_levels(mode, subject).await
     }
 
     pub async fn list_partners(
@@ -762,5 +893,161 @@ impl PartnerAdminService {
         subject: &PartnerAdminSubject,
     ) -> Result<PartnerStatItem, CommerceServiceError> {
         self.repository.retrieve_partner_stats(query, subject).await
+    }
+
+    pub async fn list_join_applications(
+        &self,
+        query: ListJoinApplicationsQuery,
+        subject: &PartnerAdminSubject,
+    ) -> Result<PartnerAdminListPage<PartnerJoinApplicationItem>, CommerceServiceError> {
+        self.repository.list_join_applications(query, subject).await
+    }
+
+    pub async fn retrieve_join_application(
+        &self,
+        application_id: i64,
+        subject: &PartnerAdminSubject,
+    ) -> Result<PartnerJoinApplicationItem, CommerceServiceError> {
+        self.repository
+            .retrieve_join_application(application_id, subject)
+            .await
+    }
+
+    pub async fn approve_join_application(
+        &self,
+        command: ApproveJoinApplicationCommand,
+        subject: &PartnerAdminSubject,
+    ) -> Result<PartnerJoinApplicationItem, CommerceServiceError> {
+        self.repository
+            .approve_join_application(command, subject)
+            .await
+    }
+
+    pub async fn reject_join_application(
+        &self,
+        command: RejectJoinApplicationCommand,
+        subject: &PartnerAdminSubject,
+    ) -> Result<PartnerJoinApplicationItem, CommerceServiceError> {
+        self.repository
+            .reject_join_application(command, subject)
+            .await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn restore_mode_parse_accepts_defaults_and_explicit_modes() {
+        assert_eq!(
+            RestoreDefaultLevelsMode::parse(None).unwrap(),
+            RestoreDefaultLevelsMode::Fill
+        );
+        assert_eq!(
+            RestoreDefaultLevelsMode::parse(Some("fill")).unwrap(),
+            RestoreDefaultLevelsMode::Fill
+        );
+        assert_eq!(
+            RestoreDefaultLevelsMode::parse(Some("reset")).unwrap(),
+            RestoreDefaultLevelsMode::Reset
+        );
+        assert_eq!(
+            RestoreDefaultLevelsMode::parse(Some("  FILL  ")).unwrap(),
+            RestoreDefaultLevelsMode::Fill
+        );
+    }
+
+    #[test]
+    fn restore_mode_parse_rejects_unknown_modes() {
+        assert!(RestoreDefaultLevelsMode::parse(Some("wipe")).is_err());
+        // Empty string falls back to the default fill mode.
+        assert_eq!(
+            RestoreDefaultLevelsMode::parse(Some("")).unwrap(),
+            RestoreDefaultLevelsMode::Fill
+        );
+    }
+
+    #[test]
+    fn default_catalog_is_complete_and_consistent() {
+        let catalog = crate::domain::default_catalog::DEFAULT_LEVEL_CATALOG;
+        assert_eq!(catalog.len(), 7);
+        for (index, entry) in catalog.iter().enumerate() {
+            assert_eq!(
+                entry.level_no,
+                (index + 1) as i32,
+                "levels must be contiguous"
+            );
+            assert_eq!(entry.sort_order, (index + 1) as i32);
+            assert!(
+                entry.customer_revenue_ratio_per_10000 <= 3000,
+                "payout pool capped at 30%"
+            );
+            assert!(!entry.name.is_empty());
+            let items = entry.benefits_as_items();
+            assert!(!items.is_empty(), "every level needs benefits");
+            // Benefit ladders must be ordered and code-unique.
+            let codes: Vec<&str> = items.iter().map(|b| b.code.as_str()).collect();
+            let mut unique = codes.clone();
+            unique.sort_unstable();
+            unique.dedup();
+            assert_eq!(
+                codes.len(),
+                unique.len(),
+                "duplicate benefit codes in level {}",
+                entry.level_no
+            );
+        }
+        // Join fee ladder must start at 5999 and be strictly increasing.
+        let fees: Vec<i64> = catalog.iter().map(|e| e.join_fee_cents).collect();
+        assert_eq!(fees[0], 599_900);
+        for pair in fees.windows(2) {
+            assert!(pair[0] < pair[1], "join fees must increase");
+        }
+    }
+}
+
+#[cfg(test)]
+mod wire_serialization_tests {
+    use super::*;
+
+    /// int64 identifiers must serialize as decimal strings (API_SPEC §16.6,
+    /// x-sdkwork-int64-string) so browsers keep exact 64-bit ids. A 19-digit
+    /// id like the one below exceeds Number.MAX_SAFE_INTEGER; emitting a JSON
+    /// number would silently round it and break parent lookups on replay.
+    #[test]
+    fn partner_item_serializes_int64_ids_as_strings() {
+        let item = PartnerItem {
+            id: 8_938_785_933_767_635_644,
+            uuid: "e6778f9c-b66e-4b5d-a400-f37d301be9a6".to_owned(),
+            name: "总代理".to_owned(),
+            contact_name: String::new(),
+            phone: String::new(),
+            email: String::new(),
+            level_no: 1,
+            parent_partner_id: Some(8_938_785_933_767_635_643),
+            user_account_id: None,
+            status: "PENDING".to_owned(),
+            join_fee_amount: "0.00".to_owned(),
+            join_fee_status: "UNPAID".to_owned(),
+            joined_at: None,
+            owner_id: 9,
+            remark: String::new(),
+            created_at: "2026-08-12T00:00:00Z".to_owned(),
+            updated_at: "2026-08-12T00:00:00Z".to_owned(),
+        };
+        let json = serde_json::to_string(&item).expect("serialize partner item");
+        assert!(
+            json.contains(r#""id":"8938785933767635644""#),
+            "id must be a decimal string, got: {json}"
+        );
+        assert!(
+            json.contains(r#""parentPartnerId":"8938785933767635643""#),
+            "parentPartnerId must be a decimal string, got: {json}"
+        );
+        assert!(
+            !json.contains(r#""id":8938785933767635644"#),
+            "id must not be a JSON number"
+        );
     }
 }

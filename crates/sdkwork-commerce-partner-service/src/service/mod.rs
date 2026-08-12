@@ -1,6 +1,8 @@
 //! Partner service contract declaration.
 
-use crate::ports::{PARTNER_ADMIN_REPOSITORY_PORT, PARTNER_REPOSITORY_PORT};
+use crate::ports::{
+    PARTNER_ADMIN_REPOSITORY_PORT, PARTNER_JOIN_REPOSITORY_PORT, PARTNER_REPOSITORY_PORT,
+};
 use sdkwork_contract_service::CommerceServiceContract;
 
 /// Declare the partner service contract for the commerce service registry.
@@ -24,6 +26,10 @@ pub fn partner_service_contract() -> CommerceServiceContract {
             "partner.withdrawal.create",
             "partner.withdrawal.review",
             "partner.withdrawal.pay",
+            "partner.joinApplication.submit",
+            "partner.joinApplication.cancel",
+            "partner.joinApplication.approve",
+            "partner.joinApplication.reject",
         ],
         read_queries: vec![
             "partner.commissionConfig.retrieve",
@@ -41,8 +47,16 @@ pub fn partner_service_contract() -> CommerceServiceContract {
             "partner.stats.overview",
             "partner.stats.list",
             "partner.stats.retrieve",
+            "partner.joinApplication.list",
+            "partner.joinApplication.mine",
+            "partner.joinProgram.retrieve",
+            "partner.inviteCode.validate",
         ],
-        ports: vec![PARTNER_REPOSITORY_PORT, PARTNER_ADMIN_REPOSITORY_PORT],
+        ports: vec![
+            PARTNER_REPOSITORY_PORT,
+            PARTNER_ADMIN_REPOSITORY_PORT,
+            PARTNER_JOIN_REPOSITORY_PORT,
+        ],
         requires_idempotency_for_writes: false,
     }
 }

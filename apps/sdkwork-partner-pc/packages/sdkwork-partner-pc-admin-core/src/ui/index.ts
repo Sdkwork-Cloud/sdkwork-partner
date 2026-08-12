@@ -23,6 +23,7 @@ export { Section } from './section';
 export { SidePanel } from './side-panel';
 export { StatusBadge } from './status-badge';
 export { TableState } from './table-state';
+export { Tooltip } from './tooltip';
 
 export {
   EntityPickerDialog,

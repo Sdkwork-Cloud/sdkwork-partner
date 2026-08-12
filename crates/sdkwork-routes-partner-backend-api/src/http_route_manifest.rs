@@ -25,6 +25,11 @@ const HTTP_ROUTES: &[HttpRoute] = &[
         "/backend/v3/api/partners/levels/{levelId}",
         "levels.delete",
     ),
+    manage(
+        HttpMethod::Post,
+        "/backend/v3/api/partners/levels/restore_defaults",
+        "levels.restoreDefaults",
+    ),
     read(
         HttpMethod::Get,
         "/backend/v3/api/partners/commission_config",
@@ -70,7 +75,7 @@ const HTTP_ROUTES: &[HttpRoute] = &[
     // Join fees
     read(
         HttpMethod::Get,
-        "/backend/v3/api/partners/{partnerId}/join_fee_payments",
+        "/backend/v3/api/partners/join_fee_payments",
         "joinFeePayments.list",
     ),
     manage(
@@ -81,7 +86,7 @@ const HTTP_ROUTES: &[HttpRoute] = &[
     // Customer bindings
     read(
         HttpMethod::Get,
-        "/backend/v3/api/partners/{partnerId}/customers",
+        "/backend/v3/api/partners/customers",
         "customerBindings.list",
     ),
     manage(
@@ -126,6 +131,12 @@ const HTTP_ROUTES: &[HttpRoute] = &[
         "/backend/v3/api/partners/ledger/adjustments",
         "ledgerEntries.create",
     ),
+    // Audit log
+    read(
+        HttpMethod::Get,
+        "/backend/v3/api/partners/audit_logs",
+        "auditLogs.list",
+    ),
     // Withdrawals
     read(
         HttpMethod::Get,
@@ -162,6 +173,27 @@ const HTTP_ROUTES: &[HttpRoute] = &[
         HttpMethod::Get,
         "/backend/v3/api/partners/{partnerId}/stats",
         "stats.retrieve",
+    ),
+    // Partner join (伙伴计划) application review
+    read(
+        HttpMethod::Get,
+        "/backend/v3/api/partners/applications",
+        "applications.list",
+    ),
+    read(
+        HttpMethod::Get,
+        "/backend/v3/api/partners/applications/{applicationId}",
+        "applications.retrieve",
+    ),
+    manage(
+        HttpMethod::Post,
+        "/backend/v3/api/partners/applications/{applicationId}/approve",
+        "applications.approve",
+    ),
+    manage(
+        HttpMethod::Post,
+        "/backend/v3/api/partners/applications/{applicationId}/reject",
+        "applications.reject",
     ),
 ];
 

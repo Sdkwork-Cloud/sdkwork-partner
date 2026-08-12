@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.sdk-family",
+  "sdkFamily": "sdkwork-partner-app-sdk",
+  "sdkName": "sdkwork-partner-app-sdk",
+  "packageName": "@sdkwork/partner-app-sdk",
+  "transportPackageName": "sdkwork-partner-app-sdk-generated-typescript",
+  "apiAuthority": "sdkwork-partner-app-api",
+  "owner": "sdkwork-partner",
+  "domain": "partner",
+  "authoritySpec": "openapi/sdkwork-partner-app-api.openapi.json",
+  "generationInputSpec": "openapi/sdkwork-partner-app-api.sdkgen.json",
+  "derivedSpecs": {},
+  "discoverySurface": {
+    "sdkTarget": "app",
+    "apiPrefix": "/app/v3/api",
+    "schemaUrl": "/app/v3/api/openapi.json",
+    "generatedProtocols": [
+      "http-openapi"
+    ],
+    "manualTransports": []
+  },
+  "languages": [
+    {
+      "language": "typescript",
+      "generationState": "generated",
+      "releaseState": "not_published",
+      "packagePath": "sdkwork-partner-app-sdk-typescript/generated/server-openapi",
+      "consumerPackageName": "@sdkwork/partner-app-sdk",
+      "transportPackageName": "sdkwork-partner-app-sdk-generated-typescript"
+    }
+  ],
+  "sdkDependencies": [],
+  "ownerOnlyOperationCount": 5
+}

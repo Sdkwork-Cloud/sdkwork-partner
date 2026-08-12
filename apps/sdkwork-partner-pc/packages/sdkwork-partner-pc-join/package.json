@@ -1,0 +1,50 @@
+{
+  "name": "@sdkwork/partner-pc-join",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Partner join (伙伴计划) marketing module: public program landing, join application form, and application status tracking. Independent app-surface package; hosted by embedding applications (e.g. sdkwork-cloudrouter portal).",
+  "exports": {
+    ".": {
+      "types": "./src/index.tsx",
+      "import": "./src/index.tsx",
+      "default": "./src/index.tsx"
+    },
+    "./i18n": {
+      "types": "./src/i18n/index.ts",
+      "import": "./src/i18n/index.ts",
+      "default": "./src/i18n/index.ts"
+    }
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sdkwork/partner-app-sdk": "workspace:*",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-i18next": "catalog:",
+    "@sdkwork/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@sdkwork/partner-app-sdk": "workspace:*",
+    "react": ">=18.2.0 <20.0.0"
+  },
+  "sdkwork": {
+    "workspace": "sdkwork-partner",
+    "architecture": "pc-react",
+    "domain": "commerce",
+    "capability": "join",
+    "status": "ready"
+  }
+}

@@ -230,6 +230,47 @@
         }
       }
     },
+    "/backend/v3/api/partners/levels/restore_defaults": {
+      "post": {
+        "operationId": "levelsRestoreDefaults.create",
+        "summary": "Restore the commercial default level catalog (seven-tier pyramid).",
+        "description": "Restores the default seven-tier catalog for the tenant. Mode \"fill\" (default) inserts or revives only the missing default levels and never touches active levels the operator configured; mode \"reset\" additionally overwrites the active default levels with catalog values (existing row ids are kept, operator-created levels beyond the catalog are never touched).",
+        "tags": [
+          "levels"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLevelsRestoreDefaultsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreDefaultLevelsResultEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/backend/v3/api/partners/levels/{levelId}": {
       "patch": {
         "operationId": "levels.update",
@@ -345,8 +386,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Level id."
           }
@@ -449,8 +492,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Level id."
           }
@@ -1064,8 +1109,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Partner id."
           }
@@ -1185,8 +1232,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Partner id."
           }
@@ -1308,8 +1357,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Partner id."
           }
@@ -1421,8 +1472,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Partner id."
           }
@@ -1534,8 +1587,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Partner id."
           }
@@ -1543,146 +1598,6 @@
       }
     },
     "/backend/v3/api/partners/{partnerId}/join_fee_payments": {
-      "get": {
-        "operationId": "joinFeePayments.list",
-        "summary": "List join fee payments of a partner",
-        "tags": [
-          "partners"
-        ],
-        "x-sdkwork-owner": "sdkwork-partner",
-        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
-        "x-sdkwork-api-surface": "backend-api",
-        "x-sdkwork-permission": "commerce.partner.read",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JoinFeePaymentListEnvelope"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server Error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Error response.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AuthToken": [],
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "partnerId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "description": "Partner id."
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1,
-              "default": 1
-            }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1,
-              "maximum": 200,
-              "default": 20
-            }
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "maxLength": 128
-            }
-          }
-        ]
-      },
       "post": {
         "operationId": "joinFeePayments.create",
         "summary": "Record a join fee payment and trigger ancestor commission",
@@ -1797,152 +1712,12 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "description": "Partner id."
-          }
-        ]
-      }
-    },
-    "/backend/v3/api/partners/{partnerId}/customers": {
-      "get": {
-        "operationId": "customerBindings.list",
-        "summary": "List customer bindings of a partner",
-        "tags": [
-          "partners"
-        ],
-        "x-sdkwork-owner": "sdkwork-partner",
-        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
-        "x-sdkwork-api-surface": "backend-api",
-        "x-sdkwork-permission": "commerce.partner.read",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CustomerBindingListEnvelope"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server Error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Error response.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "AuthToken": [],
-            "AccessToken": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "partnerId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "description": "Partner id."
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1,
-              "default": 1
-            }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1,
-              "maximum": 200,
-              "default": 20
-            }
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
               "type": "string",
-              "maxLength": 128
-            }
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
+            },
+            "description": "Partner id."
           }
         ]
       }
@@ -2058,7 +1833,7 @@
         }
       },
       "get": {
-        "operationId": "customerBindings.listAll",
+        "operationId": "customerBindings.list",
         "summary": "List customer bindings across all partners",
         "tags": [
           "partners"
@@ -2079,7 +1854,9 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
             }
           },
           {
@@ -2087,7 +1864,10 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
             }
           },
           {
@@ -2101,8 +1881,10 @@
             "name": "partner_id",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             }
           },
           {
@@ -2285,8 +2067,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Binding id."
           }
@@ -2295,7 +2079,7 @@
     },
     "/backend/v3/api/partners/join_fee_payments": {
       "get": {
-        "operationId": "joinFeePayments.listAll",
+        "operationId": "joinFeePayments.list",
         "summary": "List join fee payments across all partners",
         "tags": [
           "partners"
@@ -2316,7 +2100,9 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
             }
           },
           {
@@ -2324,7 +2110,10 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
             }
           },
           {
@@ -2338,8 +2127,10 @@
             "name": "partner_id",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             }
           },
           {
@@ -2934,8 +2725,10 @@
             "name": "partner_id",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             }
           },
           {
@@ -3057,8 +2850,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Partner id."
           },
@@ -3229,7 +3024,9 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
             }
           },
           {
@@ -3237,7 +3034,10 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
             }
           },
           {
@@ -3267,8 +3067,10 @@
             "name": "target_id",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Filter by target entity id."
           },
@@ -3276,8 +3078,10 @@
             "name": "operator_id",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Filter by operator id."
           }
@@ -3495,8 +3299,10 @@
             "name": "partner_id",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             }
           },
           {
@@ -3739,8 +3545,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Withdrawal id."
           }
@@ -3862,8 +3670,10 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Withdrawal id."
           }
@@ -4104,8 +3914,10 @@
             "name": "partner_id",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             }
           },
           {
@@ -4227,12 +4039,540 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
             },
             "description": "Partner id."
           }
         ]
+      }
+    },
+    "/backend/v3/api/partners/applications": {
+      "get": {
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "operationId": "applications.list",
+        "summary": "List partner join applications",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SUBMITTED",
+                "APPROVED",
+                "REJECTED",
+                "CANCELLED"
+              ]
+            },
+            "description": "Filter by application status."
+          },
+          {
+            "name": "applicant_type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INDIVIDUAL",
+                "ORGANIZATION"
+              ]
+            },
+            "description": "Filter by applicant entity type."
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "description": "Keyword search over contact name, phone, email, and subject name."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPartnerApplicationListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners/applications/{applicationId}": {
+      "get": {
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "operationId": "applications.retrieve",
+        "summary": "Retrieve a partner join application",
+        "x-sdkwork-permission": "commerce.partner.read",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
+            },
+            "description": "Join application id."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPartnerApplicationItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners/applications/{applicationId}/approve": {
+      "post": {
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "operationId": "applications.approve",
+        "summary": "Approve a partner join application",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "description": "Approves the application (SUBMITTED → APPROVED) and creates the partner record in the same transaction using the existing partner creation path (status PENDING, bound to the applicant, inviter chain from the invite code, assigned level and invite code).",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
+            },
+            "description": "Join application id."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPartnerApplicationApproveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPartnerApplicationItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/v3/api/partners/applications/{applicationId}/reject": {
+      "post": {
+        "tags": [
+          "partners"
+        ],
+        "x-sdkwork-owner": "sdkwork-partner",
+        "x-sdkwork-api-authority": "sdkwork-partner-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ],
+        "operationId": "applications.reject",
+        "summary": "Reject a partner join application",
+        "x-sdkwork-permission": "commerce.partner.manage",
+        "description": "Rejects the application (SUBMITTED → REJECTED) with a required reason; the applicant may submit a new application afterwards.",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "int64",
+              "pattern": "^-?[0-9]+$",
+              "x-sdkwork-int64-string": true
+            },
+            "description": "Join application id."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPartnerApplicationRejectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPartnerApplicationItemEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -4300,20 +4640,28 @@
             ]
           },
           "page": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "pageSize": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "totalItems": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "totalPages": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "hasMore": {
             "type": "boolean"
@@ -4347,13 +4695,16 @@
           "joinFeeCommissionRatio",
           "joinFee",
           "status",
-          "sortOrder"
+          "sortOrder",
+          "benefits"
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Level id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "levelNo": {
             "type": "integer",
@@ -4388,6 +4739,36 @@
             "type": "integer",
             "description": "Display sort order.",
             "format": "int32"
+          },
+          "benefits": {
+            "type": "array",
+            "description": "Structured benefit (权益) ladder entries granted by this level.",
+            "items": {
+              "type": "object",
+              "required": [
+                "code",
+                "name"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Stable machine-readable benefit key (e.g. account_manager)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Display name of the benefit."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Display value of the benefit (e.g. 10 qualified leads per month)."
+                },
+                "sort": {
+                  "type": "integer",
+                  "description": "Display sort order within the level benefit list.",
+                  "format": "int32"
+                }
+              }
+            }
           }
         }
       },
@@ -4486,6 +4867,36 @@
             "type": "integer",
             "description": "Display sort order.",
             "format": "int32"
+          },
+          "benefits": {
+            "type": "array",
+            "description": "Structured benefit (权益) ladder entries for this level.",
+            "items": {
+              "type": "object",
+              "required": [
+                "code",
+                "name"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Stable machine-readable benefit key (e.g. account_manager)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Display name of the benefit."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Display value of the benefit (e.g. 10 qualified leads per month)."
+                },
+                "sort": {
+                  "type": "integer",
+                  "description": "Display sort order within the level benefit list.",
+                  "format": "int32"
+                }
+              }
+            }
           }
         }
       },
@@ -4527,6 +4938,36 @@
             "type": "integer",
             "description": "Display sort order.",
             "format": "int32"
+          },
+          "benefits": {
+            "type": "array",
+            "description": "Structured benefit (权益) ladder entries for this level.",
+            "items": {
+              "type": "object",
+              "required": [
+                "code",
+                "name"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Stable machine-readable benefit key (e.g. account_manager)."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Display name of the benefit."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Display value of the benefit (e.g. 10 qualified leads per month)."
+                },
+                "sort": {
+                  "type": "integer",
+                  "description": "Display sort order within the level benefit list.",
+                  "format": "int32"
+                }
+              }
+            }
           }
         }
       },
@@ -4538,7 +4979,8 @@
           "rechargeEnabled",
           "maxCommissionDepth",
           "currency",
-          "minWithdrawalAmount"
+          "minWithdrawalAmount",
+          "profitMarginRatio"
         ],
         "properties": {
           "enabled": {
@@ -4554,9 +4996,11 @@
             "description": "Commission on recharge revenue."
           },
           "maxCommissionDepth": {
-            "type": "integer",
+            "type": "string",
             "description": "Max ancestor depth for commission (0 = unlimited).",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "currency": {
             "type": "string",
@@ -4565,6 +5009,10 @@
           "minWithdrawalAmount": {
             "type": "string",
             "description": "Minimum withdrawal amount."
+          },
+          "profitMarginRatio": {
+            "type": "string",
+            "description": "Platform gross profit margin (percent, e.g. 40.00). Customer revenue commissions are profit-based: the allocation base equals revenue × margin; join-fee commissions use the full join fee."
           }
         }
       },
@@ -4618,9 +5066,11 @@
             "description": "Commission on recharge revenue."
           },
           "maxCommissionDepth": {
-            "type": "integer",
+            "type": "string",
             "description": "Max ancestor depth (0 = unlimited).",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "currency": {
             "type": "string",
@@ -4629,6 +5079,10 @@
           "minWithdrawalAmount": {
             "type": "string",
             "description": "Minimum withdrawal amount."
+          },
+          "profitMarginRatio": {
+            "type": "string",
+            "description": "Platform gross profit margin (percent, e.g. 40.00). Customer revenue commissions are profit-based: the allocation base equals revenue × margin; join-fee commissions use the full join fee."
           }
         }
       },
@@ -4653,9 +5107,11 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "uuid": {
             "type": "string",
@@ -4688,7 +5144,8 @@
               "null"
             ],
             "description": "Parent partner id (null = top level).",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true
           },
           "userAccountId": {
             "type": [
@@ -4696,7 +5153,8 @@
               "null"
             ],
             "description": "Bound IAM user account id (null = not bound yet).",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true
           },
           "status": {
             "type": "string",
@@ -4728,9 +5186,11 @@
             "description": "Join timestamp."
           },
           "ownerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Operator id that created the partner.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "remark": {
             "type": "string",
@@ -4840,7 +5300,8 @@
               "null"
             ],
             "description": "Parent partner id (null = top level).",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true
           },
           "userAccountId": {
             "type": [
@@ -4848,7 +5309,8 @@
               "null"
             ],
             "description": "Bound IAM user account id (optional at creation; bind later from the partner list).",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true
           },
           "remark": {
             "type": "string",
@@ -4885,6 +5347,24 @@
             "description": "Partner level number.",
             "format": "int32"
           },
+          "parentPartnerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Parent partner id (null = top level, clears the current parent).",
+            "format": "int64",
+            "x-sdkwork-int64-string": true
+          },
+          "userAccountId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Bound IAM user account id (null = unbind).",
+            "format": "int64",
+            "x-sdkwork-int64-string": true
+          },
           "status": {
             "type": "string",
             "description": "Partner status.",
@@ -4912,9 +5392,11 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "name": {
             "type": "string",
@@ -4977,9 +5459,11 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "name": {
             "type": "string",
@@ -5044,14 +5528,18 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Payment id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "partnerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Paying partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "amount": {
             "type": "string",
@@ -5086,7 +5574,8 @@
               "null"
             ],
             "description": "Operator id that recorded the payment.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true
           },
           "remark": {
             "type": "string",
@@ -5179,6 +5668,11 @@
           "remark": {
             "type": "string",
             "description": "Remark."
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "maxLength": 128,
+            "description": "Client-generated idempotency key: replaying the same submission returns the original payment instead of creating a duplicate (and duplicate ancestor commission)."
           }
         }
       },
@@ -5196,19 +5690,25 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Binding id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "partnerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "customerUserId": {
-            "type": "integer",
+            "type": "string",
             "description": "Customer (IAM user) id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "bindingType": {
             "type": "string",
@@ -5230,9 +5730,11 @@
             "description": "Bound timestamp."
           },
           "boundBy": {
-            "type": "integer",
+            "type": "string",
             "description": "Operator id that bound the customer.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "unboundAt": {
             "type": [
@@ -5247,7 +5749,8 @@
               "null"
             ],
             "description": "Operator id that unbound the customer.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true
           },
           "createdAt": {
             "type": "string",
@@ -5323,14 +5826,18 @@
         ],
         "properties": {
           "partnerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "customerUserId": {
-            "type": "integer",
+            "type": "string",
             "description": "Customer (IAM user) id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "bindingType": {
             "type": "string",
@@ -5356,9 +5863,11 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Event id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "sourceType": {
             "type": "string",
@@ -5374,9 +5883,11 @@
             "description": "Source reference (unique per source type)."
           },
           "customerUserId": {
-            "type": "integer",
+            "type": "string",
             "description": "Customer (IAM user) id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "baseAmount": {
             "type": "string",
@@ -5486,9 +5997,11 @@
             "description": "Source reference (unique for MANUAL events)."
           },
           "customerUserId": {
-            "type": "integer",
+            "type": "string",
             "description": "Customer (IAM user) id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "baseAmount": {
             "type": "string",
@@ -5514,24 +6027,32 @@
         ],
         "properties": {
           "processed": {
-            "type": "integer",
+            "type": "string",
             "description": "Events processed in the batch.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "settled": {
-            "type": "integer",
+            "type": "string",
             "description": "Events settled with distributions.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "skipped": {
-            "type": "integer",
+            "type": "string",
             "description": "Events skipped (no active binding or no allocation).",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "failed": {
-            "type": "integer",
+            "type": "string",
             "description": "Events that failed during settlement.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           }
         }
       },
@@ -5566,9 +6087,11 @@
         "required": [],
         "properties": {
           "limit": {
-            "type": "integer",
+            "type": "string",
             "description": "Max events to process in this run (default 100).",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           }
         }
       },
@@ -5587,14 +6110,18 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Settlement id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "eventId": {
-            "type": "integer",
+            "type": "string",
             "description": "Commission event id (0 = join-fee batch).",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "baseAmount": {
             "type": "string",
@@ -5681,19 +6208,25 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Distribution id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "settlementId": {
-            "type": "integer",
+            "type": "string",
             "description": "Settlement id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "receiverPartnerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Receiving partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "levelOffset": {
             "type": "integer",
@@ -5734,14 +6267,18 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Entry id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "partnerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "entryType": {
             "type": "string",
@@ -5782,12 +6319,15 @@
               "null"
             ],
             "description": "Reference id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true
           },
           "operatorId": {
-            "type": "integer",
+            "type": "string",
             "description": "Operator id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "remark": {
             "type": "string",
@@ -5868,9 +6408,11 @@
         ],
         "properties": {
           "partnerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "amount": {
             "type": "string",
@@ -5896,14 +6438,18 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Withdrawal id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "partnerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "amount": {
             "type": "string",
@@ -5925,7 +6471,8 @@
               "null"
             ],
             "description": "Reviewer operator id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true
           },
           "reviewedAt": {
             "type": [
@@ -5951,7 +6498,8 @@
               "null"
             ],
             "description": "Paying operator id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true
           },
           "remark": {
             "type": "string",
@@ -6035,9 +6583,11 @@
         ],
         "properties": {
           "partnerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "amount": {
             "type": "string",
@@ -6087,14 +6637,18 @@
         ],
         "properties": {
           "totalPartners": {
-            "type": "integer",
+            "type": "string",
             "description": "Total partner count.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "activePartners": {
-            "type": "integer",
+            "type": "string",
             "description": "Active partner count.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "totalJoinFee": {
             "type": "string",
@@ -6105,9 +6659,11 @@
             "description": "Total earned commission."
           },
           "pendingWithdrawalCount": {
-            "type": "integer",
+            "type": "string",
             "description": "Pending withdrawal count.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "pendingWithdrawalAmount": {
             "type": "string",
@@ -6157,14 +6713,18 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
+            "type": "string",
             "description": "Snapshot id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "partnerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "periodStart": {
             "type": "string",
@@ -6187,9 +6747,11 @@
             "description": "Join fees in the period."
           },
           "customerCount": {
-            "type": "integer",
+            "type": "string",
             "description": "Bound customer count.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "revenueBase": {
             "type": "string",
@@ -6200,9 +6762,11 @@
             "description": "Commission earned."
           },
           "downstreamPartnerCount": {
-            "type": "integer",
+            "type": "string",
             "description": "Downstream partner count.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           }
         }
       },
@@ -6254,9 +6818,11 @@
         ],
         "properties": {
           "partnerId": {
-            "type": "integer",
+            "type": "string",
             "description": "Partner id.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "totalJoinFee": {
             "type": "string",
@@ -6279,14 +6845,18 @@
             "description": "Total withdrawn amount."
           },
           "customerCount": {
-            "type": "integer",
+            "type": "string",
             "description": "Active bound customer count.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "downstreamPartnerCount": {
-            "type": "integer",
+            "type": "string",
             "description": "Downstream partner count.",
-            "format": "int64"
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           }
         }
       },
@@ -6330,12 +6900,16 @@
         ],
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "operatorId": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "operatorType": {
             "type": "string"
@@ -6349,11 +6923,10 @@
             "description": "Target entity type (partner/level/withdrawal/...)."
           },
           "targetId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "requestId": {
-            "type": "string"
+            "type": "string",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           },
           "payload": {
             "type": "string",
@@ -6404,11 +6977,346 @@
         ],
         "properties": {
           "userAccountId": {
-            "type": "integer",
+            "type": "string",
             "format": "int64",
-            "description": "IAM user account id to bind (replaces any existing binding)."
+            "description": "IAM user account id to bind (replaces any existing binding).",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
           }
         }
+      },
+      "LevelBenefitItem": {
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Stable machine-readable benefit key (e.g. account_manager)."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the benefit."
+          },
+          "value": {
+            "type": "string",
+            "description": "Display value of the benefit (e.g. 10 qualified leads per month)."
+          },
+          "sort": {
+            "type": "integer",
+            "description": "Display sort order within the level benefit list.",
+            "format": "int32"
+          }
+        }
+      },
+      "AdminLevelsRestoreDefaultsRequest": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "description": "\"fill\" (default) revives only missing default levels; \"reset\" also overwrites the active default levels with catalog values.",
+            "enum": [
+              "fill",
+              "reset"
+            ]
+          }
+        }
+      },
+      "RestoreDefaultLevelsResult": {
+        "type": "object",
+        "required": [
+          "restored",
+          "reset",
+          "skipped"
+        ],
+        "properties": {
+          "restored": {
+            "type": "string",
+            "format": "int64",
+            "description": "Levels inserted or revived from soft-delete.",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
+          },
+          "reset": {
+            "type": "string",
+            "format": "int64",
+            "description": "Levels overwritten with the default catalog (reset mode only).",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
+          },
+          "skipped": {
+            "type": "string",
+            "format": "int64",
+            "description": "Existing active levels left untouched (fill mode only).",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
+          }
+        }
+      },
+      "RestoreDefaultLevelsResultEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/RestoreDefaultLevelsResult"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminPartnerApplicationItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "uuid",
+          "applicantType",
+          "subjectName",
+          "contactName",
+          "contactPhone",
+          "contactEmail",
+          "targetLevelNo",
+          "inviteCode",
+          "inviterPartnerId",
+          "businessIntro",
+          "status",
+          "reviewComment",
+          "reviewerUserId",
+          "approvedPartnerId",
+          "createdAt",
+          "updatedAt",
+          "inviterPartnerName",
+          "inviterLevelNo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Application id.",
+            "format": "int64",
+            "x-sdkwork-int64-string": true,
+            "pattern": "^-?[0-9]+$"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Application uuid."
+          },
+          "applicantType": {
+            "type": "string",
+            "description": "Applicant entity type.",
+            "enum": [
+              "INDIVIDUAL",
+              "ORGANIZATION"
+            ]
+          },
+          "subjectName": {
+            "type": "string",
+            "description": "Subject name."
+          },
+          "contactName": {
+            "type": "string",
+            "description": "Contact name."
+          },
+          "contactPhone": {
+            "type": "string",
+            "description": "Contact phone."
+          },
+          "contactEmail": {
+            "type": "string",
+            "description": "Contact email."
+          },
+          "targetLevelNo": {
+            "type": "integer",
+            "description": "Target (aspirational) level number.",
+            "format": "int32"
+          },
+          "inviteCode": {
+            "type": "string",
+            "description": "Invite code submitted with the application (original input)."
+          },
+          "inviterPartnerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Inviter partner id locked at submit time (null = no invite code).",
+            "format": "int64",
+            "x-sdkwork-int64-string": true
+          },
+          "businessIntro": {
+            "type": "string",
+            "description": "Business introduction."
+          },
+          "status": {
+            "type": "string",
+            "description": "Application status.",
+            "enum": [
+              "SUBMITTED",
+              "APPROVED",
+              "REJECTED",
+              "CANCELLED"
+            ]
+          },
+          "reviewComment": {
+            "type": "string",
+            "description": "Review comment (approval note or rejection reason)."
+          },
+          "reviewerUserId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Reviewer user id (null = not reviewed yet).",
+            "format": "int64",
+            "x-sdkwork-int64-string": true
+          },
+          "reviewedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Review timestamp.",
+            "format": "date-time"
+          },
+          "approvedPartnerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Partner record created on approval (closed loop reference).",
+            "format": "int64",
+            "x-sdkwork-int64-string": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created timestamp.",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Updated timestamp.",
+            "format": "date-time"
+          },
+          "inviterPartnerName": {
+            "type": "string",
+            "description": "Inviter partner display name (empty when the application carried no invite code or the inviter was deleted)."
+          },
+          "inviterLevelNo": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Inviter partner level number (null when the application carried no invite code).",
+            "format": "int32"
+          }
+        }
+      },
+      "AdminPartnerApplicationApproveRequest": {
+        "type": "object",
+        "required": [
+          "levelNo"
+        ],
+        "properties": {
+          "levelNo": {
+            "type": "integer",
+            "description": "Partner level number assigned on approval.",
+            "format": "int32",
+            "minimum": 1
+          },
+          "remark": {
+            "type": "string",
+            "description": "Optional approval note."
+          }
+        }
+      },
+      "AdminPartnerApplicationRejectRequest": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Rejection reason (required).",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        }
+      },
+      "AdminPartnerApplicationItemEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/AdminPartnerApplicationItem"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AdminPartnerApplicationListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "items",
+                  "pageInfo"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AdminPartnerApplicationItem"
+                    }
+                  },
+                  "pageInfo": {
+                    "$ref": "#/components/schemas/PageInfo"
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "responses": {
@@ -6638,6 +7546,36 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/AuditLogListEnvelope"
+            }
+          }
+        }
+      },
+      "RestoreDefaultLevelsResultEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RestoreDefaultLevelsResultEnvelope"
+            }
+          }
+        }
+      },
+      "AdminPartnerApplicationItemEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AdminPartnerApplicationItemEnvelope"
+            }
+          }
+        }
+      },
+      "AdminPartnerApplicationListEnvelopeResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AdminPartnerApplicationListEnvelope"
             }
           }
         }

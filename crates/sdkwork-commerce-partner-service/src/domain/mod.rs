@@ -1,6 +1,7 @@
 //! Partner domain drafts, money/ratio value helpers, and the commission engine.
 
 pub mod commission_engine;
+pub mod default_catalog;
 
 use sdkwork_contract_service::CommerceServiceError;
 
@@ -73,6 +74,31 @@ pub fn ratio_per_10000_to_decimal(per_10000: i64) -> String {
     cents_to_decimal(per_10000)
 }
 
+/// Apply the platform profit margin to a revenue base, producing the
+/// commission base (profit base) in cents.
+///
+/// Profit-based rebate: commissions are computed on the platform's gross
+/// profit of a customer transaction (`revenue × margin`), never on the full
+/// revenue amount, so a 30% commission pool on a 40%-margin business pays at
+/// most 12% of revenue. `margin_per_10000` uses the same per-10000 scale as
+/// commission ratios (40.00% -> 4000). Rounding is half-up.
+pub fn profit_base_cents(
+    revenue_cents: i64,
+    margin_per_10000: i64,
+) -> Result<i64, CommerceServiceError> {
+    if revenue_cents < 0 {
+        return Err(CommerceServiceError::validation(
+            "revenue base must not be negative",
+        ));
+    }
+    if !(0..=10_000).contains(&margin_per_10000) {
+        return Err(CommerceServiceError::validation(
+            "profit margin must be within 0% and 100%",
+        ));
+    }
+    Ok((revenue_cents * margin_per_10000 + 5_000) / 10_000)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -102,5 +128,25 @@ mod tests {
         assert_eq!(parse_ratio_per_10000("ratio", "100").unwrap(), 10000);
         assert_eq!(parse_ratio_per_10000("ratio", "0.5").unwrap(), 50);
         assert!(parse_ratio_per_10000("ratio", "-1").is_err());
+    }
+
+    #[test]
+    fn profit_base_converts_revenue_by_margin() {
+        // ¥100.00 at 40% margin -> ¥40.00
+        assert_eq!(profit_base_cents(10_000, 4_000).unwrap(), 4_000);
+        // ¥100.00 at 30% margin -> ¥30.00
+        assert_eq!(profit_base_cents(10_000, 3_000).unwrap(), 3_000);
+        // Full margin -> revenue unchanged
+        assert_eq!(profit_base_cents(12_345, 10_000).unwrap(), 12_345);
+        // Zero margin -> no commission base
+        assert_eq!(profit_base_cents(12_345, 0).unwrap(), 0);
+        // Half-up rounding: ¥1.00 at 30% -> ¥0.30
+        assert_eq!(profit_base_cents(100, 3_000).unwrap(), 30);
+        // Rounding edge: 1 cent at 50% -> 0.5 -> 1 cent (half-up)
+        assert_eq!(profit_base_cents(1, 5_000).unwrap(), 1);
+        // Rejects invalid inputs
+        assert!(profit_base_cents(-1, 4_000).is_err());
+        assert!(profit_base_cents(100, 10_001).is_err());
+        assert!(profit_base_cents(100, -1).is_err());
     }
 }

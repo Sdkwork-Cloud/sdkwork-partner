@@ -6,6 +6,7 @@
 pub mod backend_admin;
 pub mod commands;
 pub mod domain;
+pub mod join_apply;
 pub mod ports;
 pub mod queries;
 pub mod service;

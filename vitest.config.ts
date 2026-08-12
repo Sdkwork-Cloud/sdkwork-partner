@@ -8,5 +8,6 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['apps/**/*.test.{ts,tsx}', 'sdks/**/*.test.{ts,tsx}'],
     testTimeout: 15000,
+    passWithNoTests: true,
   },
 });

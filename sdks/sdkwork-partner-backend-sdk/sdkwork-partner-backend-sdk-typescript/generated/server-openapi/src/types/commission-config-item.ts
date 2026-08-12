@@ -11,4 +11,6 @@ export interface CommissionConfigItem {
   currency: string;
   /** Minimum withdrawal amount. */
   minWithdrawalAmount: string;
+  /** Platform gross profit margin (percent, e.g. 40.00). Customer revenue commissions are profit-based: the allocation base equals revenue × margin; join-fee commissions use the full join fee. */
+  profitMarginRatio: string;
 }

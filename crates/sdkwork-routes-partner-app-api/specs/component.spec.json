@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.component.spec",
+  "component": {
+    "name": "sdkwork-routes-partner-app-api",
+    "displayName": "SDKWork Partner Join App API Routes",
+    "version": "0.1.0",
+    "type": "rust-route-crate",
+    "root": "crates/sdkwork-routes-partner-app-api",
+    "domain": "commerce",
+    "capability": "partner",
+    "surface": "app-api",
+    "languages": [
+      "rust"
+    ],
+    "generated": false,
+    "manifests": [
+      "Cargo.toml"
+    ]
+  },
+  "canonicalSpecs": [
+    {
+      "file": "COMPONENT_SPEC.md",
+      "path": "../../../sdkwork-specs/COMPONENT_SPEC.md"
+    },
+    {
+      "file": "CODE_STYLE_SPEC.md",
+      "path": "../../../sdkwork-specs/CODE_STYLE_SPEC.md"
+    },
+    {
+      "file": "NAMING_SPEC.md",
+      "path": "../../../sdkwork-specs/NAMING_SPEC.md"
+    },
+    {
+      "file": "RUST_CODE_SPEC.md",
+      "path": "../../../sdkwork-specs/RUST_CODE_SPEC.md"
+    },
+    {
+      "file": "API_SPEC.md",
+      "path": "../../../sdkwork-specs/API_SPEC.md"
+    },
+    {
+      "file": "SUBJECT_ID_SPEC.md",
+      "path": "../../../sdkwork-specs/SUBJECT_ID_SPEC.md"
+    },
+    {
+      "file": "WEB_FRAMEWORK_SPEC.md",
+      "path": "../../../sdkwork-specs/WEB_FRAMEWORK_SPEC.md"
+    },
+    {
+      "file": "WEB_BACKEND_SPEC.md",
+      "path": "../../../sdkwork-specs/WEB_BACKEND_SPEC.md"
+    },
+    {
+      "file": "SECURITY_SPEC.md",
+      "path": "../../../sdkwork-specs/SECURITY_SPEC.md"
+    },
+    {
+      "file": "SDK_WORKSPACE_GENERATION_SPEC.md",
+      "path": "../../../sdkwork-specs/SDK_WORKSPACE_GENERATION_SPEC.md"
+    },
+    {
+      "file": "TEST_SPEC.md",
+      "path": "../../../sdkwork-specs/TEST_SPEC.md"
+    }
+  ],
+  "contracts": {
+    "publicExports": [
+      "."
+    ],
+    "providedPorts": [
+      {
+        "name": "partnerJoinAppApiRouter",
+        "export": "."
+      }
+    ],
+    "requiredPorts": [
+      {
+        "name": "partnerServiceHost",
+        "export": "."
+      }
+    ],
+    "runtimeEntrypoints": [
+      "gateway_mount_business",
+      "gateway_mount",
+      "gateway_route_manifest",
+      "wrap_router_with_web_framework"
+    ],
+    "routeManifest": "src/http_route_manifest.rs#app_route_manifest",
+    "authMode": "dual-token",
+    "sdkClients": [],
+    "sdkDependencies": [],
+    "dependencyApiExports": [],
+    "dependencyApiSurfaces": [],
+    "events": [],
+    "configKeys": [
+      "SDKWORK_ENVIRONMENT",
+      "SDKWORK_PARTNER_ENVIRONMENT",
+      "SDKWORK_CORS_ALLOWED_ORIGINS",
+      "SDKWORK_PARTNER_CORS_ALLOWED_ORIGINS"
+    ]
+  },
+  "verification": {
+    "commands": [
+      "cargo test -p sdkwork-routes-partner-app-api"
+    ]
+  }
+}

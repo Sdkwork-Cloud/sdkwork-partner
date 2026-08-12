@@ -5,6 +5,8 @@ import type {
   AdminCustomerBindRequest,
   AdminJoinFeePaymentCreateRequest,
   AdminLedgerAdjustmentRequest,
+  AdminPartnerApplicationApproveRequest,
+  AdminPartnerApplicationRejectRequest,
   AdminPartnerBindUserAccountRequest,
   AdminPartnerCreateRequest,
   AdminPartnerLevelCreateRequest,
@@ -14,11 +16,10 @@ import type {
   AdminWithdrawalCreateRequest,
   AdminWithdrawalPayRequest,
   AdminWithdrawalReviewRequest,
+  PartnersApi,
   PartnersAuditLogsListParams,
   PartnersCommissionEventsListParams,
-  PartnersCustomerBindingsListAllParams,
   PartnersCustomerBindingsListParams,
-  PartnersJoinFeePaymentsListAllParams,
   PartnersJoinFeePaymentsListParams,
   PartnersLedgerEntriesListParams,
   PartnersListParams,
@@ -27,11 +28,22 @@ import type {
   PartnersWithdrawalsListParams,
 } from '@sdkwork/partner-backend-sdk';
 
+/** List params of the generated `PartnersApplicationsApi.list` method. */
+type PartnersApplicationsListParams = NonNullable<Parameters<PartnersApi['applications']['list']>[0]>;
+
 function client() {
   return getPartnerBackendClient().partners;
 }
 
 export const partnerService = {
+  applications: {
+    list: (query: PartnersApplicationsListParams = {}) => client().applications.list(query),
+    retrieve: (applicationId: string) => client().applications.retrieve(applicationId),
+    approve: (applicationId: string, input: AdminPartnerApplicationApproveRequest) =>
+      client().applications.approve(applicationId, input),
+    reject: (applicationId: string, input: AdminPartnerApplicationRejectRequest) =>
+      client().applications.reject(applicationId, input),
+  },
   partners: {
     list: (query: PartnersListParams = {}) => client().list(query),
     retrieve: (partnerId: string) => client().retrieve(partnerId),
@@ -58,18 +70,14 @@ export const partnerService = {
     update: (input: AdminCommissionConfigUpdateRequest) => client().commissionConfig.update(input),
   },
   joinFeePayments: {
-    list: (partnerId: string, query: PartnersJoinFeePaymentsListParams = {}) =>
-      client().joinFeePayments.list(partnerId, query),
+    list: (query: PartnersJoinFeePaymentsListParams = {}) => client().joinFeePayments.list(query),
     create: (partnerId: string, input: AdminJoinFeePaymentCreateRequest) =>
       client().joinFeePayments.create(partnerId, input),
-    listAll: (query: PartnersJoinFeePaymentsListAllParams = {}) => client().joinFeePayments.listAll(query),
   },
   customerBindings: {
-    list: (partnerId: string, query: PartnersCustomerBindingsListParams = {}) =>
-      client().customerBindings.list(partnerId, query),
+    list: (query: PartnersCustomerBindingsListParams = {}) => client().customerBindings.list(query),
     create: (input: AdminCustomerBindRequest) => client().customerBindings.create(input),
     delete: (bindingId: string) => client().customerBindings.delete(bindingId),
-    listAll: (query: PartnersCustomerBindingsListAllParams = {}) => client().customerBindings.listAll(query),
   },
   commissionEvents: {
     list: (query: PartnersCommissionEventsListParams = {}) => client().commissionEvents.list(query),
