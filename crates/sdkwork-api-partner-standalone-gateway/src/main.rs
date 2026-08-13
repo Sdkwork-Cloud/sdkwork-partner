@@ -4,7 +4,7 @@
 //! application topology (e.g. sdkwork-cloudrouter).
 //!
 //! Mounts the full assembled API plane: the partner join (伙伴计划) app-api
-//! surface under `/app/v3/api/partner-join/*` and the partner backend-api
+//! surface under `/app/v3/api/partner_join/*` and the partner backend-api
 //! surface under `/backend/v3/api/partners/*`.
 
 use sdkwork_api_partner_assembly::assemble_api_router_from_env;

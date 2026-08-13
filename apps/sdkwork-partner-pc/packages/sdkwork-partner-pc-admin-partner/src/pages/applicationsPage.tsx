@@ -27,6 +27,7 @@ import {
 import { useRequestGuard } from '@sdkwork/partner-pc-admin-core';
 import { ApplicationStatusBadge } from '../components/status';
 import { partnerService } from '../services/partnerService';
+import { localizeLevelName } from '@sdkwork/partner-pc-admin-core/catalogLocale';
 
 const APPLICATION_STATUSES = ['SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'] as const;
 
@@ -380,7 +381,7 @@ function ApproveDialog({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onClose: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [levelNo, setLevelNo] = useState(
     levels.some((level) => level.levelNo === application.targetLevelNo)
       ? application.targetLevelNo
@@ -423,7 +424,7 @@ function ApproveDialog({
           <select name="levelNo" className={selectClass} value={levelNo} onChange={(event) => setLevelNo(Number(event.currentTarget.value))} required>
             {levels.map((level) => (
               <option key={level.id} value={level.levelNo}>
-                {level.name} (L{level.levelNo})
+                {localizeLevelName(level.name, i18n.language)} (L{level.levelNo})
               </option>
             ))}
           </select>

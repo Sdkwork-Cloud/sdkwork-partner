@@ -35,9 +35,10 @@ import {
 import { LevelStatusBadge } from '../components/status';
 import { commissionService } from '../services/commissionService';
 import { useRequestGuard } from '@sdkwork/partner-pc-admin-core';
+import { localizeBenefit, localizeLevelName, normalizeCatalogLocale } from '@sdkwork/partner-pc-admin-core/catalogLocale';
 
 export function LevelsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const guard = useRequestGuard();
   const [items, setItems] = useState<PartnerLevelItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -216,7 +217,7 @@ export function LevelsPage() {
   const exportLevels = () => {
     exportCsv(t('admin.partner.levels.export.filename', { defaultValue: 'partner-levels' }), items.map((level) => ({
       [t('admin.partner.levels.table.levelNo', { defaultValue: 'Level' })]: `L${level.levelNo}`,
-      [t('admin.partner.levels.table.name', { defaultValue: 'Name' })]: level.name,
+      [t('admin.partner.levels.table.name', { defaultValue: 'Name' })]: localizeLevelName(level.name, i18n.language),
       [t('admin.partner.levels.table.revenueRatio', { defaultValue: 'Revenue ratio' })]: `${formatDecimal(level.customerRevenueRatio)}%`,
       [t('admin.partner.levels.table.joinFeeRatio', { defaultValue: 'Join fee ratio' })]: `${formatDecimal(level.joinFeeCommissionRatio)}%`,
       [t('admin.partner.levels.table.joinFee', { defaultValue: 'Join fee' })]: formatDecimal(level.joinFee),
@@ -282,7 +283,9 @@ export function LevelsPage() {
                   items.map((level) => (
                     <tr key={level.id} className="text-slate-700 hover:bg-slate-50/80 dark:text-slate-200 dark:hover:bg-white/[0.03]">
                       <td className="px-4 py-3 font-mono text-xs">L{level.levelNo}</td>
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{level.name}</td>
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
+                        {localizeLevelName(level.name, i18n.language)}
+                      </td>
                       <td className="px-4 py-3 font-mono">{formatDecimal(level.customerRevenueRatio)}%</td>
                       <td className="px-4 py-3 font-mono">{formatDecimal(level.joinFeeCommissionRatio)}%</td>
                       <td className="px-4 py-3 font-mono">{formatDecimal(level.joinFee)}</td>
@@ -294,7 +297,11 @@ export function LevelsPage() {
                         ) : (
                           <Tooltip
                             content={level.benefits
-                              .map((benefit) => `${benefit.name}${benefit.value ? `：${benefit.value}` : ''}`)
+                              .map((benefit) => {
+                                const display = localizeBenefit(benefit, i18n.language);
+                                const separator = normalizeCatalogLocale(i18n.language) === 'zh-CN' ? '：' : ': ';
+                                return `${display.name}${display.value ? `${separator}${display.value}` : ''}`;
+                              })
                               .join('  ·  ')}
                           >
                             <span className="inline-flex cursor-default items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300">
@@ -367,7 +374,7 @@ export function LevelsPage() {
           title={t('admin.partner.levels.delete.title', { defaultValue: 'Delete level' })}
           description={t('admin.partner.levels.delete.description', {
             defaultValue: 'Delete level {{name}}? Levels referenced by partners cannot be deleted.',
-            name: deleteTarget.name,
+            name: localizeLevelName(deleteTarget.name, i18n.language),
           })}
           confirmLabel={t('common.actions.delete', { defaultValue: 'Delete' })}
           isBusy={busy}
@@ -602,7 +609,7 @@ function LevelBenefitsModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [benefits, setBenefits] = useState<LevelBenefitItem[]>(() =>
     (level.benefits ?? []).map((benefit) => ({
       code: benefit.code,
@@ -706,7 +713,10 @@ function LevelBenefitsModal({
 
   return (
     <Modal
-      title={t('admin.partner.levels.benefitsModal.title', { defaultValue: '{{name}} · Level benefits', name: level.name })}
+      title={t('admin.partner.levels.benefitsModal.title', {
+        defaultValue: '{{name}} · Level benefits',
+        name: localizeLevelName(level.name, i18n.language),
+      })}
       description={t('admin.partner.levels.benefitsModal.description', {
         defaultValue: 'Review and manage the entitlement ladder granted to partners of this level.',
       })}
@@ -727,8 +737,9 @@ function LevelBenefitsModal({
             {t('admin.partner.levels.benefitsEmpty', { defaultValue: 'No benefits configured' })}
           </p>
         ) : (
-          benefits.map((benefit, index) =>
-            editingIndex === index ? (
+          benefits.map((benefit, index) => {
+            const display = localizeBenefit(benefit, i18n.language);
+            return editingIndex === index ? (
               <div key={index} className="flex items-center gap-2 rounded-md border border-indigo-200 bg-indigo-50/60 p-2 dark:border-indigo-500/30 dark:bg-indigo-500/10">
                 <input
                   className={inputClass}
@@ -754,11 +765,11 @@ function LevelBenefitsModal({
               <div key={index} className="flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1.5 dark:border-white/10">
                 <span className="w-6 shrink-0 text-center font-mono text-xs text-slate-400">{benefit.sort}</span>
                 <BenefitCategoryBadge code={benefit.code} />
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100" title={benefit.name}>
-                  {benefit.name}
+                <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100" title={display.name}>
+                  {display.name}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-sm text-slate-500 dark:text-slate-400" title={benefit.value ?? ''}>
-                  {benefit.value || '—'}
+                <span className="min-w-0 flex-1 truncate text-sm text-slate-500 dark:text-slate-400" title={display.value}>
+                  {display.value || '—'}
                 </span>
                 <button
                   type="button"
@@ -789,8 +800,8 @@ function LevelBenefitsModal({
                   </button>
                 </Tooltip>
               </div>
-            ),
-          )
+            );
+          })
         )}
       </div>
       <div className="mt-3">

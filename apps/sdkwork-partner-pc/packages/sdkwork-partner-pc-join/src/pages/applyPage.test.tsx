@@ -12,6 +12,7 @@ vi.mock('react-i18next', () => ({
       const message = mockEnMessages[key as keyof typeof mockEnMessages] ?? options?.defaultValue ?? key;
       return options ? message.replace(/\{\{(\w+)\}\}/g, (_, name: string) => String(options[name] ?? '')) : message;
     },
+    i18n: { language: 'en-US' },
   }),
 }));
 

@@ -10,6 +10,7 @@ import {
   toMessage,
   validateInviteCode,
 } from '../services/partnerJoinService';
+import { localizeLevelName } from '../catalogLocale';
 
 export type ApplicantType = 'INDIVIDUAL' | 'ORGANIZATION';
 
@@ -76,7 +77,7 @@ export function validateApplicationForm(
 }
 
 export function ApplyPage({ onNavigate }: { onNavigate?: (section: 'apply' | 'status') => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [program, setProgram] = useState<PartnerJoinProgramItem | null>(null);
   const [values, setValues] = useState<ApplyFormValues>({
     applicantType: 'INDIVIDUAL',
@@ -109,9 +110,11 @@ export function ApplyPage({ onNavigate }: { onNavigate?: (section: 'apply' | 'st
 
   const levelNames = useMemo(() => {
     const names = new Map<number, string>();
-    for (const level of program?.levels ?? []) names.set(level.levelNo, level.name);
+    for (const level of program?.levels ?? []) {
+      names.set(level.levelNo, localizeLevelName(level.name, i18n.language));
+    }
     return names;
-  }, [program]);
+  }, [program, i18n.language]);
 
   const setField = <K extends keyof ApplyFormValues>(key: K, value: ApplyFormValues[K]) => {
     setValues((current) => ({ ...current, [key]: value }));

@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { parseNumber } from '@sdkwork/utils';
 import type { PartnerJoinLevelItem, PartnerJoinProgramItem } from '@sdkwork/partner-app-sdk';
 import { fetchProgram, toMessage } from '../services/partnerJoinService';
+import { localizeBenefit, localizeLevelName } from '../catalogLocale';
 
 const DEFAULT_PROFIT_MARGIN_RATIO = 40;
 
@@ -29,7 +30,7 @@ function formatDecimal(value: string | number | null | undefined): string {
 
 /** Public partner program landing (marketing copy). Parent owns routing. */
 export function LandingPage({ onApply }: { onApply?: () => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [program, setProgram] = useState<PartnerJoinProgramItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,12 +149,12 @@ export function LandingPage({ onApply }: { onApply?: () => void }) {
             </div>
           </div>
           {loading ? (
-            <p className="mt-8 flex items-center justify-center gap-2 py-10 text-sm text-slate-500">
+            <p className="mt-6 flex items-center justify-center gap-2 py-10 text-sm text-slate-500">
               <Loader2 className="h-4 w-4 animate-spin" />
               {t('partnerJoin.common.loading', { defaultValue: 'Loading…' })}
             </p>
           ) : error ? (
-            <div className="mt-8 flex flex-col items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-10 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+            <div className="mt-6 flex flex-col items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-10 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
               <p>{error}</p>
               <button
                 type="button"
@@ -165,18 +166,18 @@ export function LandingPage({ onApply }: { onApply?: () => void }) {
               </button>
             </div>
           ) : activeLevels.length === 0 ? (
-            <p className="mt-8 rounded-xl border border-slate-200 px-4 py-10 text-center text-sm text-slate-500 dark:border-white/10">
+            <p className="mt-6 rounded-xl border border-slate-200 px-4 py-10 text-center text-sm text-slate-500 dark:border-white/10">
               {t('partnerJoin.landing.levels.empty', { defaultValue: 'No levels available yet' })}
             </p>
           ) : (
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {activeLevels.map((level) => (
                 <article
                   key={level.levelNo}
                   className="group flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/5 dark:border-white/10 dark:bg-[#171717] dark:hover:border-indigo-500/40"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-base font-bold text-slate-900 dark:text-white">{level.name}</span>
+                    <span className="text-base font-bold text-slate-900 dark:text-white">{localizeLevelName(level.name, i18n.language)}</span>
                     <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 font-mono text-xs font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300">
                       L{level.levelNo}
                     </span>
@@ -210,16 +211,19 @@ export function LandingPage({ onApply }: { onApply?: () => void }) {
                         {level.benefits
                           .slice()
                           .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
-                          .map((benefit) => (
-                            <span
-                              key={benefit.code}
-                              title={benefit.value}
-                              className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300"
-                            >
-                              <BadgeCheck className="h-3 w-3" />
-                              {benefit.name}
-                            </span>
-                          ))}
+                          .map((benefit) => {
+                            const display = localizeBenefit(benefit, i18n.language);
+                            return (
+                              <span
+                                key={benefit.code}
+                                title={display.value}
+                                className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300"
+                              >
+                                <BadgeCheck className="h-3 w-3" />
+                                {display.name}
+                              </span>
+                            );
+                          })}
                       </div>
                     </div>
                   ) : null}
@@ -274,7 +278,7 @@ export function LandingPage({ onApply }: { onApply?: () => void }) {
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-white">
                         <TrendingUp className="h-4 w-4 text-indigo-500" />
-                        {level.name}
+                        {localizeLevelName(level.name, i18n.language)}
                       </span>
                       <span className="font-mono text-xs text-slate-400">L{level.levelNo}</span>
                     </div>
@@ -331,7 +335,7 @@ export function LandingPage({ onApply }: { onApply?: () => void }) {
           <h3 id="partner-join-faq-title" className="text-xl font-bold text-slate-900 dark:text-white">
             {t('partnerJoin.landing.faq.title', { defaultValue: 'FAQ' })}
           </h3>
-          <div className="mt-5 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:divide-white/10 dark:border-white/10 dark:bg-[#171717]">
+          <div className="mt-6 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:divide-white/10 dark:border-white/10 dark:bg-[#171717]">
             {[1, 2, 3, 4].map((index) => {
               const open = openFaq === index;
               return (

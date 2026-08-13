@@ -1706,6 +1706,7 @@ name = "sdkwork-api-partner-assembly"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "sdkwork-database-sqlx",
  "sdkwork-partner-service-host",
  "sdkwork-routes-partner-app-api",
  "sdkwork-routes-partner-backend-api",

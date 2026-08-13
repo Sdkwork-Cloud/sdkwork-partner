@@ -7,7 +7,7 @@ mod subject;
 pub mod web_bootstrap;
 
 pub use operations::build_backend_partner_router;
-pub use routes::build_partner_backend_router_with_framework;
+pub use routes::{build_partner_backend_router, build_partner_backend_router_with_framework};
 pub use web_bootstrap::{
     partner_backend_api_public_path_prefixes, wrap_router_with_web_framework,
     wrap_router_with_web_framework_from_env,

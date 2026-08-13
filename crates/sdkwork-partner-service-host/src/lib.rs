@@ -12,7 +12,10 @@ use sdkwork_commerce_partner_service::backend_admin::{
 };
 use sdkwork_commerce_partner_service::join_apply::{PartnerJoinRepositoryPort, PartnerJoinService};
 use sdkwork_database_sqlx::DatabasePool;
-use sdkwork_partner_database_host::{bootstrap_partner_database_from_env, PartnerDatabaseHost};
+use sdkwork_partner_database_host::{
+    bootstrap_partner_database_from_env, bootstrap_partner_database_host_with_pool,
+    PartnerDatabaseHost,
+};
 use std::sync::Arc;
 
 pub struct PartnerServiceHost {
@@ -36,6 +39,19 @@ impl PartnerServiceHost {
 
     pub async fn from_env() -> Result<Self, String> {
         let database = bootstrap_partner_database_from_env().await?;
+        Self::from_database(database)
+    }
+
+    /// Build the partner service host on a shared pool owned by the consuming
+    /// host (same-origin dependency composition). Mirrors the membership
+    /// `MembershipServiceHost::from_pool` pattern; the consuming host already
+    /// owns the database lifecycle for this pool.
+    pub async fn from_pool(pool: &DatabasePool) -> Result<Self, String> {
+        let database = bootstrap_partner_database_host_with_pool(pool).await?;
+        Self::from_database(database)
+    }
+
+    fn from_database(database: PartnerDatabaseHost) -> Result<Self, String> {
         // Partner persistence is PostgreSQL-only; the DatabasePool Sqlite
         // variant is gated behind the "sqlite" feature. An irrefutable match
         // keeps this explicit — enabling sqlite later becomes a compile error

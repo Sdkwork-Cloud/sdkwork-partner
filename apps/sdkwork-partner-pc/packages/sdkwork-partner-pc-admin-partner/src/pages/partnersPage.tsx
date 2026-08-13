@@ -39,12 +39,13 @@ import { PartnerStatusBadge, JoinFeeStatusBadge } from '../components/status';
 import { partnerService } from '../services/partnerService';
 import { useRequestGuard, getPartnerUserSearchPort, type PartnerUserOption } from '@sdkwork/partner-pc-admin-core';
 import { PartnerPickerField, UserPickerField } from '@sdkwork/partner-pc-admin-core/ui';
+import { localizeLevelName } from '@sdkwork/partner-pc-admin-core/catalogLocale';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const PARTNER_STATUSES = ['PENDING', 'ACTIVE', 'SUSPENDED', 'CLOSED'] as const;
 
 export function PartnersPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const guard = useRequestGuard();
   const [items, setItems] = useState<PartnerItem[]>([]);
   const [levels, setLevels] = useState<PartnerLevelItem[]>([]);
@@ -288,7 +289,7 @@ export function PartnersPage() {
               <option value="">{t('admin.partner.partners.filter.allLevels', { defaultValue: 'All levels' })}</option>
               {levels.map((level) => (
                 <option key={level.id} value={level.levelNo}>
-                  {level.name} ({level.levelNo})
+                  {localizeLevelName(level.name, i18n.language)} ({level.levelNo})
                 </option>
               ))}
             </select>
@@ -542,7 +543,7 @@ function PartnerModal({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onClose: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   return (
     <Modal
       title={
@@ -567,7 +568,7 @@ function PartnerModal({
           <select name="levelNo" className={selectClass} defaultValue={partner?.levelNo ?? levels[0]?.levelNo ?? 1} required>
             {levels.map((level) => (
               <option key={level.id} value={level.levelNo}>
-                {level.name} (L{level.levelNo})
+                {localizeLevelName(level.name, i18n.language)} (L{level.levelNo})
               </option>
             ))}
           </select>

@@ -19,6 +19,11 @@
       "types": "./src/i18n/index.ts",
       "import": "./src/i18n/index.ts",
       "default": "./src/i18n/index.ts"
+    },
+    "./catalogLocale": {
+      "types": "./src/catalogLocale.ts",
+      "import": "./src/catalogLocale.ts",
+      "default": "./src/catalogLocale.ts"
     }
   },
   "files": [
