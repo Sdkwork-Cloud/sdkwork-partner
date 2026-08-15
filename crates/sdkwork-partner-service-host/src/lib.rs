@@ -52,12 +52,18 @@ impl PartnerServiceHost {
     }
 
     fn from_database(database: PartnerDatabaseHost) -> Result<Self, String> {
-        // Partner persistence is PostgreSQL-only; the DatabasePool Sqlite
-        // variant is gated behind the "sqlite" feature. An irrefutable match
-        // keeps this explicit — enabling sqlite later becomes a compile error
-        // here, forcing a deliberate decision instead of a silent fallback.
+        // Partner persistence is PostgreSQL-only. Shared workspace consumers
+        // can unify the database crate's optional engine features, so reject
+        // non-PostgreSQL pools explicitly instead of making feature unification
+        // a compile-time failure for the whole application graph.
         let pool = match database.pool() {
             DatabasePool::Postgres(pool, _context) => pool.clone(),
+            _ => {
+                return Err(
+                    "partner service host requires an authoritative PostgreSQL database pool"
+                        .to_owned(),
+                )
+            }
         };
         let repository = Arc::new(PostgresPartnerAdminRepository::new(
             pool.clone(),
