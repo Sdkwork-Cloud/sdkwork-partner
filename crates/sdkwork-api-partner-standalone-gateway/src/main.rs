@@ -8,6 +8,10 @@
 //! surface under `/backend/v3/api/partners/*`.
 
 use sdkwork_api_partner_assembly::assemble_api_router_from_env;
+use sdkwork_iam_web_adapter::{
+    build_web_framework_builder, iam_web_request_context_resolver_from_env,
+};
+use sdkwork_web_bootstrap::{infra_public_path_prefixes, ComposedApiAssembly};
 
 const DEFAULT_BIND: &str = "0.0.0.0:18098";
 
@@ -22,13 +26,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let bind = std::env::var("PARTNER_API_BIND").unwrap_or_else(|_| DEFAULT_BIND.to_string());
 
-    let app = assemble_api_router_from_env().await.map_err(|error| {
+    let assembly = assemble_api_router_from_env().await.map_err(|error| {
         tracing::error!("assemble partner router failed: {error}");
         error
     })?;
+    let framework = build_web_framework_builder(
+        iam_web_request_context_resolver_from_env().await,
+        assembly.route_manifest.clone(),
+        infra_public_path_prefixes(),
+    );
+    let app = ComposedApiAssembly::try_compose("SDKWork Partner API", vec![assembly])
+        .map_err(std::io::Error::other)?
+        .into_hosted(framework)
+        .router;
 
     let listener = tokio::net::TcpListener::bind(&bind).await?;
     tracing::info!("partner-server listening on {bind}");
-    axum::serve(listener, app.router).await?;
+    axum::serve(listener, app).await?;
     Ok(())
 }
