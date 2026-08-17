@@ -31,5 +31,12 @@
     }
   ],
   "sdkDependencies": [],
-  "ownerOnlyOperationCount": 5
+  "ownerOnlyOperationCount": 5,
+  "typescript": {
+    "composedRoot": "sdkwork-partner-app-sdk-typescript",
+    "composedEntry": "sdkwork-partner-app-sdk-typescript/src/index.ts",
+    "transportRoot": "sdkwork-partner-app-sdk-typescript/generated/server-openapi",
+    "transportEntry": "sdkwork-partner-app-sdk-typescript/generated/server-openapi/src/index.ts"
+  },
+  "sdkOwner": "sdkwork-partner"
 }
