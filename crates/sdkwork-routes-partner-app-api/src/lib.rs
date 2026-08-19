@@ -21,7 +21,7 @@ pub fn gateway_route_manifest() -> sdkwork_web_core::HttpRouteManifest {
 }
 
 pub async fn gateway_mount_business(host: Arc<PartnerServiceHost>) -> Router {
-    build_partner_app_router_with_framework(host).await
+    build_partner_app_router(host)
 }
 
 pub async fn gateway_mount(host: Arc<PartnerServiceHost>) -> Router {
