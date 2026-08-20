@@ -29,22 +29,22 @@ export class PartnersApplicationsApi {
       { name: 'applicant_type', value: params?.applicantType, style: 'form', explode: true, allowReserved: false },
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.request<{ items: AdminPartnerApplicationItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/applications`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: AdminPartnerApplicationItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/applications`), query), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 
 /** Retrieve a partner join application */
   async retrieve(applicationId: string, requestOptions?: ApiRequestOptions): Promise<AdminPartnerApplicationItem> {
-    return this.client.request<AdminPartnerApplicationItem>(backendApiPath(`/partners/applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'item' });
+    return this.client.request<AdminPartnerApplicationItem>(backendApiPath(`/partners/applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'item' });
   }
 
 /** Approve a partner join application */
   async approve(applicationId: string, body: AdminPartnerApplicationApproveRequest, requestOptions?: ApiRequestOptions): Promise<AdminPartnerApplicationItem> {
-    return this.client.request<AdminPartnerApplicationItem>(backendApiPath(`/partners/applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}/approve`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<AdminPartnerApplicationItem>(backendApiPath(`/partners/applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}/approve`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 
 /** Reject a partner join application */
   async reject(applicationId: string, body: AdminPartnerApplicationRejectRequest, requestOptions?: ApiRequestOptions): Promise<AdminPartnerApplicationItem> {
-    return this.client.request<AdminPartnerApplicationItem>(backendApiPath(`/partners/applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}/reject`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<AdminPartnerApplicationItem>(backendApiPath(`/partners/applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}/reject`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -73,12 +73,12 @@ export class PartnersStatsApi {
       { name: 'partner_id', value: params?.partnerId, style: 'form', explode: true, allowReserved: false },
       { name: 'period_type', value: params?.periodType, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.request<{ items: StatSnapshotItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/stats`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: StatSnapshotItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/stats`), query), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 
 /** Retrieve a partner's aggregated stats */
   async retrieve(partnerId: string, requestOptions?: ApiRequestOptions): Promise<PartnerStatItem> {
-    return this.client.request<PartnerStatItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/stats`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'item' });
+    return this.client.request<PartnerStatItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/stats`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -92,7 +92,7 @@ export class PartnersStatsOverviewApi {
 
 /** Retrieve partner stats overview */
   async list(requestOptions?: ApiRequestOptions): Promise<StatsOverviewItem> {
-    return this.client.request<StatsOverviewItem>(backendApiPath(`/partners/stats/overview`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'item' });
+    return this.client.request<StatsOverviewItem>(backendApiPath(`/partners/stats/overview`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -106,7 +106,7 @@ export class PartnersWithdrawalPaymentsApi {
 
 /** Mark an approved withdrawal as paid */
   async update(withdrawalId: string, body: AdminWithdrawalPayRequest, requestOptions?: ApiRequestOptions): Promise<WithdrawalItem> {
-    return this.client.request<WithdrawalItem>(backendApiPath(`/partners/withdrawals/${serializePathParameter(withdrawalId, { name: 'withdrawalId', style: 'simple', explode: false })}/pay`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'PATCH' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<WithdrawalItem>(backendApiPath(`/partners/withdrawals/${serializePathParameter(withdrawalId, { name: 'withdrawalId', style: 'simple', explode: false })}/pay`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'PATCH' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -120,7 +120,7 @@ export class PartnersWithdrawalReviewsApi {
 
 /** Approve or reject a withdrawal request */
   async update(withdrawalId: string, body: AdminWithdrawalReviewRequest, requestOptions?: ApiRequestOptions): Promise<WithdrawalItem> {
-    return this.client.request<WithdrawalItem>(backendApiPath(`/partners/withdrawals/${serializePathParameter(withdrawalId, { name: 'withdrawalId', style: 'simple', explode: false })}/review`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'PATCH' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<WithdrawalItem>(backendApiPath(`/partners/withdrawals/${serializePathParameter(withdrawalId, { name: 'withdrawalId', style: 'simple', explode: false })}/review`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'PATCH' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -149,12 +149,12 @@ export class PartnersWithdrawalsApi {
       { name: 'partner_id', value: params?.partnerId, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.request<{ items: WithdrawalItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/withdrawals`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: WithdrawalItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/withdrawals`), query), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 
 /** Create a withdrawal request */
   async create(body: AdminWithdrawalCreateRequest, requestOptions?: ApiRequestOptions): Promise<WithdrawalItem> {
-    return this.client.request<WithdrawalItem>(backendApiPath(`/partners/withdrawals`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<WithdrawalItem>(backendApiPath(`/partners/withdrawals`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -187,7 +187,7 @@ export class PartnersAuditLogsApi {
       { name: 'target_id', value: params?.targetId, style: 'form', explode: true, allowReserved: false },
       { name: 'operator_id', value: params?.operatorId, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.request<{ items: AuditLogItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/audit_logs`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: AuditLogItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/audit_logs`), query), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 }
 
@@ -214,12 +214,12 @@ export class PartnersLedgerEntriesApi {
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'entry_type', value: params?.entryType, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.request<{ items: LedgerEntryItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/ledger`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: LedgerEntryItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/ledger`), query), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 
 /** Create a manual ledger adjustment */
   async create(body: AdminLedgerAdjustmentRequest, requestOptions?: ApiRequestOptions): Promise<LedgerEntryItem> {
-    return this.client.request<LedgerEntryItem>(backendApiPath(`/partners/ledger/adjustments`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<LedgerEntryItem>(backendApiPath(`/partners/ledger/adjustments`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -241,7 +241,7 @@ export class PartnersSettlementsApi {
 
 /** Run commission settlement for pending events */
   async run(body: AdminSettlementRunRequest, requestOptions?: ApiRequestOptions): Promise<SettlementRunResult> {
-    return this.client.request<SettlementRunResult>(backendApiPath(`/partners/settlements/run`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<SettlementRunResult>(backendApiPath(`/partners/settlements/run`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 
 /** List commission settlements */
@@ -253,7 +253,7 @@ export class PartnersSettlementsApi {
       { name: 'partner_id', value: params?.partnerId, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.request<{ items: SettlementItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/settlements`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: SettlementItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/settlements`), query), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 }
 
@@ -282,12 +282,12 @@ export class PartnersCommissionEventsApi {
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
       { name: 'source_type', value: params?.sourceType, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.request<{ items: CommissionEventItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/commission_events`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: CommissionEventItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/commission_events`), query), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 
 /** Create a manual commission revenue event */
   async create(body: AdminCommissionEventCreateRequest, requestOptions?: ApiRequestOptions): Promise<CommissionEventItem> {
-    return this.client.request<CommissionEventItem>(backendApiPath(`/partners/commission_events`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<CommissionEventItem>(backendApiPath(`/partners/commission_events`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -309,7 +309,7 @@ export class PartnersCustomerBindingsApi {
 
 /** Bind a customer to a partner */
   async create(body: AdminCustomerBindRequest, requestOptions?: ApiRequestOptions): Promise<CustomerBindingItem> {
-    return this.client.request<CustomerBindingItem>(backendApiPath(`/partners/customers`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<CustomerBindingItem>(backendApiPath(`/partners/customers`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 
 /** List customer bindings across all partners */
@@ -321,12 +321,12 @@ export class PartnersCustomerBindingsApi {
       { name: 'partner_id', value: params?.partnerId, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.request<{ items: CustomerBindingItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/customers`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: CustomerBindingItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/customers`), query), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 
 /** Unbind a customer from a partner */
   async delete(bindingId: string, requestOptions?: ApiRequestOptions): Promise<void> {
-    return this.client.request<void>(backendApiPath(`/partners/customers/${serializePathParameter(bindingId, { name: 'bindingId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'DELETE' as any });
+    return this.client.request<void>(backendApiPath(`/partners/customers/${serializePathParameter(bindingId, { name: 'bindingId', style: 'simple', explode: false })}`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'DELETE' as any });
   }
 }
 
@@ -348,7 +348,7 @@ export class PartnersJoinFeePaymentsApi {
 
 /** Record a join fee payment and trigger ancestor commission */
   async create(partnerId: string, body: AdminJoinFeePaymentCreateRequest, requestOptions?: ApiRequestOptions): Promise<JoinFeePaymentItem> {
-    return this.client.request<JoinFeePaymentItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/join_fee_payments`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<JoinFeePaymentItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/join_fee_payments`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 
 /** List join fee payments across all partners */
@@ -360,7 +360,7 @@ export class PartnersJoinFeePaymentsApi {
       { name: 'partner_id', value: params?.partnerId, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.request<{ items: JoinFeePaymentItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/join_fee_payments`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: JoinFeePaymentItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners/join_fee_payments`), query), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 }
 
@@ -374,7 +374,7 @@ export class PartnersAncestorsApi {
 
 /** List the partner ancestor chain */
   async list(partnerId: string, requestOptions?: ApiRequestOptions): Promise<PartnerAncestorItem[]> {
-    return this.client.request<PartnerAncestorItem[]>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/ancestors`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'item' });
+    return this.client.request<PartnerAncestorItem[]>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/ancestors`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -388,7 +388,7 @@ export class PartnersTreeApi {
 
 /** List the partner descendant tree */
   async list(partnerId: string, requestOptions?: ApiRequestOptions): Promise<PartnerTreeItem[]> {
-    return this.client.request<PartnerTreeItem[]>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/tree`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'item' });
+    return this.client.request<PartnerTreeItem[]>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/tree`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -402,7 +402,7 @@ export class PartnersUserAccountApi {
 
 /** Bind an IAM user account to a partner */
   async create(partnerId: string, body: AdminPartnerBindUserAccountRequest, requestOptions?: ApiRequestOptions): Promise<PartnerItem> {
-    return this.client.request<PartnerItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/user_account`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<PartnerItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}/user_account`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -416,12 +416,12 @@ export class PartnersCommissionConfigApi {
 
 /** Retrieve the commission configuration */
   async retrieve(requestOptions?: ApiRequestOptions): Promise<CommissionConfigItem> {
-    return this.client.request<CommissionConfigItem>(backendApiPath(`/partners/commission_config`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'item' });
+    return this.client.request<CommissionConfigItem>(backendApiPath(`/partners/commission_config`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'item' });
   }
 
 /** Update the commission configuration */
   async update(body: AdminCommissionConfigUpdateRequest, requestOptions?: ApiRequestOptions): Promise<CommissionConfigItem> {
-    return this.client.request<CommissionConfigItem>(backendApiPath(`/partners/commission_config`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'PATCH' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<CommissionConfigItem>(backendApiPath(`/partners/commission_config`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'PATCH' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 }
 
@@ -435,22 +435,22 @@ export class PartnersLevelsApi {
 
 /** List partner levels */
   async list(requestOptions?: ApiRequestOptions): Promise<{ items: PartnerLevelItem[]; pageInfo: PageInfo; }> {
-    return this.client.request<{ items: PartnerLevelItem[]; pageInfo: PageInfo; }>(backendApiPath(`/partners/levels`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: PartnerLevelItem[]; pageInfo: PageInfo; }>(backendApiPath(`/partners/levels`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 
 /** Create a partner level */
   async create(body: AdminPartnerLevelCreateRequest, requestOptions?: ApiRequestOptions): Promise<PartnerLevelItem> {
-    return this.client.request<PartnerLevelItem>(backendApiPath(`/partners/levels`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<PartnerLevelItem>(backendApiPath(`/partners/levels`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 
 /** Update a partner level */
   async update(levelId: string, body: AdminPartnerLevelUpdateRequest, requestOptions?: ApiRequestOptions): Promise<PartnerLevelItem> {
-    return this.client.request<PartnerLevelItem>(backendApiPath(`/partners/levels/${serializePathParameter(levelId, { name: 'levelId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'PATCH' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<PartnerLevelItem>(backendApiPath(`/partners/levels/${serializePathParameter(levelId, { name: 'levelId', style: 'simple', explode: false })}`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'PATCH' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 
 /** Delete a partner level */
   async delete(levelId: string, requestOptions?: ApiRequestOptions): Promise<void> {
-    return this.client.request<void>(backendApiPath(`/partners/levels/${serializePathParameter(levelId, { name: 'levelId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'DELETE' as any });
+    return this.client.request<void>(backendApiPath(`/partners/levels/${serializePathParameter(levelId, { name: 'levelId', style: 'simple', explode: false })}`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'DELETE' as any });
   }
 }
 
@@ -519,22 +519,22 @@ export class PartnersApi {
       { name: 'created_to', value: params?.createdTo, style: 'form', explode: true, allowReserved: false },
       { name: 'join_fee_status', value: params?.joinFeeStatus, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.request<{ items: PartnerItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'page' });
+    return this.client.request<{ items: PartnerItem[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/partners`), query), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'page' });
   }
 
 /** Create a partner */
   async create(body: AdminPartnerCreateRequest, requestOptions?: ApiRequestOptions): Promise<PartnerItem> {
-    return this.client.request<PartnerItem>(backendApiPath(`/partners`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<PartnerItem>(backendApiPath(`/partners`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 
 /** Retrieve a partner */
   async retrieve(partnerId: string, requestOptions?: ApiRequestOptions): Promise<PartnerItem> {
-    return this.client.request<PartnerItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'item' });
+    return this.client.request<PartnerItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'GET' as any, sdkworkUnwrapKind: 'item' });
   }
 
 /** Update a partner */
   async update(partnerId: string, body: AdminPartnerUpdateRequest, requestOptions?: ApiRequestOptions): Promise<PartnerItem> {
-    return this.client.request<PartnerItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'PATCH' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<PartnerItem>(backendApiPath(`/partners/${serializePathParameter(partnerId, { name: 'partnerId', style: 'simple', explode: false })}`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'PATCH' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
   }
 }
 

@@ -14,16 +14,14 @@ export class LevelsLevelsRestoreDefaultsApi {
 
 /** Restore the commercial default level catalog (seven-tier pyramid). */
   async create(body?: AdminLevelsRestoreDefaultsRequest, requestOptions?: ApiRequestOptions): Promise<RestoreDefaultLevelsResult> {
-    return this.client.request<RestoreDefaultLevelsResult>(backendApiPath(`/partners/levels/restore_defaults`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'item' });
+    return this.client.request<RestoreDefaultLevelsResult>(backendApiPath(`/partners/levels/restore_defaults`), { ...(requestOptions?.signal !== undefined ? { signal: requestOptions.signal } : {}), ...(requestOptions?.timeout !== undefined ? { timeout: requestOptions.timeout } : {}), method: 'POST' as any, ...(body !== undefined ? { body, contentType: 'application/json' } : {}), sdkworkUnwrapKind: 'item' });
   }
 }
 
 export class LevelsApi {
-  private client: HttpClient;
   public readonly levelsRestoreDefaults: LevelsLevelsRestoreDefaultsApi;
 
   constructor(client: HttpClient) {
-    this.client = client;
     this.levelsRestoreDefaults = new LevelsLevelsRestoreDefaultsApi(client);
   }
 
@@ -31,12 +29,4 @@ export class LevelsApi {
 
 export function createLevelsApi(client: HttpClient): LevelsApi {
   return new LevelsApi(client);
-}
-
-function appendQueryString(path: string, rawQueryString: string): string {
-  const query = rawQueryString.replace(/^\?+/, '');
-  if (!query) {
-    return path;
-  }
-  return path.includes('?') ? `${path}&${query}` : `${path}?${query}`;
 }
